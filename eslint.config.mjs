@@ -1,0 +1,17 @@
+import { defineConfig } from "eslint/config";
+import next from "eslint-config-next";
+
+export default defineConfig([
+  {
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'neuroquest-academy-integration/**',
+      'tmpnetroquest-academy/**',
+      'public/play/**',
+    ],
+  },
+  {
+    extends: [...next],
+  },
+]);

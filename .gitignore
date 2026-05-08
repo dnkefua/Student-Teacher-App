@@ -1,0 +1,16 @@
+node_modules/
+.next/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+.claude/
+
+# Local source/resource archives kept outside GitHub.
+neuroquest-academy-integration/
+tmpnetroquest-academy/
+Text Book/
+
+# Large textbook files exceed normal GitHub limits; keep extracted course data in src/lib.
+*.pdf

@@ -1,0 +1,5 @@
+{
+  "name": "AI Teacher's Assistant",
+  "description": "A comprehensive AI assistant for teachers to create lesson plans, grade papers, manage virtual classrooms, and draft emails.",
+  "requestFramePermissions": ["microphone", "camera"]
+}
