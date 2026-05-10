@@ -10,6 +10,7 @@ import { VirtualClassroom } from '@/components/VirtualClassroom';
 import { EmailAssistant } from '@/components/EmailAssistant';
 import { NeuroQuestHub } from '@/components/NeuroQuestHub';
 import { EISMathStudio } from '@/components/EISMathStudio';
+import { LessonGenerator } from '@/components/CinematicLessonEngine';
 
 export function ClientPage() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -43,6 +44,7 @@ export function ClientPage() {
           <div className="max-w-6xl mx-auto h-full">
             {activeTab === 'dashboard' && <DashboardHome setActiveTab={setActiveTab} />}
             {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
+            {activeTab === 'place-value-lesson' && <LessonGenerator />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}
             {activeTab === 'grader' && <Grader />}
             {activeTab === 'classroom' && <VirtualClassroom />}

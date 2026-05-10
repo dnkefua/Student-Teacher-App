@@ -6,12 +6,13 @@ import {
   MonitorPlay, 
   Mail,
   Gamepad2,
+  Gem,
   School,
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type TabType = 'dashboard' | 'eis-maths' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
+export type TabType = 'dashboard' | 'eis-maths' | 'place-value-lesson' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -24,6 +25,7 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: SidebarP
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'eis-maths', label: 'EIS Grade 8 Maths', icon: School },
+    { id: 'place-value-lesson', label: 'AI Lesson Engine', icon: Gem },
     { id: 'lesson-planner', label: 'Lesson Planner', icon: BookOpen },
     { id: 'grader', label: 'Grader & Evaluator', icon: CheckSquare },
     { id: 'classroom', label: 'Virtual Classroom', icon: MonitorPlay },

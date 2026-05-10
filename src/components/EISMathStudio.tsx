@@ -1,13 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
   BookOpen,
   Box,
   Camera,
+  ChevronDown,
   CheckCircle2,
   Circle,
+  Columns3,
   Compass,
+  ExternalLink,
   Dice5,
   FunctionSquare,
   Gamepad2,
@@ -15,16 +18,23 @@ import {
   LineChart,
   MonitorPlay,
   Network,
+  Pause,
   Percent,
   Play,
+  RotateCcw,
   Shapes,
   Sigma,
   Sparkles,
   Video,
+  X,
+  Youtube,
 } from 'lucide-react';
 import { TabType } from './Sidebar';
 import { AnimationMode, CourseLesson, eisMypMathCourse } from '@/lib/eisMypMathCourse';
+import { ConceptResearchPack, getConceptResearchPack } from '@/lib/eisConceptResearch';
 import { NeuroQuestAssignment, getNeuroQuestGame, saveActiveAssignment } from '@/lib/neuroquest';
+import { CinematicLessonPlayer } from '@/components/CinematicLessonEngine';
+import { generateLessonAssetPackage, inputFromCourseLesson } from '@/lib/lessonEngine';
 
 interface EISMathStudioProps {
   setActiveTab: (tab: TabType) => void;
@@ -134,11 +144,887 @@ function AnimatedConcept({ lesson, accent }: { lesson: CourseLesson; accent: str
   );
 }
 
+const mediaCopy: Record<AnimationMode, { diagram: string; model: string; video: string; frames: string[] }> = {
+  'number-line': {
+    diagram: 'Number line with benchmarks and inequality boundaries',
+    model: '3D place-value blocks arranged by magnitude',
+    video: 'Animated journey from estimate to exact value',
+    frames: ['Locate the starting value', 'Move by the operation', 'Check the final position'],
+  },
+  'percentage-bars': {
+    diagram: 'Hundred-grid and equivalent percentage bar',
+    model: 'Layered 100-block model for fraction-decimal-percent links',
+    video: 'Discount and multiplier explainer reel',
+    frames: ['Show the whole', 'Shade the percent', 'Convert or apply the multiplier'],
+  },
+  'ratio-mixer': {
+    diagram: 'Tape diagram and equivalent ratio table',
+    model: '3D mixture tanks with linked coloured parts',
+    video: 'Ratio sharing and scaling reel',
+    frames: ['Count total parts', 'Find one part', 'Scale each share'],
+  },
+  'algebra-tiles': {
+    diagram: 'Tile pattern, expression and simplified form',
+    model: '3D algebra tiles for x terms and constants',
+    video: 'Concrete-to-symbolic algebra reel',
+    frames: ['Build the tiles', 'Group like terms', 'Write the rule'],
+  },
+  'equation-balance': {
+    diagram: 'Balance model with inverse-operation trail',
+    model: '3D equality scale with matching operations',
+    video: 'Solve, check and interpret reel',
+    frames: ['Balance both sides', 'Undo operations', 'Substitute to check'],
+  },
+  'coordinate-grid': {
+    diagram: 'Coordinate plane, table of values and gradient triangle',
+    model: '3D graph surface with moving point marker',
+    video: 'Table-to-graph motion reel',
+    frames: ['Generate coordinates', 'Plot points', 'Read gradient or intersection'],
+  },
+  'angle-lab': {
+    diagram: 'Angle facts, parallel lines and polygon split',
+    model: '3D rotating angle arms and compass rose',
+    video: 'Angle relationship proof reel',
+    frames: ['Mark known facts', 'Name the relationship', 'Calculate the unknown'],
+  },
+  'circle-lab': {
+    diagram: 'Circle parts, circumference strip and sector area',
+    model: '3D circle pieces that unwrap and rearrange',
+    video: 'Radius, circumference and area reel',
+    frames: ['Identify the part', 'Choose the formula', 'Connect units to meaning'],
+  },
+  'construction-compass': {
+    diagram: 'Compass arcs, triangle construction and bisectors',
+    model: '3D compass-and-straightedge construction board',
+    video: 'Precision construction step reel',
+    frames: ['Draw the base', 'Sweep fixed-radius arcs', 'Join and verify'],
+  },
+  'solid-builder': {
+    diagram: 'Net, face labels and volume layers',
+    model: '3D prism that unfolds into surface area',
+    video: 'Area, surface area and volume reel',
+    frames: ['Decompose the shape', 'Label dimensions', 'Calculate with correct units'],
+  },
+  'data-lab': {
+    diagram: 'Dot plot, frequency table and mean balance',
+    model: '3D data columns showing centre and spread',
+    video: 'Data question-to-conclusion reel',
+    frames: ['Collect clean data', 'Display the distribution', 'Compare centre and spread'],
+  },
+  'probability-spinner': {
+    diagram: 'Sample space, spinner sectors and probability scale',
+    model: '3D spinner with changing sector weights',
+    video: 'Theoretical vs experimental probability reel',
+    frames: ['Count outcomes', 'Spin trials', 'Compare estimate with theory'],
+  },
+};
+
+const youtubeTopicQueries: Record<AnimationMode, string[]> = {
+  'number-line': ['grade 8 place value visual explanation', 'grade 8 integers number line visual explanation', 'grade 8 inequalities number line animation'],
+  'percentage-bars': ['grade 8 percentages visual explanation', 'percentage bar model animation', 'fractions decimals percentages visual explanation'],
+  'ratio-mixer': ['grade 8 ratio visual explanation', 'ratio tape diagram animation', 'unit rate scale drawing visual explanation'],
+  'algebra-tiles': ['grade 8 algebra tiles visual explanation', 'expanding brackets algebra tiles animation', 'nth term visual patterns grade 8'],
+  'equation-balance': ['solving equations balance scale visual explanation', 'grade 8 inequalities visual explanation', 'formula substitution visual explanation'],
+  'coordinate-grid': ['grade 8 coordinate plane visual explanation', 'linear graphs slope visual explanation', 'gradient triangle animation'],
+  'angle-lab': ['grade 8 angle relationships visual explanation', 'parallel lines angle facts animation', 'polygon angle sum visual explanation'],
+  'circle-lab': ['parts of a circle visual explanation', 'circle circumference area animation', 'semicircle quadrant area visual explanation'],
+  'construction-compass': ['constructing triangles compass straightedge visual explanation', 'perpendicular bisector construction animation', 'angle bisector construction visual explanation'],
+  'solid-builder': ['surface area nets visual explanation', 'volume of prisms unit cubes animation', 'area of compound shapes visual explanation'],
+  'data-lab': ['mean median mode visual explanation', 'frequency tables dot plots visual explanation', 'compare distributions centre spread visual explanation'],
+  'probability-spinner': ['probability spinner visual explanation', 'experimental probability animation', 'theoretical probability sample space visual explanation'],
+};
+
+const trustedVideoChannels = ['Khan Academy', 'Math Antics', 'Cognito', 'The Organic Chemistry Tutor'];
+
+function getYoutubeVideoId(url: string) {
+  const trimmed = url.trim();
+  const directId = /^[a-zA-Z0-9_-]{11}$/.test(trimmed) ? trimmed : null;
+  if (directId) return directId;
+
+  const patterns = [
+    /youtube\.com\/watch\?[^#]*v=([a-zA-Z0-9_-]{11})/,
+    /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/,
+  ];
+  return patterns.map((pattern) => trimmed.match(pattern)?.[1]).find(Boolean) ?? '';
+}
+
+function getYoutubeSearchUrl(query: string) {
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
+function clampProgress(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
+
+function InteractiveConceptCanvas({ mode, accent, progress }: { mode: AnimationMode; accent: string; progress: number }) {
+  const t = progress / 100;
+  const percent = Math.round(progress);
+  const scene = Math.min(2, Math.floor(progress / 34));
+
+  if (mode === 'percentage-bars') {
+    return (
+      <div className="grid gap-5">
+        <div className="grid grid-cols-10 gap-1 rounded-lg bg-slate-950 p-3 shadow-inner">
+          {Array.from({ length: 100 }, (_, index) => (
+            <div
+              key={index}
+              className="aspect-square rounded-sm transition-colors duration-300"
+              style={{ background: index < percent ? accent : 'rgba(255,255,255,.12)' }}
+            />
+          ))}
+        </div>
+        <div className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <div className="flex items-center justify-between text-sm font-bold text-white">
+            <span>0%</span>
+            <span>{percent}% of the whole</span>
+            <span>100%</span>
+          </div>
+          <div className="mt-3 h-8 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${percent}%`, background: `linear-gradient(90deg, ${accent}, #facc15)` }} />
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-3 text-center text-sm font-black text-slate-950">
+            <div className="rounded-md bg-white p-3">fraction<br />{percent}/100</div>
+            <div className="rounded-md bg-white p-3">decimal<br />{(percent / 100).toFixed(2)}</div>
+            <div className="rounded-md bg-white p-3">percent<br />{percent}%</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'ratio-mixer') {
+    const leftHeight = 24 + t * 62;
+    const rightHeight = 18 + t * 72;
+    return (
+      <div className="grid gap-5">
+        <div className="grid grid-cols-[2fr_5fr] gap-4">
+          {[
+            { label: '2 parts', height: leftHeight, color: accent },
+            { label: '5 parts', height: rightHeight, color: '#facc15' },
+          ].map((tank) => (
+            <div key={tank.label} className="relative h-64 overflow-hidden rounded-lg border border-white/15 bg-slate-950 p-4">
+              <div className="absolute inset-x-4 bottom-12 rounded-md transition-all duration-300" style={{ height: `${tank.height}%`, background: tank.color, boxShadow: `0 0 35px ${tank.color}77` }} />
+              <div className="absolute bottom-4 left-0 right-0 text-center text-sm font-black text-white">{tank.label}</div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+          {Array.from({ length: 7 }, (_, index) => (
+            <span key={index} className="h-9 rounded-md transition-transform duration-300" style={{ background: index < 2 ? accent : '#facc15', transform: `translateY(${index <= scene ? -6 : 0}px)` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'algebra-tiles') {
+    return (
+      <div className="relative min-h-80 overflow-hidden rounded-lg bg-slate-950 p-6">
+        <div className="grid grid-cols-3 gap-4">
+          {['Term 1', 'Term 2', 'Term n'].map((label, group) => (
+            <div key={label} className="rounded-lg border border-white/10 bg-white/5 p-4">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-400">{label}</p>
+              <div className="mt-4 flex min-h-36 flex-wrap content-end gap-2">
+                {Array.from({ length: group === 0 ? 3 : group === 1 ? 5 : 7 }, (_, index) => (
+                  <span
+                    key={index}
+                    className="grid h-10 w-10 place-items-center rounded-md text-sm font-black text-slate-950 transition-transform duration-300"
+                    style={{ background: index < 2 ? accent : '#facc15', transform: `translateY(${scene === group || progress > 75 ? -8 : 0}px)` }}
+                  >
+                    {index < 2 ? 'x' : '1'}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 rounded-lg bg-white p-4 text-center text-xl font-black text-slate-950">
+          Visual rule: <span style={{ color: accent }}>2n</span> + growing constants
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'equation-balance') {
+    const tilt = Math.sin(t * Math.PI * 2) * 5;
+    return (
+      <svg className="h-80 w-full rounded-lg bg-slate-950" viewBox="0 0 640 360" role="img" aria-label="Interactive equation balance">
+        <path d="M90 300H550" stroke="rgba(255,255,255,.6)" strokeWidth="9" strokeLinecap="round" />
+        <path d="M320 300V110" stroke="rgba(255,255,255,.5)" strokeWidth="8" strokeLinecap="round" />
+        <g style={{ transform: `rotate(${tilt}deg)`, transformOrigin: '320px 120px', transition: 'transform .3s ease' }}>
+          <path d="M150 120H490" stroke={accent} strokeWidth="10" strokeLinecap="round" />
+          <path d="M170 120L118 248M170 120L222 248M470 120L418 248M470 120L522 248" stroke="rgba(255,255,255,.38)" strokeWidth="4" />
+          <rect x="87" y="238" width="165" height="25" rx="8" fill="rgba(255,255,255,.14)" />
+          <rect x="388" y="238" width="165" height="25" rx="8" fill="rgba(255,255,255,.14)" />
+          {[0, 1, 2].map((item) => <rect key={item} x={105 + item * 43} y={194 - scene * 9} width="34" height="34" rx="6" fill={accent} />)}
+          {[0, 1, 2, 3, 4].map((item) => <circle key={item} cx={413 + item * 24} cy={211 + scene * 4} r="13" fill="#facc15" />)}
+        </g>
+        <text x="225" y="70" fill="white" fontSize="24" fontWeight="900">remove the same value from both sides</text>
+        <text x="267" y="342" fill="#fde68a" fontSize="20" fontWeight="800">x = isolated</text>
+      </svg>
+    );
+  }
+
+  if (mode === 'coordinate-grid' || mode === 'data-lab') {
+    const x = 90 + t * 390;
+    const y = 270 - t * 205;
+    return (
+      <svg className="h-80 w-full rounded-lg bg-slate-950" viewBox="0 0 640 360" role="img" aria-label="Interactive graph">
+        {Array.from({ length: 10 }, (_, index) => <path key={`v-${index}`} d={`M${90 + index * 43} 40V290`} stroke="rgba(255,255,255,.09)" />)}
+        {Array.from({ length: 7 }, (_, index) => <path key={`h-${index}`} d={`M70 ${70 + index * 35}H545`} stroke="rgba(255,255,255,.09)" />)}
+        <path d="M70 290H555M90 310V40" stroke="rgba(255,255,255,.65)" strokeWidth="5" strokeLinecap="round" />
+        <path d="M90 270L480 65" stroke={accent} strokeWidth="8" strokeLinecap="round" />
+        <path d={`M90 270L${x} ${y}`} stroke="#facc15" strokeWidth="8" strokeLinecap="round" />
+        <circle cx={x} cy={y} r="14" fill="#facc15" style={{ transition: 'all .25s ease' }} />
+        <path d={`M${Math.max(90, x - 95)} ${y}H${x}V${Math.min(270, y + 55)}`} stroke="#38bdf8" strokeWidth="5" fill="none" strokeLinecap="round" />
+        <text x="392" y="96" fill="white" fontSize="22" fontWeight="900">y = mx + c</text>
+        <text x={x + 12} y={y - 12} fill="#fde68a" fontSize="18" fontWeight="800">({Math.round(t * 10)}, {Math.round(1 + t * 8)})</text>
+      </svg>
+    );
+  }
+
+  if (mode === 'angle-lab' || mode === 'construction-compass') {
+    const angle = 20 + t * 130;
+    const rad = (Math.PI / 180) * angle;
+    const x = 170 + Math.cos(-rad) * 250;
+    const y = 250 + Math.sin(-rad) * 250;
+    return (
+      <svg className="h-80 w-full rounded-lg bg-slate-950" viewBox="0 0 640 360" role="img" aria-label="Interactive angle lab">
+        <path d="M170 250H540" stroke="rgba(255,255,255,.7)" strokeWidth="7" strokeLinecap="round" />
+        <path d={`M170 250L${x} ${y}`} stroke={accent} strokeWidth="8" strokeLinecap="round" style={{ transition: 'all .25s ease' }} />
+        <path d={`M235 250 A65 65 0 0 1 ${170 + Math.cos(-rad) * 65} ${250 + Math.sin(-rad) * 65}`} fill="none" stroke="#facc15" strokeWidth="12" strokeLinecap="round" />
+        <circle cx="170" cy="250" r="15" fill="#facc15" />
+        <circle cx={x} cy={y} r="9" fill="white" />
+        <path d="M90 92H540M90 156H540" stroke="rgba(255,255,255,.24)" strokeWidth="5" strokeLinecap="round" />
+        <path d="M225 205 A90 90 0 0 1 405 205" stroke="rgba(255,255,255,.45)" strokeWidth="4" strokeDasharray="9 8" fill="none" />
+        <text x="255" y="224" fill="#fde68a" fontSize="28" fontWeight="900">{Math.round(angle)} degrees</text>
+        <text x="278" y="55" fill="white" fontSize="20" fontWeight="900">rotate, measure, justify</text>
+      </svg>
+    );
+  }
+
+  if (mode === 'circle-lab' || mode === 'probability-spinner') {
+    const strip = 40 + t * 360;
+    return (
+      <div className="relative min-h-80 overflow-hidden rounded-lg bg-slate-950 p-6">
+        <div className="mx-auto grid h-56 w-56 place-items-center rounded-full border-[14px] border-white/10 shadow-2xl transition-transform duration-300" style={{ background: `conic-gradient(${accent} 0 ${120 + t * 60}deg, #facc15 ${120 + t * 60}deg 250deg, #38bdf8 250deg 360deg)`, transform: `rotate(${t * 220}deg) rotateX(50deg)` }}>
+          <div className="h-20 w-20 rounded-full bg-slate-950 shadow-inner" />
+          <div className="absolute left-1/2 top-1/2 h-1.5 w-28 origin-left rounded-full bg-white" />
+        </div>
+        <div className="absolute bottom-10 left-8 right-8">
+          <p className="mb-2 text-sm font-bold text-slate-300">Circumference unwrap / outcome space</p>
+          <div className="h-7 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${Math.min(100, strip / 4.1)}%`, background: `linear-gradient(90deg, ${accent}, #facc15, #38bdf8)` }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'solid-builder') {
+    const fold = 55 - t * 55;
+    return (
+      <div className="relative min-h-80 overflow-hidden rounded-lg bg-slate-950 p-6 [perspective:900px]">
+        <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2" style={{ transformStyle: 'preserve-3d', transform: 'rotateX(58deg) rotateZ(-35deg)' }}>
+          {[
+            ['front', `translateZ(56px) rotateX(${fold}deg)`, accent],
+            ['back', `translateZ(-56px) rotateX(-${fold}deg)`, '#38bdf8'],
+            ['left', `translateX(-56px) rotateY(-${fold}deg)`, '#facc15'],
+            ['right', `translateX(56px) rotateY(${fold}deg)`, accent],
+            ['top', `translateY(-56px) rotateX(${fold}deg)`, '#38bdf8'],
+            ['base', 'translateZ(0)', 'rgba(255,255,255,.16)'],
+          ].map(([face, transform, color]) => (
+            <div key={face} className="absolute grid h-28 w-28 place-items-center rounded-md border border-white/20 text-xs font-black uppercase tracking-wide text-white shadow-xl transition-transform duration-300" style={{ transform, background: color }}>
+              {face}
+            </div>
+          ))}
+        </div>
+        <div className="absolute bottom-8 left-8 right-8 grid grid-cols-8 gap-1">
+          {Array.from({ length: Math.max(4, Math.round(32 * t)) }, (_, index) => <span key={index} className="h-5 rounded-sm bg-cyan-300/80" />)}
+        </div>
+      </div>
+    );
+  }
+
+  const x = 80 + t * 450;
+  return (
+    <svg className="h-80 w-full rounded-lg bg-slate-950" viewBox="0 0 640 360" role="img" aria-label="Interactive number line">
+      <path d="M70 180H565" stroke="rgba(255,255,255,.7)" strokeWidth="6" strokeLinecap="round" />
+      {Array.from({ length: 11 }, (_, index) => (
+        <g key={index}>
+          <path d={`M${90 + index * 43} 164V196`} stroke="rgba(255,255,255,.45)" strokeWidth="3" />
+          <text x={83 + index * 43} y="226" fill="rgba(255,255,255,.75)" fontSize="16">{index - 5}</text>
+        </g>
+      ))}
+      <path d={`M80 145H${x}`} stroke={accent} strokeWidth="12" strokeLinecap="round" />
+      <circle cx={x} cy="180" r="17" fill="#facc15" style={{ transition: 'cx .25s ease' }} />
+      <rect x="120" y="62" width={Math.max(40, t * 310)} height="48" rx="8" fill={accent} opacity=".78" />
+      <text x="132" y="93" fill="white" fontSize="20" fontWeight="900">magnitude grows along the scale</text>
+    </svg>
+  );
+}
+
+function ConceptDiagram({ mode, accent }: { mode: AnimationMode; accent: string }) {
+  if (mode === 'percentage-bars') {
+    return (
+      <div className="grid gap-4">
+        <div className="grid grid-cols-10 gap-1 rounded-lg bg-slate-900 p-3">
+          {Array.from({ length: 100 }, (_, index) => (
+            <div key={index} className="aspect-square rounded-sm" style={{ background: index < 42 ? accent : 'rgba(255,255,255,.14)' }} />
+          ))}
+        </div>
+        <div className="h-8 overflow-hidden rounded-full bg-slate-800">
+          <div className="h-full w-[42%] rounded-full" style={{ background: `linear-gradient(90deg, ${accent}, #facc15)` }} />
+        </div>
+        <div className="flex justify-between text-xs font-bold uppercase tracking-wide text-slate-300">
+          <span>0%</span>
+          <span>42 shaded parts</span>
+          <span>100%</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'ratio-mixer') {
+    return (
+      <div className="grid gap-5">
+        <div className="grid grid-cols-[2fr_5fr] gap-2">
+          {['2 parts', '5 parts'].map((label, index) => (
+            <div key={label} className="rounded-lg border border-white/10 bg-slate-900 p-3">
+              <div className="h-28 rounded-md" style={{ background: index === 0 ? `${accent}dd` : '#facc15dd' }} />
+              <p className="mt-2 text-center text-sm font-bold text-white">{label}</p>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 7 }, (_, index) => (
+            <span key={index} className="h-7 rounded-md" style={{ background: index < 2 ? accent : '#facc15' }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (mode === 'algebra-tiles' || mode === 'equation-balance') {
+    return (
+      <svg className="h-72 w-full" viewBox="0 0 520 300" role="img" aria-label="Algebra balance diagram">
+        <path d="M70 225H450" stroke="rgba(255,255,255,.72)" strokeWidth="8" strokeLinecap="round" />
+        <path d="M260 225V80" stroke="rgba(255,255,255,.55)" strokeWidth="7" strokeLinecap="round" />
+        <path d="M145 126H375" stroke={accent} strokeWidth="9" strokeLinecap="round" />
+        <path d="M145 126L105 205M145 126L185 205M375 126L335 205M375 126L415 205" stroke="rgba(255,255,255,.42)" strokeWidth="4" />
+        {[0, 1, 2].map((item) => (
+          <rect key={item} x={92 + item * 48} y="176" width="38" height="38" rx="6" fill={accent} />
+        ))}
+        {[0, 1, 2, 3].map((item) => (
+          <circle key={item} cx={333 + item * 24} cy="195" r="13" fill="#facc15" />
+        ))}
+        <text x="110" y="201" fill="#0f172a" fontSize="22" fontWeight="800">x</text>
+        <text x="222" y="66" fill="white" fontSize="22" fontWeight="800">same operation both sides</text>
+      </svg>
+    );
+  }
+
+  if (mode === 'coordinate-grid' || mode === 'data-lab') {
+    return (
+      <svg className="h-72 w-full" viewBox="0 0 520 300" role="img" aria-label="Coordinate graph diagram">
+        {Array.from({ length: 9 }, (_, index) => <path key={`v-${index}`} d={`M${70 + index * 45} 35V255`} stroke="rgba(255,255,255,.09)" />)}
+        {Array.from({ length: 6 }, (_, index) => <path key={`h-${index}`} d={`M60 ${55 + index * 38}H470`} stroke="rgba(255,255,255,.09)" />)}
+        <path d="M60 255H480M70 270V35" stroke="rgba(255,255,255,.68)" strokeWidth="4" strokeLinecap="round" />
+        <path d="M85 230L175 188L265 145L355 102L445 60" stroke={accent} strokeWidth="7" fill="none" strokeLinecap="round" />
+        <path d="M265 145H355V102" stroke="#facc15" strokeWidth="5" fill="none" strokeLinecap="round" />
+        {[85, 175, 265, 355, 445].map((x, index) => (
+          <circle key={x} cx={x} cy={230 - index * 42.5} r="9" fill="#facc15" />
+        ))}
+        <text x="300" y="135" fill="#fde68a" fontSize="18" fontWeight="800">rise</text>
+        <text x="293" y="167" fill="#fde68a" fontSize="18" fontWeight="800">run</text>
+      </svg>
+    );
+  }
+
+  if (mode === 'angle-lab' || mode === 'construction-compass') {
+    return (
+      <svg className="h-72 w-full" viewBox="0 0 520 300" role="img" aria-label="Angle and construction diagram">
+        <path d="M70 105H455M70 190H455" stroke="rgba(255,255,255,.42)" strokeWidth="5" strokeLinecap="round" />
+        <path d="M140 245L390 45" stroke={accent} strokeWidth="7" strokeLinecap="round" />
+        <path d="M205 193 A75 75 0 0 1 250 157" fill="none" stroke="#facc15" strokeWidth="12" strokeLinecap="round" />
+        <path d="M115 205 A70 70 0 0 1 255 205M335 112 A70 70 0 0 0 475 112" fill="none" stroke="rgba(255,255,255,.5)" strokeWidth="3" strokeDasharray="8 7" />
+        <circle cx="205" cy="193" r="10" fill="#facc15" />
+        <text x="270" y="148" fill="white" fontSize="20" fontWeight="800">angle fact</text>
+      </svg>
+    );
+  }
+
+  if (mode === 'circle-lab' || mode === 'probability-spinner') {
+    return (
+      <svg className="h-72 w-full" viewBox="0 0 520 300" role="img" aria-label="Circle and probability diagram">
+        <circle cx="260" cy="150" r="92" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.55)" strokeWidth="5" />
+        <path d="M260 150L260 58A92 92 0 0 1 345 185Z" fill={accent} opacity=".9" />
+        <path d="M260 150L345 185A92 92 0 0 1 183 207Z" fill="#facc15" opacity=".86" />
+        <path d="M260 150L183 207A92 92 0 0 1 260 58Z" fill="#38bdf8" opacity=".76" />
+        <path d="M260 150H352" stroke="white" strokeWidth="4" strokeLinecap="round" />
+        <path d="M168 258H352" stroke="#facc15" strokeWidth="6" strokeLinecap="round" />
+        <text x="278" y="143" fill="white" fontSize="18" fontWeight="800">r</text>
+        <text x="202" y="280" fill="#fde68a" fontSize="18" fontWeight="800">circumference unwrap</text>
+      </svg>
+    );
+  }
+
+  if (mode === 'solid-builder') {
+    return (
+      <div className="grid gap-5">
+        <div className="grid grid-cols-4 gap-2">
+          {['top', 'front', 'side', 'base'].map((face, index) => (
+            <div key={face} className="grid h-24 place-items-center rounded-md border border-white/10 text-sm font-black uppercase tracking-wide text-white" style={{ background: index % 2 === 0 ? `${accent}99` : '#facc1599' }}>
+              {face}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-6 gap-1">
+          {Array.from({ length: 24 }, (_, index) => <span key={index} className="h-6 rounded-sm bg-cyan-300/80" />)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <svg className="h-72 w-full" viewBox="0 0 520 300" role="img" aria-label="Number line diagram">
+      <path d="M60 150H470" stroke="rgba(255,255,255,.72)" strokeWidth="5" strokeLinecap="round" />
+      {Array.from({ length: 9 }, (_, index) => (
+        <g key={index}>
+          <path d={`M${80 + index * 45} 138V162`} stroke="rgba(255,255,255,.52)" strokeWidth="3" />
+          <text x={73 + index * 45} y="188" fill="rgba(255,255,255,.72)" fontSize="15">{index - 4}</text>
+        </g>
+      ))}
+      <path d="M215 118H350" stroke={accent} strokeWidth="12" strokeLinecap="round" />
+      <circle cx="215" cy="150" r="16" fill="#0f172a" stroke={accent} strokeWidth="6" />
+      <circle cx="350" cy="150" r="16" fill={accent} />
+      <text x="210" y="88" fill="#fde68a" fontSize="20" fontWeight="800">solution ray</text>
+    </svg>
+  );
+}
+
+function Concept3DModel({ mode, accent }: { mode: AnimationMode; accent: string }) {
+  const cubeCount = mode === 'solid-builder' ? 18 : mode === 'data-lab' ? 12 : 9;
+
+  if (mode === 'circle-lab' || mode === 'probability-spinner') {
+    return (
+      <div className="relative grid min-h-72 place-items-center overflow-hidden rounded-lg bg-slate-900 [perspective:900px]">
+        <div className="relative h-52 w-52 animate-spin rounded-full border-[18px] border-white/10 shadow-2xl [animation-duration:9s]" style={{ background: `conic-gradient(${accent} 0 120deg, #facc15 120deg 230deg, #38bdf8 230deg 360deg)`, transform: 'rotateX(58deg)' }}>
+          <div className="absolute inset-12 rounded-full bg-slate-950 shadow-inner" />
+          <div className="absolute left-1/2 top-1/2 h-2 w-24 origin-left -translate-y-1/2 rounded-full bg-white" />
+        </div>
+        <p className="absolute bottom-5 rounded-md bg-black/35 px-3 py-2 text-sm font-bold text-white">3D rotating sector model</p>
+      </div>
+    );
+  }
+
+  if (mode === 'angle-lab' || mode === 'construction-compass') {
+    return (
+      <div className="relative grid min-h-72 place-items-center overflow-hidden rounded-lg bg-slate-900">
+        <div className="absolute h-56 w-56 rounded-full border border-dashed border-white/25" />
+        <div className="absolute h-2 w-44 origin-left rounded-full bg-white" style={{ left: '50%', top: '50%', transform: 'rotate(-7deg)' }} />
+        <div className="absolute h-2 w-44 origin-left animate-spin rounded-full" style={{ left: '50%', top: '50%', background: accent, animationDuration: '6s' }} />
+        <div className="grid h-16 w-16 place-items-center rounded-full bg-white font-black text-slate-950 shadow-xl">A</div>
+        <p className="absolute bottom-5 rounded-md bg-black/35 px-3 py-2 text-sm font-bold text-white">Rotating ray and compass arc</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative min-h-72 overflow-hidden rounded-lg bg-slate-900 p-6 [perspective:900px]">
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.06)_1px,transparent_1px)] bg-[size:32px_32px]" />
+      <div className="relative mx-auto mt-8 grid w-fit grid-cols-6 gap-3" style={{ transform: 'rotateX(58deg) rotateZ(-28deg)', transformStyle: 'preserve-3d' }}>
+        {Array.from({ length: cubeCount }, (_, index) => (
+          <span
+            key={index}
+            className="h-10 w-10 rounded-md border border-white/20 shadow-[10px_10px_0_rgba(15,23,42,.6)]"
+            style={{ background: index % 3 === 0 ? accent : index % 3 === 1 ? '#facc15' : '#38bdf8', transform: `translateZ(${(index % 4) * 6}px)` }}
+          />
+        ))}
+      </div>
+      <p className="absolute bottom-5 left-6 rounded-md bg-black/35 px-3 py-2 text-sm font-bold text-white">3D manipulative model</p>
+    </div>
+  );
+}
+
+function ExplainerVideoReel({
+  pack,
+  mode,
+  accent,
+  progress,
+  isPlaying,
+  onToggle,
+}: {
+  pack: ConceptResearchPack;
+  mode: AnimationMode;
+  accent: string;
+  progress: number;
+  isPlaying: boolean;
+  onToggle: () => void;
+}) {
+  const copy = mediaCopy[mode];
+  const sceneIndex = Math.min(2, Math.floor(progress / 34));
+
+  return (
+    <section className="rounded-lg border border-white/10 bg-black p-4">
+      <div className="aspect-video overflow-hidden rounded-lg border border-white/10 bg-slate-950">
+        <div className="relative h-full w-full">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(56,189,248,.32),transparent_30%),radial-gradient(circle_at_80%_30%,rgba(250,204,21,.22),transparent_28%)]" />
+          <div className="absolute inset-0 opacity-70" style={{ background: `conic-gradient(from ${progress * 3.6}deg at 50% 50%, transparent, ${accent}44, transparent, #facc1544, transparent)` }} />
+          <div className="absolute inset-x-8 top-8 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-white/50">Playable animated explainer</p>
+              <h3 className="mt-1 text-2xl font-black text-white">{copy.video}</h3>
+            </div>
+            <button onClick={onToggle} className="grid h-14 w-14 place-items-center rounded-full bg-white text-slate-950 shadow-xl transition hover:scale-105" aria-label={isPlaying ? 'Pause explainer' : 'Play explainer'}>
+              {isPlaying ? <Pause className="h-7 w-7 fill-current" /> : <Play className="ml-1 h-7 w-7 fill-current" />}
+            </button>
+          </div>
+          <div className="absolute left-1/2 top-[48%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-white/10 backdrop-blur transition-transform duration-300" style={{ transform: `translate(-50%, -50%) scale(${1 + progress / 220}) rotate(${progress * 2}deg)` }} />
+          <div className="absolute left-1/2 top-[48%] h-14 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl" style={{ background: accent }} />
+          <div className="absolute inset-x-8 bottom-16 grid gap-3 md:grid-cols-3">
+            {copy.frames.map((frame, index) => (
+              <div key={frame} className={`rounded-md border p-3 backdrop-blur transition ${index === sceneIndex ? 'border-cyan-200 bg-white/20' : 'border-white/10 bg-white/10'}`}>
+                <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Scene {index + 1}</p>
+                <p className="mt-1 text-sm font-semibold text-white">{frame}</p>
+              </div>
+            ))}
+          </div>
+          <div className="absolute bottom-6 left-8 right-8 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${accent}, #facc15, #38bdf8)` }} />
+          </div>
+        </div>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-300">{pack.topic} is presented as a short visual sequence that teachers can screen-share while explaining the concept live.</p>
+    </section>
+  );
+}
+
+function YouTubeVisualSourcePanel({ lesson }: { lesson: CourseLesson }) {
+  const topicQueries = youtubeTopicQueries[lesson.animation];
+  const [videoUrl, setVideoUrl] = useState(lesson.animation === 'number-line' ? 'https://www.youtube.com/watch?v=a4FXl4zb3E4' : '');
+  const videoId = getYoutubeVideoId(videoUrl);
+  const lessonSearch = getYoutubeSearchUrl(`${lesson.title} ${lesson.textbookSection} grade 8 maths visual explanation animation`);
+
+  return (
+    <section className="rounded-lg border border-white/10 bg-slate-950 p-4">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-red-200">
+            <Youtube className="h-4 w-4" />
+            YouTube visual source layer
+          </p>
+          <h4 className="mt-1 text-lg font-black text-white">Pull external video explanations into this concept lab</h4>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+            Use public YouTube embeds and teacher-selected sources as supporting media while the original interactive model remains available for live explanation.
+          </p>
+        </div>
+        <a href={lessonSearch} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-red-100">
+          Search This Topic <ExternalLink className="h-4 w-4" />
+        </a>
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-[1.25fr_0.75fr]">
+        <div>
+          <label className="text-xs font-bold uppercase tracking-wide text-slate-400" htmlFor="youtube-url">Paste a YouTube lesson URL or video ID</label>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <input
+              id="youtube-url"
+              className="min-h-11 flex-1 rounded-md border border-white/10 bg-white px-3 text-sm font-medium text-slate-950 outline-none transition focus:border-red-300"
+              onChange={(event) => setVideoUrl(event.target.value)}
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={videoUrl}
+            />
+            <button onClick={() => setVideoUrl('https://www.youtube.com/watch?v=a4FXl4zb3E4')} className="rounded-md border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/50">
+              Load Example
+            </button>
+          </div>
+
+          <div className="mt-4 aspect-video overflow-hidden rounded-lg border border-white/10 bg-black">
+            {videoId ? (
+              <iframe
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="h-full w-full"
+                referrerPolicy="strict-origin-when-cross-origin"
+                src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1`}
+                title={`YouTube visual explanation for ${lesson.title}`}
+              />
+            ) : (
+              <div className="grid h-full place-items-center p-6 text-center">
+                <div>
+                  <Youtube className="mx-auto h-12 w-12 text-red-300" />
+                  <p className="mt-4 text-lg font-black text-white">Choose or paste a YouTube explainer</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">Some schools block YouTube or some owners disable embedding. Use the search links if the player cannot load.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Curated search routes</p>
+          {topicQueries.map((query) => (
+            <a key={query} href={getYoutubeSearchUrl(`${query} ${trustedVideoChannels.join(' OR ')}`)} target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 p-3 text-sm font-semibold text-slate-100 transition hover:border-red-200 hover:bg-red-300/10">
+              <span>{query}</span>
+              <ExternalLink className="h-4 w-4 shrink-0 text-red-200" />
+            </a>
+          ))}
+          <div className="rounded-lg border border-amber-200/20 bg-amber-200/10 p-3 text-sm leading-6 text-amber-50">
+            Recommended channels to check first: {trustedVideoChannels.join(', ')}.
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ConceptMediaWall({ lesson, pack, accent }: { lesson: CourseLesson; pack: ConceptResearchPack; accent: string }) {
+  const copy = mediaCopy[lesson.animation];
+  const [progress, setProgress] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const sceneIndex = Math.min(2, Math.floor(progress / 34));
+
+  useEffect(() => {
+    if (!isPlaying) return undefined;
+    const timer = window.setInterval(() => {
+      setProgress((current) => (current >= 100 ? 0 : current + 1.35));
+    }, 90);
+
+    return () => window.clearInterval(timer);
+  }, [isPlaying]);
+
+  const jumpToScene = (index: number) => {
+    setProgress(clampProgress(index * 34 + 2));
+    setIsPlaying(false);
+  };
+
+  return (
+    <section className="rounded-lg border border-white/10 bg-white/10 p-5 backdrop-blur">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Illustrations, 3D and video</p>
+          <h3 className="text-xl font-black">Concept media wall</h3>
+        </div>
+        <p className="text-sm text-slate-300">Built for full-window teaching and screen sharing</p>
+      </div>
+
+      <div className="mt-5 rounded-lg border border-cyan-200/20 bg-slate-950 p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Interactive teacher controls</p>
+            <h4 className="mt-1 text-lg font-black text-white">{copy.frames[sceneIndex]}</h4>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setIsPlaying((current) => !current)} className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100">
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
+            <button onClick={() => { setProgress(0); setIsPlaying(false); }} className="inline-flex items-center gap-2 rounded-md border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/50">
+              Reset <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <input
+          aria-label="Scrub concept animation"
+          className="mt-4 w-full accent-cyan-300"
+          max="100"
+          min="0"
+          onChange={(event) => {
+            setProgress(Number(event.target.value));
+            setIsPlaying(false);
+          }}
+          type="range"
+          value={progress}
+        />
+        <div className="mt-3 grid gap-2 md:grid-cols-3">
+          {copy.frames.map((frame, index) => (
+            <button
+              key={frame}
+              onClick={() => jumpToScene(index)}
+              className={`rounded-md border px-3 py-2 text-left text-sm font-semibold transition ${sceneIndex === index ? 'border-cyan-200 bg-cyan-200 text-slate-950' : 'border-white/10 bg-white/5 text-slate-200 hover:border-white/40'}`}
+            >
+              Scene {index + 1}: {frame}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <article className="mt-5 rounded-lg border border-white/10 bg-slate-950 p-4">
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Live interactive explainer</p>
+        <h4 className="mt-1 font-bold text-white">{copy.video}</h4>
+        <div className="mt-4">
+          <InteractiveConceptCanvas mode={lesson.animation} accent={accent} progress={progress} />
+        </div>
+      </article>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-2">
+        <article className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Visual diagram</p>
+          <h4 className="mt-1 font-bold text-white">{copy.diagram}</h4>
+          <div className="mt-4 overflow-hidden rounded-lg border border-white/10 bg-slate-900 p-3">
+            <ConceptDiagram mode={lesson.animation} accent={accent} />
+          </div>
+        </article>
+
+        <article className="rounded-lg border border-white/10 bg-slate-950 p-4">
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">3D animation</p>
+          <h4 className="mt-1 font-bold text-white">{copy.model}</h4>
+          <div className="mt-4">
+            <Concept3DModel mode={lesson.animation} accent={accent} />
+          </div>
+        </article>
+      </div>
+
+      <div className="mt-4">
+        <ExplainerVideoReel pack={pack} mode={lesson.animation} accent={accent} progress={progress} isPlaying={isPlaying} onToggle={() => setIsPlaying((current) => !current)} />
+      </div>
+
+      <div className="mt-4">
+        <YouTubeVisualSourcePanel lesson={lesson} />
+      </div>
+    </section>
+  );
+}
+
+function ConceptLabWindow({
+  lesson,
+  pack,
+  accent,
+  onClose,
+  onTeach,
+}: {
+  lesson: CourseLesson;
+  pack: ConceptResearchPack;
+  accent: string;
+  onClose: () => void;
+  onTeach: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950 text-white">
+      <div className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/90 px-5 py-4 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Full-window concept studio</p>
+            <h2 className="text-2xl font-black tracking-normal">{lesson.title}</h2>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={onTeach} className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-100">
+              Teach With Camera <Video className="h-4 w-4" />
+            </button>
+            <button onClick={onClose} className="inline-flex items-center gap-2 rounded-md border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/50">
+              Close <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto grid max-w-7xl gap-6 px-5 py-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="space-y-6">
+          <AnimatedConcept lesson={lesson} accent={accent} />
+          <ConceptMediaWall lesson={lesson} pack={pack} accent={accent} />
+
+          <section className="rounded-lg border border-white/10 bg-white/10 p-5 backdrop-blur">
+            <div className="flex items-start gap-3">
+              <Columns3 className="mt-1 h-5 w-5 shrink-0" style={{ color: accent }} />
+              <div>
+                <h3 className="text-lg font-bold">Research-backed illustration sequence</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-200">{pack.researchNote}</p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {pack.visualStrategies.map((strategy, index) => (
+                <article key={strategy.title} className="rounded-lg border border-white/10 bg-slate-900/70 p-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-8 w-8 place-items-center rounded-md text-sm font-black text-slate-950" style={{ background: accent }}>{index + 1}</span>
+                    <h4 className="font-bold">{strategy.title}</h4>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-200">{strategy.method}</p>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-wide text-cyan-200">Teacher move</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-300">{strategy.classroomMove}</p>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-wide text-amber-200">Animation cue</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-300">{strategy.animationCue}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        <div className="space-y-6">
+          <section className="rounded-lg border border-white/10 bg-white p-5 text-slate-950">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Five examples</p>
+            <h3 className="mt-1 text-xl font-black">Model the concept from concrete to symbolic</h3>
+            <div className="mt-4 space-y-3">
+              {pack.examples.map((example, index) => (
+                <article key={`${example.label}-${example.prompt}`} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-sm font-black text-white" style={{ background: accent }}>{index + 1}</span>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-slate-500">{example.label}</p>
+                      <p className="mt-1 font-semibold text-slate-900">{example.prompt}</p>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-700">{example.method}</p>
+                  <div className="mt-3 rounded-md bg-slate-950 p-3 font-mono text-sm font-bold text-white">Answer: {example.answer}</div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-white/10 bg-white p-5 text-slate-950">
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Five exercises</p>
+            <h3 className="mt-1 text-xl font-black">Student practice with success checks</h3>
+            <div className="mt-4 space-y-3">
+              {pack.exercises.map((exercise, index) => (
+                <article key={`${exercise.label}-${exercise.prompt}`} className="rounded-lg border border-slate-200 p-4">
+                  <div className="flex gap-3">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-slate-100 text-sm font-black text-slate-800">{index + 1}</span>
+                    <div>
+                      <p className="font-semibold text-slate-900">{exercise.prompt}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600"><strong>Success check:</strong> {exercise.successCheck}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-white/10 bg-white/10 p-5 backdrop-blur">
+            <h3 className="text-lg font-bold">Presentation rhythm</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {['Illustrate', 'Animate', 'Practise'].map((step, index) => (
+                <div key={step} className="rounded-lg border border-white/10 bg-slate-900/70 p-4">
+                  <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Stage {index + 1}</p>
+                  <p className="mt-1 text-lg font-black">{step}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={onClose} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-3 font-semibold text-white transition hover:border-cyan-300 hover:text-cyan-100">
+              Return to course map <RotateCcw className="h-4 w-4" />
+            </button>
+          </section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
   const [chapterId, setChapterId] = useState(eisMypMathCourse[0].id);
   const activeChapter = useMemo(() => eisMypMathCourse.find((chapter) => chapter.id === chapterId) ?? eisMypMathCourse[0], [chapterId]);
   const [lessonId, setLessonId] = useState(activeChapter.lessons[0].id);
+  const [isLessonWindowOpen, setIsLessonWindowOpen] = useState(false);
+  const [isCourseMapOpen, setIsCourseMapOpen] = useState(false);
+  const [isChapterPanelOpen, setIsChapterPanelOpen] = useState(false);
   const lesson = useMemo(() => activeChapter.lessons.find((item) => item.id === lessonId) ?? activeChapter.lessons[0], [activeChapter, lessonId]);
+  const conceptPack = useMemo(() => getConceptResearchPack(lesson, activeChapter), [lesson, activeChapter]);
+  const generatedLessonPackage = useMemo(
+    () => generateLessonAssetPackage(inputFromCourseLesson(lesson, activeChapter.title)),
+    [lesson, activeChapter.title],
+  );
   const chapterIndex = eisMypMathCourse.findIndex((chapter) => chapter.id === activeChapter.id);
   const accent = chapterAccent[Math.max(0, chapterIndex)] ?? '#6366f1';
   const lessonCount = eisMypMathCourse.reduce((count, chapter) => count + chapter.lessons.length, 0);
@@ -154,6 +1040,12 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
     const nextChapter = eisMypMathCourse.find((chapter) => chapter.id === id) ?? eisMypMathCourse[0];
     setChapterId(nextChapter.id);
     setLessonId(nextChapter.lessons[0].id);
+    setIsLessonWindowOpen(false);
+  };
+
+  const openLessonWindow = (id: string) => {
+    setLessonId(id);
+    setIsLessonWindowOpen(true);
   };
 
   const saveLessonAssignment = (destination?: TabType) => {
@@ -167,8 +1059,8 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
         `${activeChapter.chapter}: ${activeChapter.title}`,
         `Textbook section: ${lesson.textbookSection}`,
         `Inquiry: ${lesson.inquiry}`,
-        `Complete the animated explanation, worked example and exercise set.`,
-        `Evidence: ${lesson.exercises.fluency[0]} ${lesson.exercises.reasoning[0]} Extension: ${lesson.exercises.extension}`,
+        `Use the full-window concept studio with 5 illustration strategies, 5 worked examples and 5 student exercises.`,
+        `Evidence: ${conceptPack.exercises[0].prompt} ${conceptPack.exercises[1].prompt} Extension: ${lesson.exercises.extension}`,
       ].join('\n'),
       createdAt: new Date().toISOString(),
     };
@@ -202,10 +1094,28 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[340px_1fr]">
-        <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="px-1 text-lg font-semibold text-gray-900">Full Course Chapters</h2>
-          <div className="mt-4 space-y-2">
+      <section className="grid gap-5 xl:grid-cols-[320px_1fr]">
+        <div className="self-start rounded-lg border border-gray-200 bg-white shadow-sm">
+          <button
+            onClick={() => setIsCourseMapOpen((value) => !value)}
+            className="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-gray-50"
+            aria-expanded={isCourseMapOpen}
+          >
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Course navigator</p>
+              <h2 className="mt-1 text-lg font-semibold text-gray-900">Full Course Chapters</h2>
+              <p className="mt-1 text-sm text-gray-500">{eisMypMathCourse.length} chapters · {lessonCount} lessons</p>
+            </div>
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gray-100 text-gray-700">
+              <ChevronDown className={`h-4 w-4 transition-transform ${isCourseMapOpen ? 'rotate-180' : ''}`} />
+            </span>
+          </button>
+          <div className="border-t border-gray-100 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Selected</p>
+            <p className="mt-1 font-semibold text-gray-900">{activeChapter.chapter}: {activeChapter.title}</p>
+          </div>
+          {isCourseMapOpen ? (
+          <div className="space-y-2 border-t border-gray-100 p-4">
             {eisMypMathCourse.map((chapter, index) => {
               const active = chapter.id === activeChapter.id;
               return (
@@ -228,24 +1138,37 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
               );
             })}
           </div>
+          ) : null}
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+            <button
+              onClick={() => setIsChapterPanelOpen((value) => !value)}
+              className="flex w-full items-start justify-between gap-4 p-5 text-left transition hover:bg-gray-50"
+              aria-expanded={isChapterPanelOpen}
+            >
               <div>
                 <div className="mb-3 inline-flex items-center gap-2 rounded-md bg-gray-100 px-3 py-2 text-xs font-bold uppercase tracking-wide text-gray-600">
                   <BookOpen className="h-4 w-4" />
                   {activeChapter.chapter} · {activeChapter.textbookStart}
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">{activeChapter.title}</h2>
-                <p className="mt-2 max-w-3xl text-gray-600">{activeChapter.statementOfInquiry}</p>
+                <p className="mt-2 max-w-3xl text-sm text-gray-600">{isChapterPanelOpen ? activeChapter.statementOfInquiry : `${activeChapter.lessons.length} lessons · selected lesson: ${lesson.title}`}</p>
               </div>
-              <a href={game.href} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white transition hover:bg-slate-800">
-                NeuroQuest Practice <Play className="h-4 w-4" />
-              </a>
-            </div>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gray-100 text-gray-700">
+                <ChevronDown className={`h-4 w-4 transition-transform ${isChapterPanelOpen ? 'rotate-180' : ''}`} />
+              </span>
+            </button>
 
+            {isChapterPanelOpen ? (
+            <div className="border-t border-gray-100 p-5">
+              <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <p className="text-sm leading-6 text-gray-600">Choose a subtopic to open the full-window cinematic lesson. Keep this panel collapsed during teaching for a cleaner workspace.</p>
+                <a href={game.href} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white transition hover:bg-slate-800">
+                  NeuroQuest Practice <Play className="h-4 w-4" />
+                </a>
+              </div>
             <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {activeChapter.lessons.map((item) => {
                 const Icon = animationIcon[item.animation];
@@ -253,16 +1176,38 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setLessonId(item.id)}
+                    onClick={() => openLessonWindow(item.id)}
                     className={`rounded-lg border p-4 text-left transition ${active ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 hover:bg-gray-50'}`}
                   >
                     <Icon className="mb-3 h-5 w-5" style={{ color: accent }} />
                     <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{item.textbookSection}</p>
                     <h3 className="mt-1 font-semibold text-gray-900">{item.title}</h3>
+                    <p className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-indigo-700">
+                      Open full-window lab <ArrowRight className="h-3.5 w-3.5" />
+                    </p>
                   </button>
                 );
               })}
             </div>
+            </div>
+            ) : (
+              <div className="border-t border-gray-100 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Active lesson</p>
+                    <p className="truncate font-semibold text-gray-900">{lesson.title}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setIsLessonWindowOpen(true)} className="inline-flex items-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
+                      Open Lesson <MonitorPlay className="h-4 w-4" />
+                    </button>
+                    <a href={game.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
+                      Practice <Play className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
@@ -281,44 +1226,47 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
                     </div>
                   ))}
                 </div>
+                <button onClick={() => setIsLessonWindowOpen(true)} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white transition hover:bg-slate-800">
+                  Open Full-Window Concept Lab <MonitorPlay className="h-4 w-4" />
+                </button>
               </div>
 
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900">Worked Example</h3>
-                <p className="mt-3 font-semibold text-gray-800">{lesson.workedExample.prompt}</p>
-                <ol className="mt-4 space-y-3">
-                  {lesson.workedExample.steps.map((step, index) => (
-                    <li key={step} className="flex gap-3">
-                      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: accent }}>{index + 1}</span>
-                      <span className="text-sm leading-6 text-gray-700">{step}</span>
-                    </li>
+                <h3 className="text-lg font-semibold text-gray-900">Five Worked Examples</h3>
+                <div className="mt-4 space-y-3">
+                  {conceptPack.examples.map((example, index) => (
+                    <article key={`${example.label}-${example.prompt}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex gap-3">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: accent }}>{index + 1}</span>
+                        <div>
+                          <p className="font-semibold text-gray-900">{example.prompt}</p>
+                          <p className="mt-2 text-sm leading-6 text-gray-700">{example.method}</p>
+                          <p className="mt-2 font-mono text-sm font-bold text-slate-950">Answer: {example.answer}</p>
+                        </div>
+                      </div>
+                    </article>
                   ))}
-                </ol>
-                <div className="mt-4 rounded-lg bg-slate-950 p-4 font-mono text-sm font-bold text-white">
-                  Answer: {lesson.workedExample.answer}
                 </div>
               </div>
             </div>
 
             <div className="space-y-6">
               <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900">Exercises</h3>
-                <div className="mt-4 space-y-5">
-                  <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Fluency</p>
-                    <ul className="space-y-2">
-                      {lesson.exercises.fluency.map((item) => <li key={item} className="rounded-lg bg-gray-50 p-3 text-sm text-gray-700">{item}</li>)}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Reasoning</p>
-                    <ul className="space-y-2">
-                      {lesson.exercises.reasoning.map((item) => <li key={item} className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-900">{item}</li>)}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">Extension</p>
-                    <div className="rounded-lg bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">{lesson.exercises.extension}</div>
+                <h3 className="text-lg font-semibold text-gray-900">Five Exercises</h3>
+                <div className="mt-4 space-y-3">
+                  {conceptPack.exercises.map((exercise, index) => (
+                    <article key={`${exercise.label}-${exercise.prompt}`} className="rounded-lg bg-indigo-50 p-4 text-sm text-indigo-950">
+                      <div className="flex gap-3">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-sm font-black text-indigo-700">{index + 1}</span>
+                        <div>
+                          <p className="font-semibold">{exercise.prompt}</p>
+                          <p className="mt-2 leading-6 text-indigo-800"><strong>Success check:</strong> {exercise.successCheck}</p>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                  <div className="rounded-lg bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">
+                    <strong>Extension:</strong> {lesson.exercises.extension}
                   </div>
                 </div>
               </div>
@@ -349,6 +1297,25 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
           </div>
         </div>
       </section>
+
+      {isLessonWindowOpen ? (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950">
+          <div className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/90 px-5 py-4 backdrop-blur">
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Generated cinematic lesson</p>
+                <h2 className="text-xl font-black text-white">{lesson.title}</h2>
+              </div>
+              <button onClick={() => setIsLessonWindowOpen(false)} className="inline-flex items-center gap-2 rounded-md border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/50">
+                Close <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <div className="mx-auto max-w-7xl p-4 md:p-6">
+            <CinematicLessonPlayer packageData={generatedLessonPackage} />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -5,6 +5,7 @@ export default defineConfig([
   {
     ignores: [
       '.next/**',
+      '.claude/**',
       'node_modules/**',
       'neuroquest-academy-integration/**',
       'tmpnetroquest-academy/**',
