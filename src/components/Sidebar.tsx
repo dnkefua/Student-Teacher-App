@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -11,6 +12,8 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+const brandLogoSrc = '/eis-maths-studio-logo.png';
 
 export type TabType = 'dashboard' | 'eis-maths' | 'place-value-lesson' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
 
@@ -45,15 +48,20 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: SidebarP
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:h-screen flex flex-col",
+        "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[#18345f] bg-[#050711] text-white shadow-2xl shadow-[#061126]/30 transform transition-transform duration-200 ease-in-out md:translate-x-0 md:static md:h-screen",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
-          <div className="flex items-center gap-2 font-bold text-xl text-indigo-600">
-            <BookOpen className="w-6 h-6" />
-            <span>EduQuest AI</span>
+        <div className="flex h-20 items-center justify-between border-b border-white/10 px-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-md border border-[#49c8ff]/25 bg-[#071126] shadow-[0_0_28px_rgba(73,200,255,.18)]">
+              <Image src={brandLogoSrc} alt="EIS Maths Studio logo" width={44} height={44} className="h-11 w-11 object-contain" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black uppercase tracking-wide text-white">EIS Maths Studio</p>
+              <p className="truncate text-xs font-semibold text-[#8ddfff]">Student Teacher App</p>
+            </div>
           </div>
-          <button onClick={() => setIsOpen(false)} className="md:hidden p-1 text-gray-500 hover:bg-gray-100 rounded-md">
+          <button onClick={() => setIsOpen(false)} className="rounded-md p-1 text-slate-300 hover:bg-white/10 hover:text-white md:hidden">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -70,27 +78,27 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: SidebarP
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors",
                   isActive 
-                    ? "bg-indigo-50 text-indigo-700" 
-                    : "text-gray-700 hover:bg-gray-100"
+                    ? "bg-[#ffc43b] text-[#061126] shadow-[0_0_28px_rgba(255,196,59,.16)]" 
+                    : "text-slate-300 hover:bg-[#0d1e43] hover:text-white"
                 )}
               >
-                <Icon className={cn("w-5 h-5", isActive ? "text-indigo-700" : "text-gray-400")} />
+                <Icon className={cn("h-5 w-5", isActive ? "text-[#061126]" : "text-[#8ddfff]")} />
                 {item.label}
               </button>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#49c8ff] font-black text-[#061126]">
               T
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-medium text-gray-900">Teacher Profile</span>
-              <span className="text-xs text-gray-500">Settings</span>
+              <span className="text-sm font-bold text-white">Teacher Profile</span>
+              <span className="text-xs text-slate-400">Settings</span>
             </div>
           </div>
         </div>

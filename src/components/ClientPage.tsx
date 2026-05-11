@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import React, { useState } from 'react';
 import { Sidebar, TabType } from '@/components/Sidebar';
 import { Menu } from 'lucide-react';
@@ -12,12 +13,14 @@ import { NeuroQuestHub } from '@/components/NeuroQuestHub';
 import { EISMathStudio } from '@/components/EISMathStudio';
 import { LessonGenerator } from '@/components/CinematicLessonEngine';
 
+const brandLogoSrc = '/eis-maths-studio-logo.png';
+
 export function ClientPage() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#f6f8fc]">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
@@ -27,13 +30,17 @@ export function ClientPage() {
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200 shrink-0">
-          <div className="flex items-center gap-2 font-bold text-xl text-indigo-600">
-            <span>EduQuest AI</span>
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#18345f] bg-[#050711] px-4 md:hidden">
+          <div className="flex min-w-0 items-center gap-3">
+            <Image src={brandLogoSrc} alt="EIS Maths Studio logo" width={40} height={40} className="h-10 w-10 rounded-md object-contain" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black uppercase tracking-wide text-white">EIS Maths Studio</p>
+              <p className="truncate text-xs font-semibold text-[#8ddfff]">Student Teacher App</p>
+            </div>
           </div>
           <button 
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-gray-500 hover:bg-gray-100 rounded-md"
+            className="rounded-md p-2 text-[#8ddfff] hover:bg-white/10 hover:text-white"
           >
             <Menu className="w-6 h-6" />
           </button>

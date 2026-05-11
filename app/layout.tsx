@@ -2,8 +2,12 @@ import type {Metadata} from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'EduQuest AI | Teacher Assistant + NeuroQuest Academy',
-  description: 'A unified AI teacher assistant and NeuroQuest game-based learning workspace.',
+  title: 'EIS Maths Studio | Student Teacher App',
+  description: 'A branded AI teaching workspace for EIS maths lessons, cinematic explainers, live class tools and NeuroQuest practice.',
+  icons: {
+    icon: '/eis-maths-studio-logo.png',
+    apple: '/eis-maths-studio-logo.png',
+  },
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
