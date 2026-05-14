@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.ndnanalytics.eismathsstudio",
+      "sha256_cert_fingerprints": [
+        "04:33:39:0C:1B:4C:9E:DE:5B:F9:61:26:42:C9:DD:88:B9:43:09:EA:F7:0A:83:20:27:58:7F:0A:A6:AD:59:A7"
+      ]
+    }
+  }
+]
