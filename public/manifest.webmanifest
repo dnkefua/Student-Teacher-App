@@ -1,0 +1,58 @@
+{
+  "id": "/",
+  "name": "EIS Maths Studio",
+  "short_name": "EIS Maths",
+  "description": "Student Teacher App for EIS maths lessons, cinematic explainers, live teaching and NeuroQuest practice.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#050711",
+  "theme_color": "#050711",
+  "orientation": "any",
+  "categories": ["education", "productivity"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "EIS Grade 8 Maths",
+      "short_name": "Grade 8",
+      "description": "Open the EIS Grade 8 maths studio.",
+      "url": "/?section=eis-maths",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Virtual Classroom",
+      "short_name": "Classroom",
+      "description": "Open camera-ready online teaching tools.",
+      "url": "/?section=classroom",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
