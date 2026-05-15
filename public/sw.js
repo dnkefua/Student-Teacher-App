@@ -1,4 +1,4 @@
-const CACHE_NAME = 'eis-maths-studio-v1';
+const CACHE_NAME = 'eis-maths-studio-v2';
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',

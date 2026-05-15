@@ -8,6 +8,16 @@ export function ServiceWorkerRegister() {
       return;
     }
 
+    if (process.env.NODE_ENV !== 'production') {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((reg) => reg.unregister());
+      });
+      if (window.caches) {
+        caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+      }
+      return;
+    }
+
     const register = () => {
       navigator.serviceWorker.register('/sw.js').catch(() => undefined);
     };

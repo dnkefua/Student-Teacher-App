@@ -90,7 +90,7 @@ export function Pythagoras3D() {
   );
 }
 
-export function EquationBalance3D() {
+function BalanceScene() {
   const beam = useRef<THREE.Mesh>(null);
   useFrame(({ clock }) => {
     if (!beam.current) return;
@@ -98,11 +98,7 @@ export function EquationBalance3D() {
   });
 
   return (
-    <SceneCard
-      title="EquationBalance3D"
-      caption="The equation behaves like a scale: every inverse operation must happen on both sides."
-    >
-      <FloatingGroup>
+    <FloatingGroup>
         <mesh position={[0, -0.4, 0]}>
           <cylinderGeometry args={[0.08, 0.24, 1.1, 24]} />
           <meshStandardMaterial color="#d8f6ff" metalness={0.35} roughness={0.35} />
@@ -142,7 +138,17 @@ export function EquationBalance3D() {
         <Label position={[-1.65, 0.78, 0.3]}>5x - 7</Label>
         <Label position={[1.75, 0.78, 0.3]}>28</Label>
         <Label position={[0, -1.15, 0.3]}>add 7, then divide by 5</Label>
-      </FloatingGroup>
+    </FloatingGroup>
+  );
+}
+
+export function EquationBalance3D() {
+  return (
+    <SceneCard
+      title="EquationBalance3D"
+      caption="The equation behaves like a scale: every inverse operation must happen on both sides."
+    >
+      <BalanceScene />
     </SceneCard>
   );
 }
