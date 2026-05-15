@@ -1071,6 +1071,31 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
 
   return (
     <div className="space-y-8">
+      <section className="rounded-lg border border-[#49c8ff]/25 bg-gradient-to-r from-[#0a1736] via-[#061126] to-[#050711] p-4 text-white">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">EIS Maths Studio · Upgraded experience available</p>
+            <p className="mt-1 text-sm font-semibold leading-6 text-slate-200">
+              The new <span className="font-black text-white">Lesson Player</span> pairs an animated explainer with the matching 3D scene and Firestore-persisted progress. The <span className="font-black text-white">Upload Studio</span> generates full lessons from your own materials via Gemma 4.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveTab?.('lesson')}
+              className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-3 py-2 text-xs font-black text-[#061126] transition hover:bg-[#8ddfff]"
+            >
+              Open Lesson Player <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={() => setActiveTab?.('upload-studio')}
+              className="inline-flex items-center gap-2 rounded-md border border-[#ffc43b]/40 px-3 py-2 text-xs font-black text-[#ffe08a] transition hover:bg-[#ffc43b]/10"
+            >
+              Open Upload Studio <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section className="overflow-hidden rounded-lg border border-slate-200 bg-slate-950 text-white shadow-sm">
         <div className="grid gap-8 p-6 lg:grid-cols-[0.92fr_1.08fr] lg:p-8">
           <div>

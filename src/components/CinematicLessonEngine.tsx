@@ -1509,7 +1509,12 @@ export function CinematicLessonPlayer({ packageData }: { packageData: LessonVide
   );
 }
 
-export function LessonGenerator({ initialInput = defaultPlaceValueGeneratorInput }: { initialInput?: LessonGeneratorInput }) {
+type LessonGeneratorProps = {
+  initialInput?: LessonGeneratorInput;
+  setActiveTab?: (tab: 'upload-studio' | 'lesson') => void;
+};
+
+export function LessonGenerator({ initialInput = defaultPlaceValueGeneratorInput, setActiveTab }: LessonGeneratorProps) {
   const [input, setInput] = useState<LessonGeneratorInput>(initialInput);
   const packageData = useMemo(() => generateLessonAssetPackage(input), [input]);
 
@@ -1522,6 +1527,32 @@ export function LessonGenerator({ initialInput = defaultPlaceValueGeneratorInput
 
   return (
     <div className="space-y-6">
+      {setActiveTab ? (
+        <section className="rounded-lg border border-[#ffc43b]/30 bg-gradient-to-r from-[#0a1736] via-[#061126] to-[#050711] p-4 text-white">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-wide text-[#ffe08a]">Upgraded AI generation path</p>
+              <p className="mt-1 text-sm font-semibold leading-6 text-slate-200">
+                For lessons that flow into the Lesson Player + Firestore library, use the new <span className="font-black text-white">Upload Studio</span> — it calls Gemma 4 via <span className="font-mono text-[#8ddfff]">/api/generate-lesson</span> and saves the full structured output.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setActiveTab?.('upload-studio')}
+                className="inline-flex items-center gap-2 rounded-md bg-[#ffc43b] px-3 py-2 text-xs font-black text-[#061126] transition hover:bg-[#ffe08a]"
+              >
+                Open Upload Studio
+              </button>
+              <button
+                onClick={() => setActiveTab?.('lesson')}
+                className="inline-flex items-center gap-2 rounded-md border border-[#49c8ff]/40 px-3 py-2 text-xs font-black text-[#8ddfff] transition hover:bg-[#49c8ff]/10"
+              >
+                Open Lesson Player
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
       <section className="overflow-hidden rounded-lg border border-[#49c8ff]/20 bg-[#050711] p-5 text-white shadow-[0_24px_80px_rgba(5,7,17,.18)]">
         <div className="flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#ffc43b] text-[#061126]">

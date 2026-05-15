@@ -63,7 +63,7 @@ export function ClientPage() {
             {activeTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={setActiveTab} />}
             {activeTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={setActiveTab} />}
             {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
-            {activeTab === 'place-value-lesson' && <LessonGenerator />}
+            {activeTab === 'place-value-lesson' && <LessonGenerator setActiveTab={setActiveTab} />}
             {activeTab === 'upload-studio' && <TeacherUploadStudio />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}
             {activeTab === 'grader' && <Grader />}

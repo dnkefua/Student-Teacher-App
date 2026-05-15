@@ -29,6 +29,7 @@ import {
 } from '@/components/Math3DExplainers';
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
 import { StudentAssignmentList } from '@/components/StudentAssignmentList';
+import { SystemStatusStrip } from '@/components/SystemStatusStrip';
 import {
   assignDemoQuestion,
   defaultDemoAssignment,
@@ -567,6 +568,7 @@ export function DashboardHome({ mode, setMode, setActiveTab }: DashboardHomeProp
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_at_top,rgba(73,200,255,.10),transparent_60%)]" aria-hidden="true" />
       <div className="relative space-y-6">
         <ModeBar mode={mode} setMode={setMode} />
+        <SystemStatusStrip />
 
         {mode === 'teacher' ? (
           <TeacherDashboard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />
