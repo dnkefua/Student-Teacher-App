@@ -6,9 +6,11 @@ import {
   BarChart3,
   BrainCircuit,
   Camera,
+  Check,
   CheckCircle2,
   ClipboardCheck,
   Gem,
+  Loader2,
   MonitorPlay,
   Play,
   School,
@@ -28,8 +30,8 @@ import {
 import {
   assignDemoQuestion,
   defaultDemoAssignment,
+  isFirestoreBacked,
   loadDemoAssignment,
-  saveDemoAssignment,
   submitDemoAnswer,
   type LearningMode,
   type DemoAssignment,
@@ -95,11 +97,32 @@ function HeroBackdrop() {
   );
 }
 
+function PersistenceBadge() {
+  const backed = isFirestoreBacked();
+  if (backed) {
+    return (
+      <span className="inline-flex items-center gap-2 rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#49c8ff]" />
+        Firestore persistence on
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-2 rounded-md border border-[#ffc43b]/35 bg-[#ffc43b]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#ffe08a]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#ffc43b]" />
+      Demo mode · Firestore not configured
+    </span>
+  );
+}
+
 function ModeBar({ mode, setMode }: { mode: LearningMode; setMode: (mode: LearningMode) => void }) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/5 p-3 backdrop-blur md:flex-row md:items-center md:justify-between">
       <div>
-        <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Premium demo path</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Premium demo path</p>
+          <PersistenceBadge />
+        </div>
         <p className="mt-1 text-sm font-semibold text-slate-200">
           Landing → Launch App → Teacher Dashboard → EIS Maths → AI 3D Generator → Assign → Student Submit → Virtual Classroom
         </p>
@@ -150,7 +173,7 @@ function TeacherAssignmentCard({
   setActiveTab,
 }: {
   assignment: DemoAssignment;
-  onAssign: (questionId: string) => void;
+  onAssign: (questionId: string) => Promise<void>;
   setActiveTab: (tab: TabType) => void;
 }) {
   const [selectedUnit, setSelectedUnit] = useState<CurriculumUnit>(() => {
@@ -158,6 +181,19 @@ function TeacherAssignmentCard({
     return current?.unit ?? 'abstract';
   });
   const [selectedId, setSelectedId] = useState<string>(assignment.questionId);
+  const [assignState, setAssignState] = useState<'idle' | 'pending' | 'done'>('idle');
+
+  const handleAssign = async () => {
+    if (assignState === 'pending') return;
+    setAssignState('pending');
+    try {
+      await onAssign(selectedId);
+      setAssignState('done');
+      window.setTimeout(() => setAssignState('idle'), 1800);
+    } catch {
+      setAssignState('idle');
+    }
+  };
 
   const visibleQuestions = useMemo(
     () => grade8Curriculum.filter((q) => q.unit === selectedUnit),
@@ -241,9 +277,33 @@ function TeacherAssignmentCard({
       </div>
 
       <div className="relative mt-5 grid gap-3 md:grid-cols-3">
-        <button onClick={() => onAssign(selectedId)} className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ffc43b] px-4 py-3 font-black text-[#061126] transition hover:bg-[#ffe08a]">
-          <Send className="h-4 w-4" />
-          Assign to Student
+        <button
+          onClick={handleAssign}
+          disabled={assignState === 'pending'}
+          className={`relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-md px-4 py-3 font-black transition ${
+            assignState === 'done'
+              ? 'bg-emerald-400 text-[#061126] shadow-[0_0_24px_rgba(74,222,128,.55)]'
+              : assignState === 'pending'
+              ? 'bg-[#ffc43b]/80 text-[#061126]'
+              : 'animate-eis-pulse bg-[#ffc43b] text-[#061126] shadow-[0_0_22px_rgba(255,196,59,.35)] hover:bg-[#ffe08a] hover:shadow-[0_0_28px_rgba(255,196,59,.55)] active:scale-[0.97]'
+          }`}
+        >
+          {assignState === 'done' ? (
+            <>
+              <Check className="h-4 w-4" />
+              Assigned!
+            </>
+          ) : assignState === 'pending' ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Assigning…
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              Assign to Student
+            </>
+          )}
         </button>
         <button onClick={() => setActiveTab('place-value-lesson')} className="inline-flex items-center justify-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#49c8ff] hover:text-[#8ddfff]">
           <Gem className="h-4 w-4" />
@@ -271,11 +331,20 @@ function TeacherAssignmentCard({
 
 function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { assignment: DemoAssignment; setAssignment: (assignment: DemoAssignment) => void; setActiveTab: (tab: TabType) => void }) {
   const [answer, setAnswer] = useState(assignment.submission?.answer ?? '');
+  const [submitState, setSubmitState] = useState<'idle' | 'pending' | 'done'>('idle');
   const assigned = assignment.status !== 'draft';
 
-  const submit = () => {
-    if (!answer.trim()) return;
-    setAssignment(submitDemoAnswer(answer));
+  const submit = async () => {
+    if (!answer.trim() || submitState === 'pending') return;
+    setSubmitState('pending');
+    try {
+      const next = await submitDemoAnswer(answer);
+      setAssignment(next);
+      setSubmitState('done');
+      window.setTimeout(() => setSubmitState('idle'), 1800);
+    } catch {
+      setSubmitState('idle');
+    }
   };
 
   return (
@@ -310,8 +379,34 @@ function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { as
             placeholder="Example: Add 7 to both sides, then divide by 5. x = 7. Check: 5(7) - 7 = 28."
           />
           <div className="relative mt-4 flex flex-wrap gap-3">
-            <button onClick={submit} className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-4 py-3 font-black text-[#061126] transition hover:bg-[#8ddfff]">
-              Submit Answer <Send className="h-4 w-4" />
+            <button
+              onClick={submit}
+              disabled={submitState === 'pending' || !answer.trim()}
+              className={`relative inline-flex items-center gap-2 overflow-hidden rounded-md px-4 py-3 font-black transition ${
+                submitState === 'done'
+                  ? 'bg-emerald-400 text-[#061126] shadow-[0_0_24px_rgba(74,222,128,.55)]'
+                  : submitState === 'pending'
+                  ? 'bg-[#49c8ff]/80 text-[#061126]'
+                  : !answer.trim()
+                  ? 'bg-[#49c8ff]/30 text-[#061126]/50 cursor-not-allowed'
+                  : 'animate-eis-pulse bg-[#49c8ff] text-[#061126] shadow-[0_0_22px_rgba(73,200,255,.35)] hover:bg-[#8ddfff] hover:shadow-[0_0_28px_rgba(73,200,255,.55)] active:scale-[0.97]'
+              }`}
+            >
+              {submitState === 'done' ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Submitted!
+                </>
+              ) : submitState === 'pending' ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Submitting…
+                </>
+              ) : (
+                <>
+                  Submit Answer <Send className="h-4 w-4" />
+                </>
+              )}
             </button>
             <button onClick={() => setActiveTab('eis-maths')} className="inline-flex items-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]">
               Study 3D Lesson <ArrowRight className="h-4 w-4" />
@@ -336,9 +431,8 @@ function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { as
 function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignment: DemoAssignment; setAssignment: (assignment: DemoAssignment) => void; setActiveTab: (tab: TabType) => void }) {
   const today = useMemo(() => 'Solving equations with visual balance models', []);
 
-  const assign = (questionId: string) => {
-    const next = assignDemoQuestion(questionId);
-    saveDemoAssignment(next);
+  const assign = async (questionId: string) => {
+    const next = await assignDemoQuestion(questionId);
     setAssignment(next);
   };
 

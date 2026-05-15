@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@theme {
+  --animate-eis-pulse: eis-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes eis-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.025);
+    filter: brightness(1.08);
+  }
+}

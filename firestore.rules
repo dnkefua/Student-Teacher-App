@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// EIS Maths Studio · DEMO RULES
+// These rules are intentionally OPEN for the EIS evaluation period so the
+// platform works without a real auth flow (the demo uses per-role IDs
+// stored in localStorage, not Firebase Auth).
+//
+// Before any non-demo production traffic, tighten by:
+//   1. Adding Firebase Auth and requiring `request.auth.uid` matches the
+//      document's `studentId` / `teacherId` / `createdBy` field.
+//   2. Scoping reads to a user's own classIds.
+//   3. Locking writes to authenticated teachers for the `assignments`,
+//      `lessons` and `generatedLessons` collections.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}           { allow read, write: if true; }
+    match /classes/{classId}        { allow read, write: if true; }
+    match /courses/{courseId}       { allow read, write: if true; }
+    match /lessons/{lessonId}       { allow read, write: if true; }
+    match /assignments/{aid}        { allow read, write: if true; }
+    match /studentResponses/{rid}   { allow read, write: if true; }
+    match /generatedLessons/{lid}   { allow read, write: if true; }
+    match /lessonProgress/{pid}     { allow read, write: if true; }
+  }
+}
