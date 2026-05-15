@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, Check, Gem, GraduationCap, Loader2, MonitorPlay, Save, Send, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Gem, GraduationCap, Loader2, MonitorPlay, Save, Send, Sparkles, Wand2 } from 'lucide-react';
 import { AnimatedExplainer } from './AnimatedExplainer';
 import { ExplainerByType } from './Math3DExplainers';
 import {
@@ -11,6 +11,8 @@ import {
   type CurriculumQuestion,
 } from '@/lib/grade8Curriculum';
 import { assignDemoQuestion, type DemoAssignment } from '@/lib/demoAssignments';
+import { aiGenerateAssignment } from '@/lib/ai/client';
+import type { GenerateAssignmentOutput } from '@/lib/ai/types';
 
 export function TeacherLessonWorkspace({
   assignment,
@@ -31,6 +33,31 @@ export function TeacherLessonWorkspace({
 
   const [assignState, setAssignState] = useState<'idle' | 'pending' | 'done'>('idle');
   const [savedToast, setSavedToast] = useState(false);
+  const [generateState, setGenerateState] = useState<'idle' | 'pending' | 'done' | 'error'>('idle');
+  const [generated, setGenerated] = useState<GenerateAssignmentOutput | null>(null);
+  const [generatedSource, setGeneratedSource] = useState<'ai' | 'mock' | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+
+  const generateMore = async () => {
+    if (generateState === 'pending' || !question) return;
+    setGenerateState('pending');
+    setGenerateError(null);
+    try {
+      const response = await aiGenerateAssignment({
+        topic: question.topic,
+        unit: question.unit,
+        difficulty: question.difficulty,
+        count: 3,
+        inquiryQuestion: question.inquiryQuestion,
+      });
+      setGenerated(response.data);
+      setGeneratedSource(response.source);
+      setGenerateState('done');
+    } catch (err) {
+      setGenerateError(err instanceof Error ? err.message : 'AI request failed.');
+      setGenerateState('error');
+    }
+  };
 
   const reassign = async () => {
     if (assignState === 'pending') return;
@@ -162,12 +189,20 @@ export function TeacherLessonWorkspace({
             Teach live
           </button>
           <button
-            onClick={onOpenGenerator}
-            disabled={!onOpenGenerator}
-            className="inline-flex items-center justify-center gap-2 rounded-md border border-white/15 px-4 py-3 text-sm font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b] disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={generateMore}
+            disabled={generateState === 'pending'}
+            className={`inline-flex items-center justify-center gap-2 rounded-md border px-4 py-3 text-sm font-black transition ${
+              generateState === 'done'
+                ? 'border-emerald-300 text-emerald-200'
+                : 'border-white/15 text-white hover:border-[#ffc43b] hover:text-[#ffc43b]'
+            } disabled:cursor-not-allowed disabled:opacity-60`}
           >
-            <Gem className="h-4 w-4" />
-            Generate extra questions
+            {generateState === 'pending' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Wand2 className="h-4 w-4" />
+            )}
+            {generateState === 'pending' ? 'Generating…' : 'Generate extra questions'}
           </button>
           <button
             onClick={fakeSave}
@@ -178,9 +213,58 @@ export function TeacherLessonWorkspace({
           </button>
         </div>
         <p className="mt-4 text-[11px] text-slate-500">
-          <span className="font-black uppercase tracking-wide text-slate-400">Teach live</span> and{' '}
-          <span className="font-black uppercase tracking-wide text-slate-400">Generate extra</span> hook into the Virtual Classroom and AI generator panels respectively. <span className="font-black uppercase tracking-wide text-slate-400">Save lesson</span> will persist to Firestore in a later phase.
+          <span className="font-black uppercase tracking-wide text-slate-400">Teach live</span> opens the Virtual Classroom; <span className="font-black uppercase tracking-wide text-slate-400">Generate extra</span> calls the Gemma 4 assignment route inline below; <span className="font-black uppercase tracking-wide text-slate-400">Save lesson</span> will persist to Firestore in a later phase.
+          {onOpenGenerator ? (
+            <>
+              {' '}Need the full lesson generator instead?{' '}
+              <button onClick={onOpenGenerator} className="font-black text-[#8ddfff] underline-offset-2 hover:underline">
+                Open AI 3D Lesson Generator
+              </button>
+            </>
+          ) : null}
         </p>
+
+        {generateState !== 'idle' ? (
+          <div className="mt-5 rounded-lg border border-white/10 bg-[#050711]/60 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-black uppercase tracking-wide text-[#ffe08a]">
+                <Sparkles className="mr-1 inline h-3.5 w-3.5 -translate-y-0.5" />
+                AI-generated questions
+              </p>
+              {generatedSource ? (
+                <span
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+                    generatedSource === 'ai'
+                      ? 'border-[#49c8ff]/30 bg-[#49c8ff]/10 text-[#8ddfff]'
+                      : 'border-[#ffc43b]/30 bg-[#ffc43b]/10 text-[#ffe08a]'
+                  }`}
+                >
+                  {generatedSource === 'ai' ? 'Gemma 4' : 'AI demo mode'}
+                </span>
+              ) : null}
+            </div>
+            {generateError ? (
+              <p className="mt-3 rounded-md border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm font-semibold text-red-100">
+                {generateError}
+              </p>
+            ) : generateState === 'pending' ? (
+              <p className="mt-3 text-sm text-slate-400">Asking Gemma 4 for fresh practice questions…</p>
+            ) : generated ? (
+              <ul className="mt-3 space-y-3">
+                {generated.questions.map((q, i) => (
+                  <li key={i} className="rounded-md border border-white/10 bg-white/[0.03] p-3">
+                    <p className="text-sm font-black text-white">{q.question}</p>
+                    <p className="mt-2 text-xs text-[#8ddfff]">Expected · {q.expectedAnswer}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Keywords · <span className="font-mono">{q.acceptedKeywords.join(' / ')}</span>
+                    </p>
+                    <p className="mt-2 text-xs leading-5 text-slate-300">{q.rubric}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="rounded-lg border border-white/10 bg-[#061126] p-5 text-sm text-slate-300">

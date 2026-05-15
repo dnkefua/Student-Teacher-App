@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 // useEffect retained for Firestore fetch only.
-import { ArrowRight, BookOpen, CheckCircle2, ClipboardCheck, Loader2, Send, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, CheckCircle2, ClipboardCheck, Loader2, Send, Sparkles, Wand2 } from 'lucide-react';
 import { AnimatedExplainer } from './AnimatedExplainer';
 import { ExplainerByType } from './Math3DExplainers';
 import {
@@ -14,6 +14,8 @@ import {
 import { submitDemoAnswer, type DemoAssignment } from '@/lib/demoAssignments';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
 import { getLessonProgress, saveLessonProgress } from '@/lib/firebase/firestore';
+import { aiGradeAnswer } from '@/lib/ai/client';
+import type { GradedAnswer } from '@/lib/ai/types';
 
 export function StudentLessonPlayer({
   assignment,
@@ -33,6 +35,10 @@ export function StudentLessonPlayer({
   const [answer, setAnswer] = useState(assignment.submission?.answer ?? '');
   const [submitState, setSubmitState] = useState<'idle' | 'pending' | 'done'>('idle');
   const [lessonComplete, setLessonComplete] = useState(false);
+  const [aiFeedbackState, setAiFeedbackState] = useState<'idle' | 'pending' | 'done' | 'error'>('idle');
+  const [aiFeedback, setAiFeedback] = useState<GradedAnswer | null>(null);
+  const [aiFeedbackSource, setAiFeedbackSource] = useState<'ai' | 'mock' | null>(null);
+  const [aiFeedbackError, setAiFeedbackError] = useState<string | null>(null);
 
   // Reset transient state when the assignment changes (render-time reset
   // pattern: cheaper than useEffect and avoids the setState-in-effect rule).
@@ -43,6 +49,10 @@ export function StudentLessonPlayer({
     setShowPractice(false);
     setLessonComplete(false);
     setAnswer(assignment.submission?.answer ?? '');
+    setAiFeedbackState('idle');
+    setAiFeedback(null);
+    setAiFeedbackSource(null);
+    setAiFeedbackError(null);
   }
 
   // Try to load existing progress from Firestore.
@@ -107,6 +117,27 @@ export function StudentLessonPlayer({
       window.setTimeout(() => setSubmitState('idle'), 1800);
     } catch {
       setSubmitState('idle');
+    }
+  };
+
+  const requestAiFeedback = async () => {
+    if (!question || !assignment.submission || aiFeedbackState === 'pending') return;
+    setAiFeedbackState('pending');
+    setAiFeedbackError(null);
+    try {
+      const response = await aiGradeAnswer({
+        question: question.question,
+        expectedAnswer: question.expectedAnswer,
+        acceptedKeywords: question.acceptedKeywords,
+        studentAnswer: assignment.submission.answer,
+        rubric: question.teacherNote,
+      });
+      setAiFeedback(response.data);
+      setAiFeedbackSource(response.source);
+      setAiFeedbackState('done');
+    } catch (err) {
+      setAiFeedbackError(err instanceof Error ? err.message : 'AI feedback failed.');
+      setAiFeedbackState('error');
     }
   };
 
@@ -259,12 +290,93 @@ export function StudentLessonPlayer({
           </button>
         </div>
         {assignment.submission ? (
-          <div className="mt-5 rounded-lg border border-green-300/30 bg-green-300/10 p-4">
-            <p className="flex items-center gap-2 text-sm font-black text-green-100">
-              <CheckCircle2 className="h-4 w-4" />
-              Feedback · {assignment.submission.score}%
-            </p>
-            <p className="mt-2 text-sm leading-6 text-green-50">{assignment.submission.feedback}</p>
+          <div className="mt-5 space-y-4">
+            <div className="rounded-lg border border-green-300/30 bg-green-300/10 p-4">
+              <p className="flex items-center gap-2 text-sm font-black text-green-100">
+                <CheckCircle2 className="h-4 w-4" />
+                Feedback · {assignment.submission.score}%
+              </p>
+              <p className="mt-2 text-sm leading-6 text-green-50">{assignment.submission.feedback}</p>
+            </div>
+
+            <div className="rounded-lg border border-white/10 bg-[#050711]/60 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="flex items-center gap-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">
+                  <Wand2 className="h-3.5 w-3.5" />
+                  AI breakdown
+                </p>
+                {aiFeedbackSource ? (
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+                      aiFeedbackSource === 'ai'
+                        ? 'border-[#49c8ff]/30 bg-[#49c8ff]/10 text-[#8ddfff]'
+                        : 'border-[#ffc43b]/30 bg-[#ffc43b]/10 text-[#ffe08a]'
+                    }`}
+                  >
+                    {aiFeedbackSource === 'ai' ? 'Gemma 4' : 'AI demo mode'}
+                  </span>
+                ) : null}
+              </div>
+
+              {aiFeedbackState === 'idle' ? (
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <p className="text-sm text-slate-300">
+                    Want a deeper breakdown of strengths, misconceptions and a next step? Ask Gemma 4 to review your answer.
+                  </p>
+                  <button
+                    onClick={requestAiFeedback}
+                    className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-3.5 py-2 text-xs font-black text-[#061126] transition hover:bg-[#8ddfff]"
+                  >
+                    <Wand2 className="h-3.5 w-3.5" />
+                    Get AI breakdown
+                  </button>
+                </div>
+              ) : null}
+
+              {aiFeedbackState === 'pending' ? (
+                <p className="mt-3 inline-flex items-center gap-2 text-sm text-slate-300">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Gemma is reviewing your answer…
+                </p>
+              ) : null}
+
+              {aiFeedbackState === 'error' && aiFeedbackError ? (
+                <p className="mt-3 rounded-md border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm font-semibold text-red-100">
+                  {aiFeedbackError}
+                </p>
+              ) : null}
+
+              {aiFeedbackState === 'done' && aiFeedback ? (
+                <div className="mt-3 space-y-3">
+                  <p className="text-3xl font-black text-white">{aiFeedback.score}%</p>
+                  <p className="text-sm leading-6 text-slate-200">{aiFeedback.feedback}</p>
+                  {aiFeedback.strengths.length > 0 ? (
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wide text-emerald-200">Strengths</p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm leading-6 text-emerald-50">
+                        {aiFeedback.strengths.map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {aiFeedback.misconceptions.length > 0 ? (
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wide text-[#ff8a73]">Watch out for</p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm leading-6 text-red-50">
+                        {aiFeedback.misconceptions.map((m, i) => (
+                          <li key={i}>{m}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wide text-[#ffe08a]">Next step</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-100">{aiFeedback.nextStep}</p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </section>
