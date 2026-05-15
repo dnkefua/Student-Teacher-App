@@ -14,6 +14,7 @@ import { EISMathStudio } from '@/components/EISMathStudio';
 import { LessonGenerator } from '@/components/CinematicLessonEngine';
 import { InteractiveLessonRenderer } from '@/components/InteractiveLessonRenderer';
 import { TeacherUploadStudio } from '@/components/TeacherUploadStudio';
+import { LearningDataHub } from '@/components/learningHub/LearningDataHub';
 import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
@@ -26,7 +27,8 @@ export function ClientPage() {
   const isDashboard = activeTab === 'dashboard';
   const isLesson = activeTab === 'lesson';
   const isUpload = activeTab === 'upload-studio';
-  const useDarkSurface = isDashboard || isLesson || isUpload;
+  const isLearningHub = activeTab === 'learning-hub';
+  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub;
 
   return (
     <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
@@ -62,6 +64,7 @@ export function ClientPage() {
           <div className="max-w-6xl mx-auto h-full">
             {activeTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={setActiveTab} />}
             {activeTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={setActiveTab} />}
+            {activeTab === 'learning-hub' && <LearningDataHub mode={mode} setActiveTab={setActiveTab} />}
             {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
             {activeTab === 'place-value-lesson' && <LessonGenerator setActiveTab={setActiveTab} />}
             {activeTab === 'upload-studio' && <TeacherUploadStudio />}

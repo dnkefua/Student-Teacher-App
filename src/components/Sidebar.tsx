@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   BookOpen,
   CheckSquare,
+  Database,
   MonitorPlay,
   Mail,
   Gamepad2,
@@ -18,7 +19,7 @@ import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
-export type TabType = 'dashboard' | 'lesson' | 'eis-maths' | 'place-value-lesson' | 'upload-studio' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
+export type TabType = 'dashboard' | 'lesson' | 'learning-hub' | 'eis-maths' | 'place-value-lesson' | 'upload-studio' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -33,6 +34,7 @@ export function Sidebar({ activeTab, setActiveTab, mode, setMode, isOpen, setIsO
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'lesson', label: 'Lesson Player', icon: GraduationCap },
+    { id: 'learning-hub', label: 'Learning Data Hub', icon: Database },
     { id: 'eis-maths', label: 'EIS Grade 8 Maths', icon: School },
     { id: 'place-value-lesson', label: 'AI 3D Lesson Generator', icon: Gem },
     { id: 'upload-studio', label: 'Upload Studio', icon: UploadCloud },
