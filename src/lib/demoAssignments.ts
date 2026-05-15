@@ -1,4 +1,4 @@
-import { checkAnswer, findQuestionById, grade8Curriculum, type CurriculumQuestion } from './grade8Curriculum';
+import { checkAnswer, findQuestionById, grade8Curriculum, type CurriculumQuestion, type ThreeDType } from './grade8Curriculum';
 
 export type LearningMode = 'teacher' | 'student';
 
@@ -14,17 +14,21 @@ export type DemoAssignment = {
   questionId: string;
   title: string;
   lessonTitle: string;
+  inquiryQuestion: string;
+  objective: string;
   question: string;
   prompt: string;
   expectedAnswer: string;
   teacherNote: string;
+  threeDType: ThreeDType;
+  difficulty: CurriculumQuestion['difficulty'];
   status: 'draft' | 'assigned' | 'submitted';
   createdAt: string;
   submission?: DemoSubmission;
 };
 
-const ASSIGNMENT_KEY = 'eis-demo-assignment-v2';
-const LEGACY_KEY = 'eis-demo-assignment-v1';
+const ASSIGNMENT_KEY = 'eis-demo-assignment-v3';
+const LEGACY_KEYS = ['eis-demo-assignment-v2', 'eis-demo-assignment-v1'];
 
 const defaultQuestion = grade8Curriculum[0];
 
@@ -34,10 +38,14 @@ function buildAssignment(question: CurriculumQuestion, status: DemoAssignment['s
     questionId: question.id,
     title: question.title,
     lessonTitle: `${question.unitLabel} · ${question.topic}`,
+    inquiryQuestion: question.inquiryQuestion,
+    objective: question.objective,
     question: question.question,
     prompt: question.prompt,
     expectedAnswer: question.expectedAnswer,
     teacherNote: question.teacherNote,
+    threeDType: question.threeDType,
+    difficulty: question.difficulty,
     status,
     createdAt: new Date().toISOString(),
   };
@@ -52,7 +60,16 @@ function canUseStorage() {
 export function loadDemoAssignment(): DemoAssignment {
   if (!canUseStorage()) return defaultDemoAssignment;
 
-  const stored = window.localStorage.getItem(ASSIGNMENT_KEY) ?? window.localStorage.getItem(LEGACY_KEY);
+  let stored = window.localStorage.getItem(ASSIGNMENT_KEY);
+  if (!stored) {
+    for (const legacy of LEGACY_KEYS) {
+      const value = window.localStorage.getItem(legacy);
+      if (value) {
+        stored = value;
+        break;
+      }
+    }
+  }
   if (!stored) return defaultDemoAssignment;
 
   try {
@@ -62,6 +79,10 @@ export function loadDemoAssignment(): DemoAssignment {
       ...buildAssignment(question, (parsed.status as DemoAssignment['status']) ?? 'assigned'),
       ...parsed,
       questionId: question.id,
+      threeDType: question.threeDType,
+      inquiryQuestion: question.inquiryQuestion,
+      objective: question.objective,
+      difficulty: question.difficulty,
     } as DemoAssignment;
   } catch {
     return defaultDemoAssignment;

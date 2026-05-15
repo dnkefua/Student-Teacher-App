@@ -18,7 +18,13 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { TabType } from './Sidebar';
-import { EquationBalance3D, LinearGraph3D, Pythagoras3D } from '@/components/Math3DExplainers';
+import {
+  AngleLab3D,
+  CircleLab3D,
+  ExplainerByType,
+  PercentageBar3D,
+  ProbabilitySpinner3D,
+} from '@/components/Math3DExplainers';
 import {
   assignDemoQuestion,
   defaultDemoAssignment,
@@ -28,7 +34,12 @@ import {
   type LearningMode,
   type DemoAssignment,
 } from '@/lib/demoAssignments';
-import { grade8Curriculum, unitLabels, type CurriculumUnit } from '@/lib/grade8Curriculum';
+import {
+  grade8Curriculum,
+  threeDLabels,
+  unitLabels,
+  type CurriculumUnit,
+} from '@/lib/grade8Curriculum';
 
 interface DashboardHomeProps {
   mode: LearningMode;
@@ -160,11 +171,18 @@ function TeacherAssignmentCard({
         <div>
           <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Active assignment · {assignment.lessonTitle}</p>
           <h3 className="mt-2 text-2xl font-black">{assignment.title}</h3>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">{assignment.question}</p>
+          <p className="mt-2 max-w-2xl text-sm italic leading-6 text-[#8ddfff]">Inquiry: {assignment.inquiryQuestion}</p>
+          <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-400">Objective · {assignment.objective}</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">{assignment.question}</p>
         </div>
-        <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">
-          {assignment.status}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">
+            {assignment.status}
+          </span>
+          <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
+            3D · {threeDLabels[assignment.threeDType]}
+          </span>
+        </div>
       </div>
 
       <div className="relative mt-6 rounded-lg border border-white/10 bg-[#050711]/60 p-4">
@@ -188,21 +206,37 @@ function TeacherAssignmentCard({
           ))}
         </div>
         <div className="mt-4 grid gap-2 md:grid-cols-2">
-          {visibleQuestions.map((q) => (
-            <button
-              key={q.id}
-              onClick={() => setSelectedId(q.id)}
-              className={`group rounded-md border p-3 text-left transition ${
-                selectedId === q.id
-                  ? 'border-[#ffc43b] bg-[#ffc43b]/10'
-                  : 'border-white/10 bg-white/5 hover:border-white/30'
-              }`}
-            >
-              <p className="text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">{q.topic}</p>
-              <p className="mt-1 text-sm font-black text-white">{q.title}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-400">{q.question}</p>
-            </button>
-          ))}
+          {visibleQuestions.map((q) => {
+            const difficultyStyle =
+              q.difficulty === 'support'
+                ? 'bg-[#49c8ff]/15 text-[#8ddfff] border-[#49c8ff]/30'
+                : q.difficulty === 'extension'
+                ? 'bg-[#ff3d22]/15 text-[#ff8a73] border-[#ff3d22]/30'
+                : 'bg-[#ffc43b]/15 text-[#ffe08a] border-[#ffc43b]/30';
+            return (
+              <button
+                key={q.id}
+                onClick={() => setSelectedId(q.id)}
+                className={`group rounded-md border p-3 text-left transition ${
+                  selectedId === q.id
+                    ? 'border-[#ffc43b] bg-[#ffc43b]/10'
+                    : 'border-white/10 bg-white/5 hover:border-white/30'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">{q.topic}</p>
+                  <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${difficultyStyle}`}>
+                    {q.difficulty}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm font-black text-white">{q.title}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">{q.question}</p>
+                <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                  3D · {threeDLabels[q.threeDType]}
+                </p>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -251,7 +285,14 @@ function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { as
         <div>
           <p className="text-xs font-black uppercase tracking-wide text-[#8ddfff]">Student assignment</p>
           <h3 className="mt-2 text-2xl font-black">{assigned ? assignment.title : 'No assignment yet'}</h3>
-          <p className="mt-2 text-sm leading-6 text-slate-300">{assigned ? assignment.prompt : 'Ask the teacher to assign the equation checkpoint.'}</p>
+          {assigned ? (
+            <>
+              <p className="mt-2 max-w-2xl text-sm italic leading-6 text-[#ffc43b]">Inquiry: {assignment.inquiryQuestion}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{assignment.prompt}</p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm leading-6 text-slate-300">Ask the teacher to assign a checkpoint.</p>
+          )}
         </div>
         <ClipboardCheck className="h-8 w-8 text-[#ffc43b]" />
       </div>
@@ -324,7 +365,7 @@ function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignm
               })}
             </div>
           </div>
-          <EquationBalance3D />
+          <ExplainerByType type={assignment.threeDType} />
         </div>
       </section>
 
@@ -337,8 +378,13 @@ function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignm
       <TeacherAssignmentCard assignment={assignment} onAssign={assign} setActiveTab={setActiveTab} />
 
       <section className="grid gap-5 xl:grid-cols-2">
-        <Pythagoras3D />
-        <LinearGraph3D />
+        <CircleLab3D />
+        <AngleLab3D />
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-2">
+        <PercentageBar3D />
+        <ProbabilitySpinner3D />
       </section>
 
       <section className="relative overflow-hidden rounded-lg border border-[#49c8ff]/25 bg-gradient-to-r from-[#061126] via-[#0a1736] to-[#061126] p-6 text-white">
@@ -383,15 +429,20 @@ function StudentDashboard({ assignment, setAssignment, setActiveTab }: { assignm
               </button>
             </div>
           </div>
-          <EquationBalance3D />
+          <ExplainerByType type={assignment.threeDType} />
         </div>
       </section>
 
       <StudentAssignmentCard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />
 
       <section className="grid gap-5 xl:grid-cols-2">
-        <Pythagoras3D />
-        <LinearGraph3D />
+        <CircleLab3D />
+        <AngleLab3D />
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-2">
+        <PercentageBar3D />
+        <ProbabilitySpinner3D />
       </section>
     </div>
   );
