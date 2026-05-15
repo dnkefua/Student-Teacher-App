@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { getGeminiClient } from '@/lib/gemini';
+import { generateContent, DEFAULT_AI_MODEL, TTS_MODEL } from '@/lib/gemini';
 import { Send, Volume2, Users, ShieldAlert, Loader2, UserPlus, Video, VideoOff, Mic, MicOff, PhoneOff, ScreenShare, Copy, Check, Gamepad2, ExternalLink, Settings } from 'lucide-react';
 import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
@@ -262,15 +262,14 @@ export function VirtualClassroom() {
     setIsAnswering(true);
     setAudioUrl(null);
     try {
-      const ai = getGeminiClient();
       // 1. Generate the text answer
-      const textResponse = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+      const textResponse = await generateContent({
+        model: DEFAULT_AI_MODEL,
         contents: `You are a teacher answering a student's question in a virtual class. Keep it concise and encouraging. The question is: "${questionText}"`,
       });
-      
+
       const answerText = textResponse.text || 'I am not sure how to answer that right now.';
-      
+
       // Add text message to chat
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
@@ -281,8 +280,8 @@ export function VirtualClassroom() {
       }]);
 
       // 2. Generate TTS audio
-      const ttsResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
+      const ttsResponse = await generateContent({
+        model: TTS_MODEL,
         contents: [{ parts: [{ text: answerText }] }],
         config: {
           responseModalities: [Modality.AUDIO],
@@ -294,7 +293,8 @@ export function VirtualClassroom() {
         },
       });
 
-      const base64Audio = ttsResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      const candidates = ttsResponse.candidates as Array<{ content?: { parts?: Array<{ inlineData?: { data?: string } }> } }> | null;
+      const base64Audio = candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
         const binary = atob(base64Audio);
         const bytes = new Uint8Array(binary.length);
@@ -330,10 +330,9 @@ export function VirtualClassroom() {
   const analyzeBehavior = async () => {
     setIsAnalyzing(true);
     try {
-      const ai = getGeminiClient();
       const chatHistory = messages.map(m => `${m.sender}: ${m.text}`).join('\n');
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+      const response = await generateContent({
+        model: DEFAULT_AI_MODEL,
         contents: `Analyze the following virtual classroom chat history. Rate the students' behavior, engagement, and identify any potential issues or students who might need help.\n\nChat History:\n${chatHistory}`,
       });
       setBehaviorReport(response.text || 'No analysis available.');

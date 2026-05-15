@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { getGeminiClient } from '@/lib/gemini';
+import { generateContent, DEFAULT_AI_MODEL } from '@/lib/gemini';
 import { Upload, Loader2, FileImage, FileText, Gamepad2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -96,9 +96,8 @@ export function Grader() {
         }
       }
 
-      const ai = getGeminiClient();
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+      const response = await generateContent({
+        model: DEFAULT_AI_MODEL,
         contents: { parts },
         config: {
           systemInstruction: "Evaluate the student's work strictly based on the provided marking scheme. Provide a final score, a breakdown of points, constructive feedback on what they did well, and areas for improvement.",

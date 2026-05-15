@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getGeminiClient } from '@/lib/gemini';
+import { generateContent, DEFAULT_AI_MODEL } from '@/lib/gemini';
 import { Mail, Send, Loader2, Copy, Check, Gamepad2 } from 'lucide-react';
 import { NeuroQuestAssignment, buildQuestProgressEmail, loadActiveAssignment } from '@/lib/neuroquest';
 
@@ -22,9 +22,8 @@ export function EmailAssistant() {
     
     setIsDrafting(true);
     try {
-      const ai = getGeminiClient();
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+      const response = await generateContent({
+        model: DEFAULT_AI_MODEL,
         contents: `Draft an email to ${recipient} about ${topic}. The tone should be ${tone}.`,
         config: {
           systemInstruction: "You are an AI assistant helping a teacher write emails. Keep the emails clear, polite, and well-structured.",

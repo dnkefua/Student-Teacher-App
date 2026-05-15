@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { getGeminiClient } from '@/lib/gemini';
+import { generateContent, DEFAULT_AI_MODEL } from '@/lib/gemini';
 import { Upload, Link as LinkIcon, FileText, Loader2, FileImage, Gamepad2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -125,9 +125,8 @@ export function LessonPlanner() {
         tools.push({ urlContext: {} });
       }
 
-      const ai = getGeminiClient();
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
+      const response = await generateContent({
+        model: DEFAULT_AI_MODEL,
         contents: { parts },
         config: {
           tools: tools.length > 0 ? tools : undefined,
