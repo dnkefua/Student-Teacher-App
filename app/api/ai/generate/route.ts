@@ -75,17 +75,49 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Gemma models reject Genkit's chat-style request envelope (systemInstruction
+    // + generationConfig + safetySettings) with a 500 from Google. Bypass Genkit
+    // and POST the raw Gemini REST shape, which the direct API accepts.
+    if (body.model.startsWith('gemma')) {
+      const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY;
+      const parts = extractParts(body.contents);
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${body.model}:generateContent?key=${apiKey}`;
+      const upstream = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts }] }),
+      });
+      const json = await upstream.json();
+      if (!upstream.ok) {
+        const message = json?.error?.message || `Gemma request failed (${upstream.status})`;
+        return NextResponse.json({ error: message }, { status: 502 });
+      }
+      const candidates = json.candidates ?? [];
+      const visibleParts: Array<{ text?: string; thought?: boolean }> = candidates[0]?.content?.parts ?? [];
+      const text = visibleParts
+        .filter((p) => !p.thought && typeof p.text === 'string')
+        .map((p) => p.text)
+        .join('');
+      return NextResponse.json({
+        text: text || null,
+        candidates,
+        usageMetadata: json.usageMetadata ?? null,
+      });
+    }
+
     const prompt = toGenkitParts(extractParts(body.contents));
     const generationConfig: Record<string, unknown> = {};
     if (body.config?.responseModalities) generationConfig.responseModalities = body.config.responseModalities;
     if (body.config?.speechConfig) generationConfig.speechConfig = body.config.speechConfig;
 
-    const result = await ai.generate({
+    const generateArgs: Parameters<typeof ai.generate>[0] = {
       model: googleAI.model(body.model),
       prompt,
-      system: body.config?.systemInstruction,
-      ...(Object.keys(generationConfig).length > 0 ? { config: generationConfig } : {}),
-    });
+    };
+    if (body.config?.systemInstruction) generateArgs.system = body.config.systemInstruction;
+    if (Object.keys(generationConfig).length > 0) generateArgs.config = generationConfig;
+
+    const result = await ai.generate(generateArgs);
 
     return NextResponse.json({
       text: result.text ?? null,
