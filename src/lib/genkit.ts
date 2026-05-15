@@ -5,7 +5,11 @@
 import { googleAI } from '@genkit-ai/googleai';
 import { genkit } from 'genkit';
 
-export const DEFAULT_AI_MODEL = 'gemma-3n-e4b-it';
+// Preferred: 'gemma-4-26b-a4b-it' (lightweight MoE). Google's generateContent
+// for Gemma 4 was returning 500 Internal Server Error during the demo
+// preparation window, so we default to gemini-2.5-flash. Swap back to the
+// Gemma model once the upstream endpoint stabilises.
+export const DEFAULT_AI_MODEL = 'gemini-2.5-flash';
 export const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 
 // The googleAI plugin reads GEMINI_API_KEY or GOOGLE_GENAI_API_KEY from

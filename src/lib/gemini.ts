@@ -2,7 +2,7 @@
 // server. The provider API key lives only in the server's environment and is
 // never bundled into the client.
 
-export const DEFAULT_AI_MODEL = 'gemma-3n-e4b-it';
+export const DEFAULT_AI_MODEL = 'gemini-2.5-flash';
 export const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
 
 export type GenerateContentRequest = {
