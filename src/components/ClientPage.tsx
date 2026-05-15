@@ -12,6 +12,7 @@ import { EmailAssistant } from '@/components/EmailAssistant';
 import { NeuroQuestHub } from '@/components/NeuroQuestHub';
 import { EISMathStudio } from '@/components/EISMathStudio';
 import { LessonGenerator } from '@/components/CinematicLessonEngine';
+import { InteractiveLessonRenderer } from '@/components/InteractiveLessonRenderer';
 import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
@@ -22,9 +23,11 @@ export function ClientPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const isDashboard = activeTab === 'dashboard';
+  const isLesson = activeTab === 'lesson';
+  const useDarkSurface = isDashboard || isLesson;
 
   return (
-    <div className={`flex h-screen overflow-hidden ${isDashboard ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
+    <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -53,9 +56,10 @@ export function ClientPage() {
         </header>
 
         {/* Main Content Area */}
-        <main className={`flex-1 overflow-y-auto p-4 md:p-8 ${isDashboard ? 'bg-[#050711]' : ''}`}>
+        <main className={`flex-1 overflow-y-auto p-4 md:p-8 ${useDarkSurface ? 'bg-[#050711]' : ''}`}>
           <div className="max-w-6xl mx-auto h-full">
             {activeTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={setActiveTab} />}
+            {activeTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={setActiveTab} />}
             {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
             {activeTab === 'place-value-lesson' && <LessonGenerator />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}

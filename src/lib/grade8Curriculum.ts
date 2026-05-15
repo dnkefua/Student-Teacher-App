@@ -19,6 +19,29 @@ export type ThreeDType =
 
 export type Difficulty = 'core' | 'support' | 'extension';
 
+/** A single beat in the animated explainer. Plain text by default; the optional
+ * fields let a step highlight a formula, attach teacher narration, or pause
+ * for a student checkpoint. */
+export type ExplainerStep = {
+  title: string;
+  body: string;
+  formula?: string;
+  narration?: string;
+  checkpoint?: string;
+};
+
+export type WorkedExample = {
+  prompt: string;
+  steps: string[];
+  answer: string;
+};
+
+export type PracticeQuestion = {
+  question: string;
+  answer: string;
+  explanation: string;
+};
+
 export type CurriculumQuestion = {
   id: string;
   unit: CurriculumUnit;
@@ -37,6 +60,13 @@ export type CurriculumQuestion = {
   teacherNote: string;
   threeDType: ThreeDType;
   difficulty: Difficulty;
+  /** Step-by-step explainer beats. The renderer auto-generates a fallback
+   *  when this is absent so every question is still teachable. */
+  animatedSteps?: ExplainerStep[];
+  /** A fully worked example the teacher walks through before the checkpoint. */
+  workedExample?: WorkedExample;
+  /** A no-stakes practice item the student tries before the assignment. */
+  practiceQuestion?: PracticeQuestion;
 };
 
 export const unitLabels: Record<CurriculumUnit, string> = {
@@ -79,6 +109,44 @@ export const grade8Curriculum: CurriculumQuestion[] = [
     teacherNote: 'Reinforce that doing the same operation on both sides keeps the equation true. Connect to the EquationBalance3D scene where weights mirror operations.',
     threeDType: 'equation_balance_3d',
     difficulty: 'core',
+    animatedSteps: [
+      {
+        title: 'Picture the balance',
+        body: 'An equation is a balanced scale. The left side weighs 5x − 7. The right side weighs 28. Anything we do to one side must happen to the other or the scale tips.',
+        formula: '5x − 7 = 28',
+        narration: 'Today we will solve 5x − 7 = 28 by treating it like a scale.',
+      },
+      {
+        title: 'Undo the subtraction',
+        body: 'The constant −7 is keeping x trapped. To free it, we add 7 to both sides. The minus 7 cancels with the plus 7.',
+        formula: '5x − 7 + 7 = 28 + 7  →  5x = 35',
+      },
+      {
+        title: 'Undo the multiplication',
+        body: 'Now 5x means 5 times x. To isolate x we divide both sides by 5.',
+        formula: '5x ÷ 5 = 35 ÷ 5  →  x = 7',
+      },
+      {
+        title: 'Check by substitution',
+        body: 'Replace x with 7 in the original equation. If both sides match, the solution is correct.',
+        formula: '5(7) − 7 = 35 − 7 = 28 ✓',
+        checkpoint: 'Why must we do the same operation to both sides every time?',
+      },
+    ],
+    workedExample: {
+      prompt: 'Solve 4x + 9 = 25.',
+      steps: [
+        'Subtract 9 from both sides:  4x = 16',
+        'Divide both sides by 5… wait, divide by 4:  x = 4',
+        'Check:  4(4) + 9 = 16 + 9 = 25 ✓',
+      ],
+      answer: 'x = 4',
+    },
+    practiceQuestion: {
+      question: 'Solve 3x − 2 = 13.',
+      answer: 'x = 5',
+      explanation: 'Add 2 to both sides → 3x = 15. Divide by 3 → x = 5.',
+    },
   },
   {
     id: 'abstract-linear-with-brackets',
@@ -136,6 +204,44 @@ export const grade8Curriculum: CurriculumQuestion[] = [
     teacherNote: 'Bring out the geometric meaning: gradient = rise/run, intercept = where the line meets the y-axis.',
     threeDType: 'linear_graph_3d',
     difficulty: 'core',
+    animatedSteps: [
+      {
+        title: 'Meet the standard form',
+        body: 'A linear equation in the form y = mx + c hides two pieces of information: m and c. Both have a geometric meaning we can see on a graph.',
+        formula: 'y = mx + c',
+      },
+      {
+        title: 'm is the gradient',
+        body: 'The number multiplying x tells us how steep the line is. A gradient of 3 means: for every 1 step right, the line goes 3 steps up.',
+        formula: 'gradient (m) = rise ÷ run',
+      },
+      {
+        title: 'c is the y-intercept',
+        body: 'The standalone constant tells us where the line crosses the y-axis — i.e. when x = 0. In y = 3x − 5, that point is (0, −5).',
+        formula: 'y-intercept (c) = the value of y when x = 0',
+        checkpoint: 'For y = 3x − 5, what are m and c, and what do they look like on a graph?',
+      },
+      {
+        title: 'Put it together',
+        body: 'Start at (0, −5). For every 1 step right, go 3 steps up. That single rule draws the whole line.',
+        narration: 'On the LinearGraph3D scene, the gold dot marks the y-intercept and the cyan beam is the line itself.',
+      },
+    ],
+    workedExample: {
+      prompt: 'For the line y = −2x + 4, find the gradient and y-intercept.',
+      steps: [
+        'Compare to y = mx + c.',
+        'The coefficient of x is −2, so m = −2.',
+        'The constant term is 4, so c = 4.',
+        'Geometrically: cross the y-axis at (0, 4), then for every 1 right, go 2 down.',
+      ],
+      answer: 'gradient = −2, y-intercept = 4',
+    },
+    practiceQuestion: {
+      question: 'For y = 5x + 2, state the gradient and y-intercept.',
+      answer: 'gradient = 5, y-intercept = 2',
+      explanation: 'm is the coefficient of x (5). c is the standalone constant (2).',
+    },
   },
   {
     id: 'abstract-find-line-from-points',
@@ -461,6 +567,45 @@ export const grade8Curriculum: CurriculumQuestion[] = [
     teacherNote: 'Use the RatioMixer3D scene to make "one part" tangible — two cylinders filling at different rates.',
     threeDType: 'ratio_mixer_3d',
     difficulty: 'core',
+    animatedSteps: [
+      {
+        title: 'Count the parts',
+        body: 'A ratio of 2 : 3 means the amount is split into 2 + 3 = 5 equal parts. Ali gets 2 of those parts, Sara gets 3.',
+        formula: 'total parts = 2 + 3 = 5',
+      },
+      {
+        title: 'Find the value of one part',
+        body: 'Divide the whole amount by the total parts. Every part is the same size.',
+        formula: 'one part = 200 ÷ 5 = AED 40',
+        narration: 'On the RatioMixer3D scene, both tanks fill in 40-unit increments — one part at a time.',
+      },
+      {
+        title: 'Scale up each share',
+        body: 'Multiply each person\'s number of parts by the value of one part.',
+        formula: 'Ali: 2 × 40 = 80;  Sara: 3 × 40 = 120',
+        checkpoint: 'Do Ali\'s and Sara\'s shares add back to AED 200?',
+      },
+      {
+        title: 'Always check',
+        body: 'A good ratio answer can be verified by adding the parts back to the original total.',
+        formula: '80 + 120 = 200 ✓',
+      },
+    ],
+    workedExample: {
+      prompt: 'Split AED 360 in the ratio 4 : 5.',
+      steps: [
+        'Total parts: 4 + 5 = 9.',
+        'One part: 360 ÷ 9 = 40.',
+        '4 parts: 4 × 40 = 160. 5 parts: 5 × 40 = 200.',
+        'Check: 160 + 200 = 360 ✓.',
+      ],
+      answer: 'AED 160 and AED 200',
+    },
+    practiceQuestion: {
+      question: 'Share AED 50 in the ratio 1 : 4.',
+      answer: 'AED 10 and AED 40',
+      explanation: 'Total parts 5; one part AED 10. So 1 × 10 = 10 and 4 × 10 = 40.',
+    },
   },
 
   // ─── SPATIAL REASONING ──────────────────────────────────────────────
@@ -482,6 +627,43 @@ export const grade8Curriculum: CurriculumQuestion[] = [
     teacherNote: 'Anchor with the visual Pythagoras3D scene: the two smaller squares physically combine into the larger one.',
     threeDType: 'pythagoras_3d',
     difficulty: 'core',
+    animatedSteps: [
+      {
+        title: 'The right-angle promise',
+        body: 'Pythagoras only works when the triangle has a right angle. Look for the small square symbol in the corner.',
+        formula: 'a² + b² = c²',
+      },
+      {
+        title: 'Square each leg',
+        body: 'The two shorter sides are called legs. Squaring a length gives the area of the square drawn on that side.',
+        formula: '6² = 36   and   8² = 64',
+        narration: 'In the Pythagoras3D scene, watch the cyan and gold squares snap together into the tilted white square.',
+      },
+      {
+        title: 'Add the squares',
+        body: 'The combined area of the two leg-squares is exactly the area of the hypotenuse-square.',
+        formula: '36 + 64 = 100',
+      },
+      {
+        title: 'Take the square root',
+        body: 'Because c² = 100, the hypotenuse c is √100 = 10. Lengths are always the positive root.',
+        formula: 'c = √100 = 10 cm',
+        checkpoint: 'Why must c be positive?',
+      },
+    ],
+    workedExample: {
+      prompt: 'A right-angled triangle has legs 9 cm and 12 cm. Find the hypotenuse.',
+      steps: [
+        '9² + 12² = 81 + 144 = 225',
+        'c = √225 = 15',
+      ],
+      answer: 'c = 15 cm',
+    },
+    practiceQuestion: {
+      question: 'A right-angled triangle has legs 5 cm and 12 cm. Find the hypotenuse.',
+      answer: '13 cm',
+      explanation: '5² + 12² = 25 + 144 = 169; √169 = 13.',
+    },
   },
   {
     id: 'spatial-pythagoras-missing-leg',
@@ -558,6 +740,43 @@ export const grade8Curriculum: CurriculumQuestion[] = [
     teacherNote: 'Bring out π as a ratio (circumference ÷ diameter) using string and a coffee tin.',
     threeDType: 'circle_lab_3d',
     difficulty: 'core',
+    animatedSteps: [
+      {
+        title: 'Meet the radius',
+        body: 'Every circle has one number that fixes everything else: the radius r — the distance from centre to edge.',
+        formula: 'r = 7 cm',
+        narration: 'On the CircleLab3D scene, the gold beam sweeping the disc is the radius.',
+      },
+      {
+        title: 'Diameter is double',
+        body: 'The diameter d goes all the way across the circle through the centre. It is exactly two radii placed end to end.',
+        formula: 'd = 2r = 14 cm',
+      },
+      {
+        title: 'Circumference uses π',
+        body: 'The circumference is the distance around the edge. It is always a tiny bit more than 3 diameters. The exact factor is π ≈ 3.14.',
+        formula: 'C = 2πr = π × d',
+      },
+      {
+        title: 'Substitute and compute',
+        body: 'Replace r with 7 and π with 3.14 (or keep π exact). Watch units stay in cm.',
+        formula: 'C = 2 × 3.14 × 7 ≈ 43.96 cm',
+        checkpoint: 'What would the circumference be if the radius doubled?',
+      },
+    ],
+    workedExample: {
+      prompt: 'A pizza has radius 10 cm. Find its circumference (use π ≈ 3.14).',
+      steps: [
+        'C = 2πr = 2 × 3.14 × 10',
+        '= 62.8',
+      ],
+      answer: 'about 62.8 cm',
+    },
+    practiceQuestion: {
+      question: 'Find the circumference of a circle with radius 3 cm (use π ≈ 3.14).',
+      answer: 'about 18.84 cm',
+      explanation: 'C = 2πr = 2 × 3.14 × 3 ≈ 18.84.',
+    },
   },
   {
     id: 'spatial-circle-area',
@@ -826,6 +1045,41 @@ export const grade8Curriculum: CurriculumQuestion[] = [
     teacherNote: 'Show both methods (multiplication and sample space) — students learn the link between them.',
     threeDType: 'probability_spinner_3d',
     difficulty: 'core',
+    animatedSteps: [
+      {
+        title: 'Independent events',
+        body: 'The second toss is not affected by the first. We call these independent events. Independence is the key word.',
+      },
+      {
+        title: 'List the sample space',
+        body: 'For two coin flips, every outcome is one of: HH, HT, TH, TT. Exactly one of these is "two heads".',
+        formula: '{HH, HT, TH, TT}',
+      },
+      {
+        title: 'Use the multiplication rule',
+        body: 'For independent events, multiply the probabilities. P(H) for one fair coin is 1/2. Two heads → 1/2 × 1/2.',
+        formula: 'P(H and H) = 1/2 × 1/2 = 1/4',
+      },
+      {
+        title: 'Both methods agree',
+        body: 'One favourable outcome (HH) out of four equally likely outcomes gives 1/4. Same answer as the multiplication.',
+        formula: '1 / 4 = 0.25 = 25%',
+        checkpoint: 'What is the probability of getting exactly one head in two flips?',
+      },
+    ],
+    workedExample: {
+      prompt: 'A fair die is rolled twice. What is the probability of two sixes?',
+      steps: [
+        'P(six) on one roll = 1/6.',
+        'Rolls are independent → multiply: 1/6 × 1/6 = 1/36.',
+      ],
+      answer: '1/36 ≈ 0.028',
+    },
+    practiceQuestion: {
+      question: 'A fair coin is flipped three times. What is P(three heads)?',
+      answer: '1/8',
+      explanation: '1/2 × 1/2 × 1/2 = 1/8. Or list: HHH is one of 8 equally likely outcomes.',
+    },
   },
   {
     id: 'data-probability-spinner',
@@ -878,4 +1132,34 @@ export function checkAnswer(question: CurriculumQuestion, answer: string): boole
 
 export function questionsByUnit(unit: CurriculumUnit): CurriculumQuestion[] {
   return grade8Curriculum.filter((q) => q.unit === unit);
+}
+
+/** Returns the authored explainer steps if present, otherwise generates
+ *  a sensible 4-step fallback from the question's own metadata so every
+ *  curriculum item is teachable through the lesson renderer. */
+export function getExplainerSteps(question: CurriculumQuestion): ExplainerStep[] {
+  if (question.animatedSteps && question.animatedSteps.length > 0) {
+    return question.animatedSteps;
+  }
+  return [
+    {
+      title: 'Today\'s inquiry',
+      body: question.inquiryQuestion,
+      narration: `In this lesson we will work on: ${question.topic}.`,
+    },
+    {
+      title: 'What we are aiming for',
+      body: question.objective,
+    },
+    {
+      title: 'How to approach it',
+      body: question.prompt,
+    },
+    {
+      title: 'Try it yourself',
+      body: question.question,
+      formula: question.expectedAnswer,
+      checkpoint: 'Work this out in your notebook before peeking at the answer above.',
+    },
+  ];
 }

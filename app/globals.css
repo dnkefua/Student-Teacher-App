@@ -2,6 +2,7 @@
 
 @theme {
   --animate-eis-pulse: eis-pulse 2.4s ease-in-out infinite;
+  --animate-eis-fade: eis-fade 0.42s ease-out;
 }
 
 @keyframes eis-pulse {
@@ -12,5 +13,16 @@
   50% {
     transform: scale(1.025);
     filter: brightness(1.08);
+  }
+}
+
+@keyframes eis-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

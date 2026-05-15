@@ -17,9 +17,11 @@ type Row = {
 export function StudentAssignmentList({
   activeAssignmentId,
   onSelect,
+  onOpenLesson,
 }: {
   activeAssignmentId: string;
   onSelect?: (assignment: DemoAssignment) => void;
+  onOpenLesson?: () => void;
 }) {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,6 +85,7 @@ export function StudentAssignmentList({
     };
     saveDemoAssignment(next);
     onSelect?.(next);
+    onOpenLesson?.();
   };
 
   if (!isFirebaseConfigured()) {

@@ -59,7 +59,7 @@ const progressCards = [
 ];
 
 const quickActions = [
-  { label: 'Launch 3D Lesson', tab: 'eis-maths' as TabType, icon: Play, style: 'bg-[#49c8ff] text-[#061126] hover:bg-[#8ddfff]' },
+  { label: 'Open Lesson Player', tab: 'lesson' as TabType, icon: Play, style: 'bg-[#49c8ff] text-[#061126] hover:bg-[#8ddfff]' },
   { label: 'Generate Lesson with AI', tab: 'place-value-lesson' as TabType, icon: BrainCircuit, style: 'bg-[#ffc43b] text-[#061126] hover:bg-[#ffe08a]' },
   { label: 'Start Live Class', tab: 'classroom' as TabType, icon: MonitorPlay, style: 'border border-white/20 text-white hover:border-[#49c8ff] hover:text-[#8ddfff]' },
 ];
@@ -220,6 +220,13 @@ function TeacherAssignmentCard({
           <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
             3D · {threeDLabels[assignment.threeDType]}
           </span>
+          <button
+            onClick={() => setActiveTab('lesson')}
+            className="inline-flex items-center gap-1 rounded-md border border-[#49c8ff]/35 bg-[#49c8ff]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#8ddfff] transition hover:border-[#49c8ff] hover:bg-[#49c8ff]/20"
+          >
+            Open lesson workspace
+            <ArrowRight className="h-3 w-3" />
+          </button>
         </div>
       </div>
 
@@ -531,7 +538,11 @@ function StudentDashboard({ assignment, setAssignment, setActiveTab }: { assignm
         </div>
       </section>
 
-      <StudentAssignmentList activeAssignmentId={assignment.id} onSelect={setAssignment} />
+      <StudentAssignmentList
+        activeAssignmentId={assignment.id}
+        onSelect={setAssignment}
+        onOpenLesson={() => setActiveTab('lesson')}
+      />
 
       <StudentAssignmentCard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />
 

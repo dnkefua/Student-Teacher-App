@@ -1,22 +1,23 @@
 import React from 'react';
 import Image from 'next/image';
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  CheckSquare, 
-  MonitorPlay, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  CheckSquare,
+  MonitorPlay,
   Mail,
   Gamepad2,
   Gem,
+  GraduationCap,
   School,
-  X
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
-export type TabType = 'dashboard' | 'eis-maths' | 'place-value-lesson' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
+export type TabType = 'dashboard' | 'lesson' | 'eis-maths' | 'place-value-lesson' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -30,6 +31,7 @@ interface SidebarProps {
 export function Sidebar({ activeTab, setActiveTab, mode, setMode, isOpen, setIsOpen }: SidebarProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'lesson', label: 'Lesson Player', icon: GraduationCap },
     { id: 'eis-maths', label: 'EIS Grade 8 Maths', icon: School },
     { id: 'place-value-lesson', label: 'AI 3D Lesson Generator', icon: Gem },
     { id: 'lesson-planner', label: 'Lesson Planner', icon: BookOpen },
