@@ -1,0 +1,64 @@
+# Firebase App Hosting backend config.
+# https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  minInstances: 0
+  maxInstances: 5
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  # Firebase web SDK config — public project identifiers, safe in the client bundle.
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyDqXS1wFUHLXwWBjhpz6BP9NcrADHaOURg
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: student-teacher-app-495806.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: student-teacher-app-495806
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: student-teacher-app-495806.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "154167079139"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:154167079139:web:38bdb655d20b79065ad5d6"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-CBNE6RFWYM
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Server-side Gemini key. Stored in Google Secret Manager — never in this
+  # file, never in git, never in the client bundle.
+  # Create the secret once:
+  #   firebase apphosting:secrets:set gemini-api-key
+  # Then grant the App Hosting backend access:
+  #   firebase apphosting:secrets:grantaccess gemini-api-key --backend <backend-id>
+  - variable: GEMINI_API_KEY
+    secret: gemini-api-key
+    availability:
+      - RUNTIME

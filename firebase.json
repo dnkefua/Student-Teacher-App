@@ -1,0 +1,15 @@
+{
+  "apphosting": {
+    "source": ".",
+    "ignore": [
+      "node_modules",
+      ".git",
+      ".next",
+      ".claude",
+      "Text Book",
+      "neuroquest-academy-integration",
+      "tmpnetroquest-academy",
+      "android-twa"
+    ]
+  }
+}
