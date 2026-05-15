@@ -456,7 +456,7 @@ function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignm
               <Sparkles className="h-4 w-4" />
               Teacher Dashboard
             </div>
-            <h1 className="mt-5 text-4xl font-black tracking-normal sm:text-5xl">Today&apos;s Grade 8 Maths Lesson</h1>
+            <h1 className="mt-5 text-3xl font-black tracking-normal sm:text-4xl lg:text-5xl">Today&apos;s Grade 8 Maths Lesson</h1>
             <p className="mt-4 max-w-2xl text-lg font-semibold leading-8 text-slate-200">{today}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {quickActions.map((action) => {
@@ -522,7 +522,7 @@ function StudentDashboard({ assignment, setAssignment, setActiveTab }: { assignm
               <School className="h-4 w-4" />
               Student View
             </div>
-            <h1 className="mt-5 text-4xl font-black tracking-normal sm:text-5xl">Learn, interact, answer, submit.</h1>
+            <h1 className="mt-5 text-3xl font-black tracking-normal sm:text-4xl lg:text-5xl">Learn, interact, answer, submit.</h1>
             <p className="mt-4 max-w-xl text-lg font-semibold leading-8 text-slate-200">
               Follow the visual model, solve the assigned checkpoint, receive instant feedback, then join the virtual class.
             </p>

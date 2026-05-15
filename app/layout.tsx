@@ -23,12 +23,18 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#050711',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  // iOS-friendly viewport. Allowing modest zoom keeps accessibility while
+  // preventing the auto-zoom on small input fields.
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className="overflow-x-hidden antialiased">
         <ServiceWorkerRegister />
         {children}
       </body>

@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { aiGenerateLesson } from '@/lib/ai/client';
 import type { GeneratedLesson as AiGeneratedLesson } from '@/lib/ai/types';
-import { uploadTeacherSource, type UploadResult } from '@/lib/firebase/uploads';
+import { uploadTeacherSource, type UploadProgress, type UploadResult } from '@/lib/firebase/uploads';
 import { saveGeneratedLesson } from '@/lib/firebase/firestore';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
 import { getDemoUserId } from '@/lib/firebase/demoUser';
@@ -53,6 +53,7 @@ export function TeacherUploadStudio() {
   const [context, setContext] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [upload, setUpload] = useState<UploadResult | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
   const [error, setError] = useState<string | null>(null);
   const [generated, setGenerated] = useState<AiGeneratedLesson | null>(null);
@@ -66,11 +67,12 @@ export function TeacherUploadStudio() {
     if (!picked) return;
     setFile(picked);
     setUpload(null);
+    setUploadProgress(null);
     setError(null);
     if (!fbReady) return; // demo mode — skip upload
     setPhase('uploading');
     try {
-      const result = await uploadTeacherSource(picked);
+      const result = await uploadTeacherSource(picked, (p) => setUploadProgress(p));
       if (result) {
         setUpload(result);
         setPhase('uploaded');
@@ -93,6 +95,7 @@ export function TeacherUploadStudio() {
   const clearFile = () => {
     setFile(null);
     setUpload(null);
+    setUploadProgress(null);
     if (phase === 'uploaded' || phase === 'error') setPhase('idle');
   };
 
@@ -167,7 +170,7 @@ export function TeacherUploadStudio() {
               <UploadCloud className="h-3.5 w-3.5" />
               Teacher Upload Studio
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">Generate a lesson from your own source</h1>
+            <h1 className="mt-4 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">Generate a lesson from your own source</h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
               Drop in a PDF, slide deck or image. Add a topic and any teacher notes. Gemma 4 returns a full
               structured lesson — animated steps, worked examples, assignment questions with rubrics, and the
@@ -293,10 +296,29 @@ export function TeacherUploadStudio() {
               </div>
 
               {phase === 'uploading' ? (
-                <p className="mt-3 inline-flex items-center gap-2 text-xs text-slate-300">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Uploading to Firebase Storage…
-                </p>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between gap-2 text-xs text-slate-300">
+                    <span className="inline-flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Uploading to Firebase Storage…
+                    </span>
+                    <span className="font-mono text-[11px] text-[#8ddfff]">
+                      {uploadProgress ? Math.round(uploadProgress.fraction * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#49c8ff] to-[#8ddfff] transition-[width] duration-150"
+                      style={{ width: `${(uploadProgress?.fraction ?? 0) * 100}%` }}
+                    />
+                  </div>
+                  {uploadProgress ? (
+                    <p className="mt-1 text-[10px] text-slate-500">
+                      {(uploadProgress.bytesTransferred / 1024).toFixed(0)} /{' '}
+                      {(uploadProgress.totalBytes / 1024).toFixed(0)} KB
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
 
               {upload ? (

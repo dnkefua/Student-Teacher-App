@@ -15,7 +15,7 @@ type SceneCardProps = {
 function SceneCard({ title, caption, children }: SceneCardProps) {
   return (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-[#061126] shadow-[0_24px_80px_rgba(5,7,17,.24)]">
-      <div className="h-64 sm:h-72">
+      <div className="h-52 sm:h-64 md:h-72">
         <Canvas camera={{ position: [5, 4, 7], fov: 42 }} dpr={[1, 1.5]}>
           <color attach="background" args={['#050711']} />
           <ambientLight intensity={0.75} />

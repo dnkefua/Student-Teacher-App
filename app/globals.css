@@ -26,3 +26,45 @@
     transform: translateY(0);
   }
 }
+
+/* Global mobile-safe overrides. */
+html,
+body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior-y: contain;
+}
+
+/* Prevent long tokens (accepted-keyword strings, IDs, URLs) from blowing
+ * out card widths on phones. */
+.font-mono {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Tap target hygiene — every actionable button stays at least 40px tall
+ * on touch devices regardless of class overrides. */
+@media (pointer: coarse) {
+  button,
+  [role='button'],
+  a {
+    touch-action: manipulation;
+  }
+  button:not([disabled]) {
+    min-height: 40px;
+  }
+}
+
+/* iOS Safari: prevent input zoom by ensuring inputs render at >= 16px. */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+@media (min-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: inherit;
+  }
+}

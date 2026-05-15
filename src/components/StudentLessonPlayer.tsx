@@ -162,7 +162,7 @@ export function StudentLessonPlayer({
               <BookOpen className="h-3.5 w-3.5" />
               Student lesson player
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">{assignment.title}</h1>
+            <h1 className="mt-4 text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">{assignment.title}</h1>
             <p className="mt-2 text-sm font-semibold text-slate-300">{assignment.lessonTitle}</p>
             <p className="mt-3 text-sm italic leading-6 text-[#ffc43b]">Inquiry: {assignment.inquiryQuestion}</p>
             <p className="mt-1 text-xs leading-6 text-slate-400">Objective · {assignment.objective}</p>
