@@ -67,7 +67,7 @@ export function ClientPage() {
             {activeTab === 'upload-studio' && <TeacherUploadStudio />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}
             {activeTab === 'grader' && <Grader />}
-            {activeTab === 'classroom' && <VirtualClassroom />}
+            {activeTab === 'classroom' && <VirtualClassroom setActiveTab={setActiveTab} />}
             {activeTab === 'email' && <EmailAssistant />}
             {activeTab === 'neuroquest' && <NeuroQuestHub setActiveTab={setActiveTab} />}
           </div>

@@ -3,6 +3,9 @@ import { generateContent, DEFAULT_AI_MODEL, TTS_MODEL } from '@/lib/gemini';
 import { Send, Volume2, Users, ShieldAlert, Loader2, UserPlus, Video, VideoOff, Mic, MicOff, PhoneOff, ScreenShare, Copy, Check, Gamepad2, ExternalLink, Settings } from 'lucide-react';
 import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
+import { ActiveLessonPanel } from './ActiveLessonPanel';
+import type { DemoAssignment } from '@/lib/demoAssignments';
+import type { TabType } from './Sidebar';
 
 interface Message {
   id: string;
@@ -18,7 +21,7 @@ const FAKE_STUDENTS = Array.from({ length: 29 }, (_, i) => ({
   avatarColor: `hsl(${(i * 137.5) % 360}, 70%, 80%)`,
 }));
 
-export function VirtualClassroom() {
+export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabType) => void } = {}) {
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', sender: 'System', text: 'Class has started.', isTeacher: false, timestamp: new Date() },
     { id: '2', sender: 'Alice', text: 'Hi Mr. Smith! I have a question about the homework.', isTeacher: false, timestamp: new Date() },
@@ -47,6 +50,57 @@ export function VirtualClassroom() {
   const [activeAssignment, setActiveAssignment] = useState<NeuroQuestAssignment | null>(null);
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isAskingAi, setIsAskingAi] = useState(false);
+
+  const postSystemMessage = (sender: string, text: string, isTeacher = true) => {
+    setMessages((prev) => [
+      ...prev,
+      { id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, sender, text, isTeacher, timestamp: new Date() },
+    ]);
+  };
+
+  const handleShareLesson = (lesson: DemoAssignment) => {
+    postSystemMessage(
+      'Mr Smith (live)',
+      `📘 We're starting "${lesson.title}" (${lesson.lessonTitle}). Today's inquiry: ${lesson.inquiryQuestion}`,
+    );
+  };
+
+  const handleShareAssignment = (lesson: DemoAssignment) => {
+    postSystemMessage(
+      'Mr Smith (live)',
+      `📝 Assignment for today: ${lesson.question} — try this in your notebook and submit on your dashboard.`,
+    );
+  };
+
+  const handleAskAi = async (lesson: DemoAssignment) => {
+    if (isAskingAi) return;
+    setIsAskingAi(true);
+    try {
+      const prompt = `You are explaining a step in a live Grade 8 maths class. In 2-3 short sentences, explain how to approach this question for a student who is stuck. Be encouraging and concrete. Do not give the final numeric answer — leave that for the student to compute.\n\nQuestion: ${lesson.question}\nInquiry frame: ${lesson.inquiryQuestion}`;
+      const response = await generateContent({
+        model: DEFAULT_AI_MODEL,
+        contents: prompt,
+      });
+      const text = response.text?.trim();
+      if (text) {
+        postSystemMessage('AI Tutor', `🤖 ${text}`);
+      } else {
+        postSystemMessage('AI Tutor', '🤖 I could not generate an explanation just now — try again in a moment.');
+      }
+    } catch (err) {
+      postSystemMessage(
+        'AI Tutor',
+        `🤖 Sorry — AI explanation failed (${err instanceof Error ? err.message : 'unknown error'}).`,
+      );
+    } finally {
+      setIsAskingAi(false);
+    }
+  };
+
+  const handleOpenLessonPlayer = () => {
+    setActiveTab?.('lesson');
+  };
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
   const previewVideoRef = useRef<HTMLVideoElement>(null);
@@ -512,6 +566,14 @@ export function VirtualClassroom() {
           )}
         </div>
       </div>
+
+      <ActiveLessonPanel
+        onShareLesson={handleShareLesson}
+        onShareAssignment={handleShareAssignment}
+        onAskAi={handleAskAi}
+        onOpenLessonPlayer={setActiveTab ? handleOpenLessonPlayer : undefined}
+        isAskingAi={isAskingAi}
+      />
 
       {cameraError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
