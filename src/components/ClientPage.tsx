@@ -13,6 +13,7 @@ import { NeuroQuestHub } from '@/components/NeuroQuestHub';
 import { EISMathStudio } from '@/components/EISMathStudio';
 import { LessonGenerator } from '@/components/CinematicLessonEngine';
 import { InteractiveLessonRenderer } from '@/components/InteractiveLessonRenderer';
+import { TeacherUploadStudio } from '@/components/TeacherUploadStudio';
 import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
@@ -24,7 +25,8 @@ export function ClientPage() {
 
   const isDashboard = activeTab === 'dashboard';
   const isLesson = activeTab === 'lesson';
-  const useDarkSurface = isDashboard || isLesson;
+  const isUpload = activeTab === 'upload-studio';
+  const useDarkSurface = isDashboard || isLesson || isUpload;
 
   return (
     <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
@@ -62,6 +64,7 @@ export function ClientPage() {
             {activeTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={setActiveTab} />}
             {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
             {activeTab === 'place-value-lesson' && <LessonGenerator />}
+            {activeTab === 'upload-studio' && <TeacherUploadStudio />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}
             {activeTab === 'grader' && <Grader />}
             {activeTab === 'classroom' && <VirtualClassroom />}

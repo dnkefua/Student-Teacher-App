@@ -10,6 +10,7 @@ import {
   Gem,
   GraduationCap,
   School,
+  UploadCloud,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,7 +18,7 @@ import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
-export type TabType = 'dashboard' | 'lesson' | 'eis-maths' | 'place-value-lesson' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
+export type TabType = 'dashboard' | 'lesson' | 'eis-maths' | 'place-value-lesson' | 'upload-studio' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -34,6 +35,7 @@ export function Sidebar({ activeTab, setActiveTab, mode, setMode, isOpen, setIsO
     { id: 'lesson', label: 'Lesson Player', icon: GraduationCap },
     { id: 'eis-maths', label: 'EIS Grade 8 Maths', icon: School },
     { id: 'place-value-lesson', label: 'AI 3D Lesson Generator', icon: Gem },
+    { id: 'upload-studio', label: 'Upload Studio', icon: UploadCloud },
     { id: 'lesson-planner', label: 'Lesson Planner', icon: BookOpen },
     { id: 'grader', label: 'Grader & Evaluator', icon: CheckSquare },
     { id: 'classroom', label: 'Virtual Classroom', icon: MonitorPlay },

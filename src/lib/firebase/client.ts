@@ -4,6 +4,7 @@
 
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -21,6 +22,7 @@ export function isFirebaseConfigured(): boolean {
 
 let cachedApp: FirebaseApp | null = null;
 let cachedDb: Firestore | null = null;
+let cachedStorage: FirebaseStorage | null = null;
 
 export function getFirebaseApp(): FirebaseApp | null {
   if (typeof window === 'undefined') return null;
@@ -36,4 +38,12 @@ export function getDb(): Firestore | null {
   if (!app) return null;
   cachedDb = getFirestore(app);
   return cachedDb;
+}
+
+export function getStorageBucket(): FirebaseStorage | null {
+  if (cachedStorage) return cachedStorage;
+  const app = getFirebaseApp();
+  if (!app) return null;
+  cachedStorage = getStorage(app);
+  return cachedStorage;
 }

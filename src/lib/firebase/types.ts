@@ -82,6 +82,10 @@ export type GeneratedLesson = {
   createdBy: string;
   source: 'ai' | 'manual' | 'upload';
   createdAt: string;
+  /** Cloud Storage download URL when the lesson was generated from a teacher upload. */
+  sourceUrl?: string;
+  /** Original filename of the teacher upload (for display). */
+  sourceFilename?: string;
 };
 
 export type LessonProgress = {
