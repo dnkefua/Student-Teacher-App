@@ -27,6 +27,8 @@ import {
   PercentageBar3D,
   ProbabilitySpinner3D,
 } from '@/components/Math3DExplainers';
+import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
+import { StudentAssignmentList } from '@/components/StudentAssignmentList';
 import {
   assignDemoQuestion,
   defaultDemoAssignment,
@@ -471,6 +473,8 @@ function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignm
 
       <TeacherAssignmentCard assignment={assignment} onAssign={assign} setActiveTab={setActiveTab} />
 
+      <TeacherSubmissionsPanel />
+
       <section className="grid gap-5 xl:grid-cols-2">
         <CircleLab3D />
         <AngleLab3D />
@@ -526,6 +530,8 @@ function StudentDashboard({ assignment, setAssignment, setActiveTab }: { assignm
           <ExplainerByType type={assignment.threeDType} />
         </div>
       </section>
+
+      <StudentAssignmentList activeAssignmentId={assignment.id} onSelect={setAssignment} />
 
       <StudentAssignmentCard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />
 
