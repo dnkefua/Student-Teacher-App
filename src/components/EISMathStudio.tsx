@@ -28,6 +28,7 @@ import {
   Video,
   X,
   Youtube,
+  type LucideIcon,
 } from 'lucide-react';
 import { TabType } from './Sidebar';
 import { AnimationMode, CourseLesson, eisMypMathCourse } from '@/lib/eisMypMathCourse';
@@ -40,7 +41,7 @@ interface EISMathStudioProps {
   setActiveTab: (tab: TabType) => void;
 }
 
-const animationIcon: Record<AnimationMode, React.ElementType> = {
+const animationIcon: Record<AnimationMode, LucideIcon> = {
   'number-line': Network,
   'percentage-bars': Percent,
   'ratio-mixer': Shapes,

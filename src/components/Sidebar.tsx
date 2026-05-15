@@ -12,6 +12,7 @@ import {
   X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
@@ -20,15 +21,17 @@ export type TabType = 'dashboard' | 'eis-maths' | 'place-value-lesson' | 'lesson
 interface SidebarProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
+  mode: LearningMode;
+  setMode: (mode: LearningMode) => void;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, mode, setMode, isOpen, setIsOpen }: SidebarProps) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'eis-maths', label: 'EIS Grade 8 Maths', icon: School },
-    { id: 'place-value-lesson', label: 'AI Lesson Engine', icon: Gem },
+    { id: 'place-value-lesson', label: 'AI 3D Lesson Generator', icon: Gem },
     { id: 'lesson-planner', label: 'Lesson Planner', icon: BookOpen },
     { id: 'grader', label: 'Grader & Evaluator', icon: CheckSquare },
     { id: 'classroom', label: 'Virtual Classroom', icon: MonitorPlay },
@@ -67,6 +70,28 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: SidebarP
         </div>
 
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
+          <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-2">
+            <p className="mb-2 px-2 text-xs font-black uppercase tracking-wide text-slate-400">View mode</p>
+            <div className="grid grid-cols-2 gap-1">
+              {(['teacher', 'student'] as const).map((item) => (
+                <button
+                  key={item}
+                  onClick={() => {
+                    setMode(item);
+                    setActiveTab('dashboard');
+                    setIsOpen(false);
+                  }}
+                  className={cn(
+                    'rounded-md px-2 py-2 text-xs font-black capitalize transition',
+                    mode === item ? 'bg-[#49c8ff] text-[#061126]' : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                  )}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -98,7 +123,7 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen }: SidebarP
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-white">Teacher Profile</span>
-              <span className="text-xs text-slate-400">Settings</span>
+              <span className="text-xs capitalize text-slate-400">{mode} workspace</span>
             </div>
           </div>
         </div>

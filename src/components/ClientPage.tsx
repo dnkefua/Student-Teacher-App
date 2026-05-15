@@ -12,18 +12,24 @@ import { EmailAssistant } from '@/components/EmailAssistant';
 import { NeuroQuestHub } from '@/components/NeuroQuestHub';
 import { EISMathStudio } from '@/components/EISMathStudio';
 import { LessonGenerator } from '@/components/CinematicLessonEngine';
+import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
 export function ClientPage() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [mode, setMode] = useState<LearningMode>('teacher');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const isDashboard = activeTab === 'dashboard';
+
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f6f8fc]">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
+    <div className={`flex h-screen overflow-hidden ${isDashboard ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        mode={mode}
+        setMode={setMode}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
       />
@@ -35,10 +41,10 @@ export function ClientPage() {
             <Image src={brandLogoSrc} alt="EIS Maths Studio logo" width={40} height={40} className="h-10 w-10 rounded-md object-contain" />
             <div className="min-w-0">
               <p className="truncate text-sm font-black uppercase tracking-wide text-white">EIS Maths Studio</p>
-              <p className="truncate text-xs font-semibold text-[#8ddfff]">Student Teacher App</p>
+              <p className="truncate text-xs font-semibold capitalize text-[#8ddfff]">{mode} workspace</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsSidebarOpen(true)}
             className="rounded-md p-2 text-[#8ddfff] hover:bg-white/10 hover:text-white"
           >
@@ -47,9 +53,9 @@ export function ClientPage() {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className={`flex-1 overflow-y-auto p-4 md:p-8 ${isDashboard ? 'bg-[#050711]' : ''}`}>
           <div className="max-w-6xl mx-auto h-full">
-            {activeTab === 'dashboard' && <DashboardHome setActiveTab={setActiveTab} />}
+            {activeTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={setActiveTab} />}
             {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
             {activeTab === 'place-value-lesson' && <LessonGenerator />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}

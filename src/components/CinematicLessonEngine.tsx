@@ -1522,33 +1522,36 @@ export function LessonGenerator({ initialInput = defaultPlaceValueGeneratorInput
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="overflow-hidden rounded-lg border border-[#49c8ff]/20 bg-[#050711] p-5 text-white shadow-[0_24px_80px_rgba(5,7,17,.18)]">
         <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-lg bg-slate-950 text-cyan-200">
+          <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#ffc43b] text-[#061126]">
             <Wand2 className="h-6 w-6" />
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-500">LessonGenerator</p>
-            <h2 className="text-2xl font-black text-slate-950">AI-powered cinematic lesson engine</h2>
+            <p className="text-xs font-bold uppercase tracking-wide text-[#49c8ff]">AI 3D Lesson Generator</p>
+            <h2 className="text-2xl font-black text-white">Generate cinematic, interactive maths explainers</h2>
           </div>
         </div>
+        <p className="mt-4 max-w-4xl text-sm leading-7 text-slate-300">
+          Build a teacher-ready 3D lesson with narration, visual actions, exam walkthroughs, student checkpoints, quiz feedback, reward moments and a video-ready scene timeline.
+        </p>
 
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <label className="text-sm font-bold text-slate-700">
+          <label className="text-sm font-bold text-slate-200">
             Subject
-            <input value={input.subject} onChange={(event) => updateField('subject', event.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 font-medium" />
+            <input value={input.subject} onChange={(event) => updateField('subject', event.target.value)} className="mt-1 w-full rounded-md border border-white/10 bg-white px-3 py-2 font-medium text-slate-950" />
           </label>
-          <label className="text-sm font-bold text-slate-700">
+          <label className="text-sm font-bold text-slate-200">
             Grade
-            <input type="number" value={input.grade} onChange={(event) => updateField('grade', event.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 font-medium" />
+            <input type="number" value={input.grade} onChange={(event) => updateField('grade', event.target.value)} className="mt-1 w-full rounded-md border border-white/10 bg-white px-3 py-2 font-medium text-slate-950" />
           </label>
-          <label className="text-sm font-bold text-slate-700">
+          <label className="text-sm font-bold text-slate-200">
             Chapter
-            <input value={input.chapter} onChange={(event) => updateField('chapter', event.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 font-medium" />
+            <input value={input.chapter} onChange={(event) => updateField('chapter', event.target.value)} className="mt-1 w-full rounded-md border border-white/10 bg-white px-3 py-2 font-medium text-slate-950" />
           </label>
-          <label className="text-sm font-bold text-slate-700">
+          <label className="text-sm font-bold text-slate-200">
             Subtopic
-            <input value={input.subtopic} onChange={(event) => updateField('subtopic', event.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 font-medium" />
+            <input value={input.subtopic} onChange={(event) => updateField('subtopic', event.target.value)} className="mt-1 w-full rounded-md border border-white/10 bg-white px-3 py-2 font-medium text-slate-950" />
           </label>
         </div>
       </section>
