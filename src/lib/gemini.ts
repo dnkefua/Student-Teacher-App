@@ -1,7 +1,6 @@
-'use client';
-
-import { getAI, getGenerativeModel, GoogleAIBackend, type AI, type Tool } from 'firebase/ai';
-import { getFirebaseApp } from './firebase';
+// Client-side AI helper. Posts to /api/ai/generate, which runs Genkit on the
+// server. The provider API key lives only in the server's environment and is
+// never bundled into the client.
 
 export const DEFAULT_AI_MODEL = 'gemma-3n-e4b-it';
 export const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
@@ -23,38 +22,21 @@ export type GenerateContentResponse = {
   usageMetadata: unknown | null;
 };
 
-let cachedAI: AI | null = null;
-
-function getAIClient(): AI {
-  if (cachedAI) return cachedAI;
-  cachedAI = getAI(getFirebaseApp(), { backend: new GoogleAIBackend() });
-  return cachedAI;
-}
-
 export async function generateContent(request: GenerateContentRequest): Promise<GenerateContentResponse> {
-  const ai = getAIClient();
-
-  const generationConfig: Record<string, unknown> = {};
-  if (request.config?.responseModalities) {
-    generationConfig.responseModalities = request.config.responseModalities;
-  }
-  if (request.config?.speechConfig) {
-    generationConfig.speechConfig = request.config.speechConfig;
-  }
-
-  const model = getGenerativeModel(ai, {
-    model: request.model,
-    systemInstruction: request.config?.systemInstruction,
-    tools: request.config?.tools as Tool[] | undefined,
-    generationConfig: Object.keys(generationConfig).length > 0 ? generationConfig : undefined,
+  const res = await fetch('/api/ai/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
   });
 
-  const result = await model.generateContent(request.contents as never);
-  const response = result.response;
+  if (!res.ok) {
+    let message = `AI request failed (${res.status})`;
+    try {
+      const err = await res.json();
+      if (err?.error) message = err.error;
+    } catch {}
+    throw new Error(message);
+  }
 
-  return {
-    text: typeof response.text === 'function' ? response.text() : null,
-    candidates: response.candidates ?? null,
-    usageMetadata: response.usageMetadata ?? null,
-  };
+  return (await res.json()) as GenerateContentResponse;
 }
