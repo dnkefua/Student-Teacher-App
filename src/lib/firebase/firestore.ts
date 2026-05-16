@@ -8,16 +8,26 @@ import {
   setDoc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   where,
   orderBy,
   limit,
   serverTimestamp,
   type Firestore,
+  type Unsubscribe,
 } from 'firebase/firestore';
 import type { CurriculumQuestion } from '@/lib/grade8Curriculum';
 import { getDb, isFirebaseConfigured } from './client';
 import { demoDisplayName, getDemoClassId, getDemoUserId } from './demoUser';
+import { getActiveClassId } from '@/lib/activeClass';
+
+function activeOrDemoClassId(): string {
+  // Read the picker's selected class on the client, fall back to the
+  // legacy demo class id on the server or when nothing is selected.
+  if (typeof window === 'undefined') return getDemoClassId();
+  return getActiveClassId() || getDemoClassId();
+}
 import {
   COLLECTIONS,
   type AppRole,
@@ -94,7 +104,7 @@ export async function createAssignment(
   const db = dbOrNull();
   if (!db) return null;
 
-  const classId = opts.classId ?? getDemoClassId();
+  const classId = opts.classId ?? activeOrDemoClassId();
   const teacherId = opts.teacherId ?? getDemoUserId('teacher');
   const assignmentId = id();
 
@@ -131,7 +141,7 @@ export async function getActiveAssignments(classId?: string): Promise<FirestoreA
   const db = dbOrNull();
   if (!db) return null;
 
-  const targetClassId = classId ?? getDemoClassId();
+  const targetClassId = classId ?? activeOrDemoClassId();
   const q = query(
     collection(db, COLLECTIONS.assignments),
     where('classId', '==', targetClassId),
@@ -165,7 +175,7 @@ export async function submitStudentResponse(input: {
   const response: StudentResponse = {
     id: responseId,
     assignmentId: input.assignmentId,
-    classId: input.classId ?? getDemoClassId(),
+    classId: input.classId ?? activeOrDemoClassId(),
     studentId: input.studentId ?? getDemoUserId('student'),
     answer: input.answer,
     score: input.score,
@@ -190,6 +200,49 @@ export async function getResponsesForAssignment(assignmentId: string): Promise<S
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as StudentResponse);
+}
+
+/** Subscribe to live changes for active assignments. Returns an unsubscribe
+ *  function. Returns null (and never calls the callback) when Firebase is
+ *  not configured — callers can fall back to polling or static demo data. */
+export function watchActiveAssignments(
+  callback: (assignments: FirestoreAssignment[]) => void,
+  classId?: string,
+): Unsubscribe | null {
+  const db = dbOrNull();
+  if (!db) return null;
+  const targetClassId = classId ?? activeOrDemoClassId();
+  const q = query(
+    collection(db, COLLECTIONS.assignments),
+    where('classId', '==', targetClassId),
+    where('status', '==', 'assigned'),
+    orderBy('createdAt', 'desc'),
+    limit(50),
+  );
+  return onSnapshot(
+    q,
+    (snap) => callback(snap.docs.map((d) => d.data() as FirestoreAssignment)),
+    (err) => console.warn('[firestore] watchActiveAssignments error', err),
+  );
+}
+
+/** Subscribe to live student responses for a given assignment. */
+export function watchResponsesForAssignment(
+  assignmentId: string,
+  callback: (responses: StudentResponse[]) => void,
+): Unsubscribe | null {
+  const db = dbOrNull();
+  if (!db) return null;
+  const q = query(
+    collection(db, COLLECTIONS.studentResponses),
+    where('assignmentId', '==', assignmentId),
+    orderBy('submittedAt', 'desc'),
+  );
+  return onSnapshot(
+    q,
+    (snap) => callback(snap.docs.map((d) => d.data() as StudentResponse)),
+    (err) => console.warn('[firestore] watchResponsesForAssignment error', err),
+  );
 }
 
 export async function saveGeneratedLesson(lesson: Omit<GeneratedLesson, 'id' | 'createdAt'> & { id?: string }): Promise<GeneratedLesson | null> {

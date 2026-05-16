@@ -32,6 +32,8 @@ import { StudentAssignmentList } from '@/components/StudentAssignmentList';
 import { SystemStatusStrip } from '@/components/SystemStatusStrip';
 import { SubjectQuickPicker } from '@/components/SubjectQuickPicker';
 import { ActiveSubjectLessonCard } from '@/components/ActiveSubjectLessonCard';
+import { ClassPicker } from '@/components/ClassPicker';
+import { AuthButton } from '@/components/AuthButton';
 import {
   assignDemoQuestion,
   defaultDemoAssignment,
@@ -132,18 +134,22 @@ function ModeBar({ mode, setMode }: { mode: LearningMode; setMode: (mode: Learni
           Landing → Launch App → Teacher Dashboard → EIS Maths → AI 3D Generator → Assign → Student Submit → Virtual Classroom
         </p>
       </div>
-      <div className="grid grid-cols-2 rounded-md border border-white/10 bg-[#050711]/70 p-1">
-        {(['teacher', 'student'] as const).map((item) => (
-          <button
-            key={item}
-            onClick={() => setMode(item)}
-            className={`rounded px-4 py-2 text-sm font-black capitalize transition ${
-              mode === item ? 'bg-[#49c8ff] text-[#061126] shadow-[0_0_22px_rgba(73,200,255,.35)]' : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            {item}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <AuthButton compact />
+        <ClassPicker />
+        <div className="grid grid-cols-2 rounded-md border border-white/10 bg-[#050711]/70 p-1">
+          {(['teacher', 'student'] as const).map((item) => (
+            <button
+              key={item}
+              onClick={() => setMode(item)}
+              className={`rounded px-4 py-2 text-sm font-black capitalize transition ${
+                mode === item ? 'bg-[#49c8ff] text-[#061126] shadow-[0_0_22px_rgba(73,200,255,.35)]' : 'text-slate-300 hover:text-white'
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

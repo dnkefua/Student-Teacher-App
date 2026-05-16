@@ -1,17 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, RefreshCw, UserCircle } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChevronDown, ChevronRight, Inbox, Radio, UserCircle } from 'lucide-react';
 import {
-  getActiveAssignments,
-  getResponsesForAssignment,
+  watchActiveAssignments,
+  watchResponsesForAssignment,
 } from '@/lib/firebase/firestore';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
+import {
+  loadActiveClass,
+  subscribeActiveClass,
+  type ClassMeta,
+} from '@/lib/activeClass';
 import { threeDLabels } from '@/lib/grade8Curriculum';
 import type {
   FirestoreAssignment,
   StudentResponse,
 } from '@/lib/firebase/types';
+import type { Unsubscribe } from 'firebase/firestore';
 
 type AssignmentWithResponses = {
   assignment: FirestoreAssignment;
@@ -30,45 +36,80 @@ function timeAgo(iso: string): string {
 }
 
 export function TeacherSubmissionsPanel() {
-  const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<AssignmentWithResponses[] | null>(null);
+  const [assignments, setAssignments] = useState<FirestoreAssignment[] | null>(null);
+  const [responsesByAssignment, setResponsesByAssignment] = useState<Record<string, StudentResponse[]>>({});
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const [error, setError] = useState<string | null>(null);
+  const [pulse, setPulse] = useState(false);
+  const responseSubsRef = useRef<Record<string, Unsubscribe>>({});
 
-  const load = async () => {
-    if (!isFirebaseConfigured()) {
-      setData(null);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const assignments = await getActiveAssignments();
-      if (!assignments) {
-        setData([]);
-        return;
-      }
-      const enriched = await Promise.all(
-        assignments.map(async (a) => ({
-          assignment: a,
-          responses: (await getResponsesForAssignment(a.id)) ?? [],
-        })),
-      );
-      setData(enriched);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load submissions.';
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Subscribe to active assignments scoped to the current class. Re-binds
+  // when the teacher swaps class in the picker.
+  const [activeClass, setLocalActiveClass] = useState<ClassMeta>(() => loadActiveClass());
 
   useEffect(() => {
-    void load();
-    const onChange = () => void load();
-    window.addEventListener('eis-demo-assignment', onChange);
-    return () => window.removeEventListener('eis-demo-assignment', onChange);
+    const unsub = subscribeActiveClass(() => setLocalActiveClass(loadActiveClass()));
+    return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (!isFirebaseConfigured()) {
+      setAssignments(null);
+      return;
+    }
+    const unsub = watchActiveAssignments((next) => {
+      setAssignments(next);
+      setPulse(true);
+      window.setTimeout(() => setPulse(false), 800);
+    }, activeClass.id);
+    return () => {
+      unsub?.();
+    };
+  }, [activeClass.id]);
+
+  // Maintain a per-assignment response subscription so new submissions
+  // appear instantly without a manual refresh.
+  useEffect(() => {
+    if (!assignments) return;
+    const wanted = new Set(assignments.map((a) => a.id));
+
+    // Tear down subscriptions for assignments that disappeared.
+    for (const [id, unsub] of Object.entries(responseSubsRef.current)) {
+      if (!wanted.has(id)) {
+        unsub();
+        delete responseSubsRef.current[id];
+        setResponsesByAssignment((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      }
+    }
+
+    // Add subscriptions for newly-arriving assignments.
+    for (const a of assignments) {
+      if (responseSubsRef.current[a.id]) continue;
+      const unsub = watchResponsesForAssignment(a.id, (responses) => {
+        setResponsesByAssignment((prev) => ({ ...prev, [a.id]: responses }));
+        setPulse(true);
+        window.setTimeout(() => setPulse(false), 800);
+      });
+      if (unsub) responseSubsRef.current[a.id] = unsub;
+    }
+  }, [assignments]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(responseSubsRef.current).forEach((u) => u());
+      responseSubsRef.current = {};
+    };
+  }, []);
+
+  const data: AssignmentWithResponses[] | null = assignments
+    ? assignments.map((a) => ({
+        assignment: a,
+        responses: responsesByAssignment[a.id] ?? [],
+      }))
+    : null;
 
   const toggle = (id: string) => {
     setExpanded((prev) => {
@@ -100,24 +141,20 @@ export function TeacherSubmissionsPanel() {
           <Inbox className="h-5 w-5 text-[#49c8ff]" />
           <div>
             <p className="text-xs font-black uppercase tracking-wide text-[#8ddfff]">Live submissions</p>
-            <p className="text-sm font-semibold text-slate-300">From the EIS Grade 8 Maths demo class · Firestore</p>
+            <p className="text-sm font-semibold text-slate-300">{activeClass.name} · Firestore</p>
           </div>
         </div>
-        <button
-          onClick={() => void load()}
-          disabled={loading}
-          className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-wide text-slate-200 transition hover:border-[#49c8ff] hover:text-[#8ddfff] disabled:cursor-not-allowed disabled:opacity-60"
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide transition-colors ${
+            pulse
+              ? 'border-emerald-300/60 bg-emerald-300/20 text-emerald-100'
+              : 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200'
+          }`}
         >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-          Refresh
-        </button>
+          <Radio className={`h-3 w-3 ${pulse ? 'animate-pulse' : ''}`} />
+          Live · onSnapshot
+        </span>
       </div>
-
-      {error ? (
-        <p className="mt-4 rounded-md border border-red-300/30 bg-red-300/10 px-3 py-2 text-sm font-semibold text-red-100">
-          {error}
-        </p>
-      ) : null}
 
       <div className="mt-5 space-y-3">
         {data === null ? (

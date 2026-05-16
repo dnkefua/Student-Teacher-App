@@ -14,6 +14,9 @@ import {
   Wand2,
   X,
 } from 'lucide-react';
+import { LessonLibraryPanel } from './LessonLibraryPanel';
+import { extractPdfText } from '@/lib/extractors/pdfExtractor';
+import type { TabType } from './Sidebar';
 import { aiGenerateLesson } from '@/lib/ai/client';
 import type { GeneratedLesson as AiGeneratedLesson } from '@/lib/ai/types';
 import { uploadTeacherSource, type UploadProgress, type UploadResult } from '@/lib/firebase/uploads';
@@ -92,7 +95,11 @@ function asSubjectLesson(gl: AiGeneratedLesson): SubjectLesson {
   };
 }
 
-export function TeacherUploadStudio() {
+interface TeacherUploadStudioProps {
+  setActiveTab?: (tab: TabType) => void;
+}
+
+export function TeacherUploadStudio({ setActiveTab }: TeacherUploadStudioProps = {}) {
   const [subject, setSubject] = useState<SubjectId>('mathematics');
   const [topic, setTopic] = useState('');
   const [unit, setUnit] = useState<CurriculumUnit | ''>('');
@@ -105,6 +112,8 @@ export function TeacherUploadStudio() {
   const [generated, setGenerated] = useState<AiGeneratedLesson | null>(null);
   const [generatedSource, setGeneratedSource] = useState<'ai' | 'mock' | null>(null);
   const [savedLessonId, setSavedLessonId] = useState<string | null>(null);
+  const [extractedChars, setExtractedChars] = useState<number | null>(null);
+  const [extracting, setExtracting] = useState(false);
 
   const fbReady = isFirebaseConfigured();
 
@@ -115,6 +124,23 @@ export function TeacherUploadStudio() {
     setUpload(null);
     setUploadProgress(null);
     setError(null);
+    setExtractedChars(null);
+
+    // Client-side PDF text extraction so the AI context picks up the
+    // worksheet contents even before Firestore upload completes.
+    if (picked.type === 'application/pdf') {
+      setExtracting(true);
+      try {
+        const text = await extractPdfText(picked);
+        if (text) {
+          setContext((prev) => (prev ? `${prev}\n\n--- From ${picked.name} ---\n${text}` : text));
+          setExtractedChars(text.length);
+        }
+      } finally {
+        setExtracting(false);
+      }
+    }
+
     if (!fbReady) return; // demo mode — skip upload
     setPhase('uploading');
     try {
@@ -407,9 +433,17 @@ export function TeacherUploadStudio() {
                 </a>
               ) : null}
 
-              {isExtractableLater(file) ? (
+              {extracting ? (
+                <p className="mt-3 rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-2 text-[11px] leading-5 text-[#8ddfff]">
+                  Extracting text from the PDF in your browser…
+                </p>
+              ) : extractedChars !== null ? (
+                <p className="mt-3 rounded-md border border-emerald-300/30 bg-emerald-300/10 px-3 py-2 text-[11px] leading-5 text-emerald-100">
+                  Extracted {extractedChars.toLocaleString()} characters of text and appended to your context. The AI will read it as additional teacher input.
+                </p>
+              ) : isExtractableLater(file) ? (
                 <p className="mt-3 rounded-md border border-[#ffc43b]/25 bg-[#ffc43b]/5 px-3 py-2 text-[11px] leading-5 text-[#ffe08a]">
-                  PDF and PowerPoint extraction will be handled by a Cloud Run extractor in a follow-up. For now, type the lesson topic and any key points into the fields on the left — those become the AI&apos;s context.
+                  PowerPoint extraction needs a Cloud Run extractor (coming in a follow-up). Type the lesson topic and any key points into the fields on the left — those become the AI&apos;s context.
                 </p>
               ) : null}
             </div>
@@ -584,6 +618,8 @@ export function TeacherUploadStudio() {
           </div>
         </section>
       ) : null}
+
+      <LessonLibraryPanel setActiveTab={setActiveTab} />
     </div>
   );
 }

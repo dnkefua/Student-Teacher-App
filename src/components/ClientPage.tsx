@@ -1,27 +1,84 @@
 'use client';
 
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
 import { Sidebar, TabType } from '@/components/Sidebar';
 import { Menu } from 'lucide-react';
 import { DashboardHome } from '@/components/DashboardHome';
-import { LessonPlanner } from '@/components/LessonPlanner';
-import { Grader } from '@/components/Grader';
-import { VirtualClassroom } from '@/components/VirtualClassroom';
-import { EmailAssistant } from '@/components/EmailAssistant';
-import { NeuroQuestHub } from '@/components/NeuroQuestHub';
-import { EISMathStudio } from '@/components/EISMathStudio';
-import { EnglishStudio } from '@/components/english/EnglishStudio';
-import { ScienceStudio } from '@/components/science/ScienceStudio';
-import { LessonGenerator } from '@/components/CinematicLessonEngine';
-import { InteractiveLessonRenderer } from '@/components/InteractiveLessonRenderer';
-import { TeacherUploadStudio } from '@/components/TeacherUploadStudio';
-import { LearningDataHub } from '@/components/learningHub/LearningDataHub';
+import { AuthProvider } from '@/lib/auth/authContext';
 import type { LearningMode } from '@/lib/demoAssignments';
+
+// Heavy or rarely-used routes are split into their own chunks so the
+// initial bundle doesn't carry every studio. Each lazy import shows a
+// small skeleton while its chunk downloads.
+
+const SkeletonLoading = () => (
+  <div className="flex h-64 items-center justify-center rounded-lg border border-white/10 bg-white/[.02]">
+    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#49c8ff] border-t-transparent" />
+  </div>
+);
+
+const InteractiveLessonRenderer = dynamic(
+  () => import('@/components/InteractiveLessonRenderer').then((m) => ({ default: m.InteractiveLessonRenderer })),
+  { loading: SkeletonLoading },
+);
+const LearningDataHub = dynamic(
+  () => import('@/components/learningHub/LearningDataHub').then((m) => ({ default: m.LearningDataHub })),
+  { loading: SkeletonLoading },
+);
+const EISMathStudio = dynamic(
+  () => import('@/components/EISMathStudio').then((m) => ({ default: m.EISMathStudio })),
+  { loading: SkeletonLoading },
+);
+const EnglishStudio = dynamic(
+  () => import('@/components/english/EnglishStudio').then((m) => ({ default: m.EnglishStudio })),
+  { loading: SkeletonLoading },
+);
+const ScienceStudio = dynamic(
+  () => import('@/components/science/ScienceStudio').then((m) => ({ default: m.ScienceStudio })),
+  { loading: SkeletonLoading },
+);
+const LessonGenerator = dynamic(
+  () => import('@/components/CinematicLessonEngine').then((m) => ({ default: m.LessonGenerator })),
+  { loading: SkeletonLoading },
+);
+const TeacherUploadStudio = dynamic(
+  () => import('@/components/TeacherUploadStudio').then((m) => ({ default: m.TeacherUploadStudio })),
+  { loading: SkeletonLoading },
+);
+const VirtualClassroom = dynamic(
+  () => import('@/components/VirtualClassroom').then((m) => ({ default: m.VirtualClassroom })),
+  { loading: SkeletonLoading },
+);
+const LessonPlanner = dynamic(
+  () => import('@/components/LessonPlanner').then((m) => ({ default: m.LessonPlanner })),
+  { loading: SkeletonLoading },
+);
+const Grader = dynamic(
+  () => import('@/components/Grader').then((m) => ({ default: m.Grader })),
+  { loading: SkeletonLoading },
+);
+const EmailAssistant = dynamic(
+  () => import('@/components/EmailAssistant').then((m) => ({ default: m.EmailAssistant })),
+  { loading: SkeletonLoading },
+);
+const NeuroQuestHub = dynamic(
+  () => import('@/components/NeuroQuestHub').then((m) => ({ default: m.NeuroQuestHub })),
+  { loading: SkeletonLoading },
+);
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
 export function ClientPage() {
+  return (
+    <AuthProvider>
+      <ClientPageInner />
+    </AuthProvider>
+  );
+}
+
+function ClientPageInner() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [mode, setMode] = useState<LearningMode>('teacher');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -73,7 +130,7 @@ export function ClientPage() {
             {activeTab === 'english-studio' && <EnglishStudio setActiveTab={setActiveTab} />}
             {activeTab === 'science-studio' && <ScienceStudio setActiveTab={setActiveTab} />}
             {activeTab === 'place-value-lesson' && <LessonGenerator setActiveTab={setActiveTab} />}
-            {activeTab === 'upload-studio' && <TeacherUploadStudio />}
+            {activeTab === 'upload-studio' && <TeacherUploadStudio setActiveTab={setActiveTab} />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}
             {activeTab === 'grader' && <Grader />}
             {activeTab === 'classroom' && <VirtualClassroom setActiveTab={setActiveTab} />}
