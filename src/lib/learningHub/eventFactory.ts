@@ -55,6 +55,24 @@ export function getValueByAliases(
   return undefined;
 }
 
+/** Mapping-first lookup: prefers the teacher-supplied column name, falls
+ *  back to the registry aliases. Used everywhere baseEvent reads from a row.
+ */
+export function getMappedOrAliasValue(
+  index: Map<string, unknown>,
+  mappedColumn: string | undefined,
+  aliases: readonly string[] | undefined,
+): unknown {
+  if (mappedColumn) {
+    const k = normalizeKey(mappedColumn);
+    if (index.has(k)) {
+      const v = index.get(k);
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+  }
+  return getValueByAliases(index, aliases);
+}
+
 export function parseNumber(value: unknown): number | undefined {
   if (value === undefined || value === null || value === '') return undefined;
   if (typeof value === 'number' && !Number.isNaN(value)) return value;
@@ -175,23 +193,24 @@ function baseEvent(
   eventType: LearningEventType,
 ): LearningEvent {
   const schema = platformAnalyticsRegistry[input.platform];
-  const externalStudentName = (getValueByAliases(index, schema.identityFields.studentName) as string | undefined) ?? undefined;
-  const externalEmail = (getValueByAliases(index, schema.identityFields.email) as string | undefined) ?? undefined;
+  const m = input.mapping ?? {};
+  const externalStudentName = (getMappedOrAliasValue(index, m.studentName, schema.identityFields.studentName) as string | undefined) ?? undefined;
+  const externalEmail = (getMappedOrAliasValue(index, m.studentEmail, schema.identityFields.email) as string | undefined) ?? undefined;
   const externalUsername = (getValueByAliases(index, schema.identityFields.username) as string | undefined) ?? undefined;
 
-  const activityTitle = (getValueByAliases(index, schema.activityFields.activityTitle) as string | undefined) ?? undefined;
-  const topicRaw = (getValueByAliases(index, schema.activityFields.topic) as string | undefined) ?? undefined;
+  const activityTitle = (getMappedOrAliasValue(index, m.activityTitle, schema.activityFields.activityTitle) as string | undefined) ?? undefined;
+  const topicRaw = (getMappedOrAliasValue(index, m.topic, schema.activityFields.topic) as string | undefined) ?? undefined;
   const inferred = inferTopicFromActivityTitle(activityTitle ?? topicRaw);
 
-  const score = parseNumber(getValueByAliases(index, schema.performanceFields.score));
-  const maxScore = parseNumber(getValueByAliases(index, schema.performanceFields.maxScore));
-  const percentage = parseNumber(getValueByAliases(index, schema.performanceFields.percentage));
+  const score = parseNumber(getMappedOrAliasValue(index, m.score, schema.performanceFields.score));
+  const maxScore = parseNumber(getMappedOrAliasValue(index, m.maxScore, schema.performanceFields.maxScore));
+  const percentage = parseNumber(getMappedOrAliasValue(index, m.accuracy, schema.performanceFields.percentage));
   const accuracy =
     percentage ?? (score !== undefined && maxScore ? (score / maxScore) * 100 : undefined);
 
-  const durationSeconds = parseNumber(getValueByAliases(index, schema.engagementFields.durationSeconds));
-  const answerTimeSeconds = parseNumber(getValueByAliases(index, schema.engagementFields.answerTimeSeconds));
-  const dateRaw = getValueByAliases(index, schema.activityFields.date);
+  const durationSeconds = parseNumber(getMappedOrAliasValue(index, m.durationSeconds, schema.engagementFields.durationSeconds));
+  const answerTimeSeconds = parseNumber(getMappedOrAliasValue(index, m.answerTimeSeconds, schema.engagementFields.answerTimeSeconds));
+  const dateRaw = getMappedOrAliasValue(index, m.occurredAt, schema.activityFields.date);
   const occurredAt = parseDate(dateRaw) ?? new Date().toISOString();
   const completion = getValueByAliases(index, schema.performanceFields.completionStatus) as string | undefined;
 
@@ -207,10 +226,10 @@ function baseEvent(
     return 'unknown';
   })();
 
-  const questionText = getValueByAliases(index, schema.questionFields.questionText) as string | undefined;
-  const selectedAnswer = getValueByAliases(index, schema.questionFields.selectedAnswer) as string | undefined;
-  const correctAnswer = getValueByAliases(index, schema.questionFields.correctAnswer) as string | undefined;
-  const isCorrect = parseBoolean(getValueByAliases(index, schema.questionFields.isCorrect));
+  const questionText = getMappedOrAliasValue(index, m.questionText, schema.questionFields.questionText) as string | undefined;
+  const selectedAnswer = getMappedOrAliasValue(index, m.selectedAnswer, schema.questionFields.selectedAnswer) as string | undefined;
+  const correctAnswer = getMappedOrAliasValue(index, m.correctAnswer, schema.questionFields.correctAnswer) as string | undefined;
+  const isCorrect = parseBoolean(getMappedOrAliasValue(index, m.isCorrect, schema.questionFields.isCorrect));
 
   const masterySignal = calculateMasterySignal(score ?? percentage, accuracy);
 

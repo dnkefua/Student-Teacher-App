@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   BarChart3,
   BrainCircuit,
@@ -15,16 +15,15 @@ import {
   UploadCloud,
   UserCheck,
 } from 'lucide-react';
-import type { ExternalPlatform, LearningEvent, ExternalImport, PlatformConnection } from '@/lib/learningHub/types';
-import { isFirebaseConfigured } from '@/lib/firebase/client';
+import type { LearningEvent } from '@/lib/learningHub/types';
 import {
-  isDemoLoaded,
-  listEvents,
-  listConnections,
-  listImports,
-  clearAll,
-} from '@/lib/learningHub/localStore';
-import { seedDemoLearningHubData } from '@/lib/learningHub/demoData';
+  clearLearningHubRepository,
+  isFirestoreBacked,
+  loadLearningHubSnapshot,
+  seedDemoDataRepository,
+  type LearningHubSnapshot,
+} from '@/lib/learningHub/repository';
+import { applyStudentMappings } from '@/lib/learningHub/studentMatching';
 import { DEMO_ROSTER } from '@/lib/learningHub/studentMatching';
 import { ConnectedPlatforms } from './ConnectedPlatforms';
 import { UploadReports } from './UploadReports';
@@ -71,65 +70,65 @@ const STUDENT_TABS: { id: StudentTab; label: string; icon: typeof BarChart3 }[] 
   { id: 'my-mastery', label: 'My mastery', icon: BarChart3 },
 ];
 
-/* ─── External store (Learning Hub) ─────────────────────────────────── */
-
-let cachedSnapshot: {
-  events: LearningEvent[];
-  imports: ExternalImport[];
-  connections: PlatformConnection[];
-} | null = null;
-
-function invalidate() { cachedSnapshot = null; }
-function readSnapshot() {
-  if (cachedSnapshot === null) {
-    cachedSnapshot = {
-      events: listEvents(),
-      imports: listImports(),
-      connections: listConnections(),
-    };
-  }
-  return cachedSnapshot;
-}
-const EMPTY_SNAPSHOT = { events: [] as LearningEvent[], imports: [] as ExternalImport[], connections: [] as PlatformConnection[] };
-
-function subscribe(cb: () => void): () => void {
-  if (typeof window === 'undefined') return () => undefined;
-  const handler = () => { invalidate(); cb(); };
-  window.addEventListener('eis-learning-hub-changed', handler);
-  window.addEventListener('storage', handler);
-  return () => {
-    window.removeEventListener('eis-learning-hub-changed', handler);
-    window.removeEventListener('storage', handler);
-  };
-}
-
-/* ─── Component ─────────────────────────────────────────────────────── */
+const EMPTY_SNAPSHOT: LearningHubSnapshot = {
+  events: [],
+  imports: [],
+  connections: [],
+  mappings: [],
+  recommendations: [],
+  source: 'local',
+};
 
 export function LearningDataHub({ mode, setActiveTab }: Props) {
-  const { events, imports, connections } = useSyncExternalStore(
-    subscribe,
-    readSnapshot,
-    () => EMPTY_SNAPSHOT,
-  );
-  const fbReady = isFirebaseConfigured();
+  const [snapshot, setSnapshot] = useState<LearningHubSnapshot>(EMPTY_SNAPSHOT);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const fbReady = isFirestoreBacked();
 
-  // Use first demo student as the "signed-in" student in student mode.
-  const [studentMockId] = useState<string>(DEMO_ROSTER[0].id);
+  // Student mode pins to the first demo roster entry (no real auth yet).
+  const studentMockId = DEMO_ROSTER[0].id;
+
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadLearningHubSnapshot({
+      mode,
+      studentId: mode === 'student' ? studentMockId : undefined,
+    }).then((next) => {
+      if (cancelled) return;
+      // Apply roster mappings so every event row has a friendly student name.
+      const eventsWithMappings = applyStudentMappings(next.events, next.mappings);
+      setSnapshot({ ...next, events: eventsWithMappings });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, studentMockId, refreshKey]);
+
+  // Also listen to localStore mutations so manual uploads, matchings and the
+  // seed/clear demo buttons keep the panel in sync without a tab change.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onChange = () => refresh();
+    window.addEventListener('eis-learning-hub-changed', onChange);
+    return () => window.removeEventListener('eis-learning-hub-changed', onChange);
+  }, [refresh]);
+
   const [teacherTab, setTeacherTab] = useState<TeacherTab>('platforms');
   const [studentTab, setStudentTab] = useState<StudentTab>('my-graph');
-  // Derive demo-active state from storage on each render (cheap; isDemoLoaded
-  // is a single localStorage lookup) so we never need a setState-in-effect.
-  const demoActive = isDemoLoaded() || events.length > 0;
 
-  const seedDemo = () => {
-    seedDemoLearningHubData();
-    invalidate();
+  const seedDemo = async () => {
+    await seedDemoDataRepository();
+    refresh();
   };
 
-  const clearDemo = () => {
-    clearAll();
-    invalidate();
+  const clearDemo = async () => {
+    await clearLearningHubRepository();
+    refresh();
   };
+
+  const { events, imports, connections } = snapshot;
+  const studentEvents = events.filter((e: LearningEvent) => e.studentId === studentMockId);
 
   return (
     <div className="space-y-6 text-white">
@@ -155,13 +154,13 @@ export function LearningDataHub({ mode, setActiveTab }: Props) {
           <div className="flex flex-col items-end gap-2">
             <span
               className={`inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-[10px] font-black uppercase tracking-wide ${
-                fbReady
+                snapshot.source === 'firestore'
                   ? 'border-[#49c8ff]/30 bg-[#49c8ff]/10 text-[#8ddfff]'
                   : 'border-[#ffc43b]/30 bg-[#ffc43b]/10 text-[#ffe08a]'
               }`}
             >
-              <span className={`h-1.5 w-1.5 rounded-full ${fbReady ? 'bg-[#49c8ff]' : 'bg-[#ffc43b]'}`} />
-              {fbReady ? 'Firebase persistence on' : 'Local demo mode'}
+              <span className={`h-1.5 w-1.5 rounded-full ${snapshot.source === 'firestore' ? 'bg-[#49c8ff]' : 'bg-[#ffc43b]'}`} />
+              {snapshot.source === 'firestore' ? 'Firestore persistence on' : fbReady ? 'Firestore configured · local cache active' : 'Local demo mode'}
             </span>
             <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
               {events.length.toLocaleString()} events · {imports.length} imports · {connections.length} platforms
@@ -172,19 +171,19 @@ export function LearningDataHub({ mode, setActiveTab }: Props) {
         {mode === 'teacher' ? (
           <div className="relative mt-4 flex flex-wrap gap-2">
             <button
-              onClick={seedDemo}
+              onClick={() => void seedDemo()}
               className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-black transition ${
-                demoActive
+                events.length > 0
                   ? 'border border-white/15 text-slate-200 hover:border-white/35'
                   : 'animate-eis-pulse bg-[#ffc43b] text-[#061126] shadow-[0_0_22px_rgba(255,196,59,.35)] hover:bg-[#ffe08a]'
               }`}
             >
               <Sparkles className="h-3.5 w-3.5" />
-              {demoActive ? 'Re-seed demo data' : 'Load demo learning data'}
+              {events.length > 0 ? 'Re-seed demo data' : 'Load demo learning data'}
             </button>
             {events.length > 0 ? (
               <button
-                onClick={clearDemo}
+                onClick={() => void clearDemo()}
                 className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-xs font-black text-slate-300 transition hover:border-[#ff3d22]/40 hover:text-[#ff8a73]"
               >
                 <TrashIcon className="h-3.5 w-3.5" />
@@ -239,17 +238,17 @@ export function LearningDataHub({ mode, setActiveTab }: Props) {
                 connections={connections}
                 imports={imports}
                 events={events}
-                onUpload={(p: ExternalPlatform) => { setTeacherTab('upload'); void p; }}
+                onUpload={() => setTeacherTab('upload')}
               />
             )}
             {teacherTab === 'upload' && (
-              <UploadReports onImported={() => invalidate()} />
+              <UploadReports onImported={() => refresh()} />
             )}
             {teacherTab === 'matching' && (
-              <StudentMatching events={events} onMappingsApplied={() => invalidate()} />
+              <StudentMatching events={events} onMappingsApplied={() => refresh()} />
             )}
-            {teacherTab === 'events' && <LearningEventsTable events={events} />}
-            {teacherTab === 'mastery' && <MasteryAnalytics events={events} />}
+            {teacherTab === 'events' && <LearningEventsTable events={events} onDeleteImport={() => refresh()} />}
+            {teacherTab === 'mastery' && <MasteryAnalytics events={events} setActiveTab={setActiveTab} />}
             {teacherTab === 'recommendations' && (
               <AIRecommendations events={events} mode="teacher" setActiveTab={setActiveTab} />
             )}
@@ -280,10 +279,10 @@ export function LearningDataHub({ mode, setActiveTab }: Props) {
             })}
           </nav>
           {studentTab === 'my-graph' && (
-            <StudentLearningGraph events={events.filter((e) => e.studentId === studentMockId)} mode="student" defaultStudentId={studentMockId} />
+            <StudentLearningGraph events={studentEvents} mode="student" defaultStudentId={studentMockId} />
           )}
           {studentTab === 'my-recommendations' && (
-            <AIRecommendations events={events.filter((e) => e.studentId === studentMockId)} mode="student" studentId={studentMockId} setActiveTab={setActiveTab} />
+            <AIRecommendations events={studentEvents} mode="student" studentId={studentMockId} setActiveTab={setActiveTab} />
           )}
           {studentTab === 'my-mastery' && (
             <section className="rounded-lg border border-white/10 bg-[#050711]/70 p-4 text-sm leading-6 text-slate-200">

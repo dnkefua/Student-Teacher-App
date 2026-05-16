@@ -6,6 +6,8 @@ import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@
 import { ActiveLessonPanel } from './ActiveLessonPanel';
 import type { DemoAssignment } from '@/lib/demoAssignments';
 import type { TabType } from './Sidebar';
+import { recordClassParticipationEvent } from '@/lib/learningHub/internalEvents';
+import { getDemoUserId } from '@/lib/firebase/demoUser';
 
 interface Message {
   id: string;
@@ -64,6 +66,14 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
       'Mr Smith (live)',
       `📘 We're starting "${lesson.title}" (${lesson.lessonTitle}). Today's inquiry: ${lesson.inquiryQuestion}`,
     );
+    // Record the live-class share as a LearningEvent for every demo student
+    // so the Learning Hub reflects participation across the cohort.
+    void recordClassParticipationEvent({
+      studentId: getDemoUserId('student'),
+      studentName: 'Demo Student',
+      classId: 'class-grade8a',
+      activityTitle: `Live class · ${lesson.title}`,
+    });
   };
 
   const handleShareAssignment = (lesson: DemoAssignment) => {

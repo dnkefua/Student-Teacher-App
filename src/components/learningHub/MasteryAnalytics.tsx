@@ -2,14 +2,17 @@
 
 import { useMemo, useState } from 'react';
 import type { ClassMasteryProfile, LearningEvent } from '@/lib/learningHub/types';
-import { calculateClassMastery, calculateStudentMastery } from '@/lib/learningHub/mastery';
+import { calculateClassMastery, calculateStudentMastery, recommendIntervention } from '@/lib/learningHub/mastery';
 import { platformAnalyticsRegistry } from '@/lib/learningHub/platformRegistry';
 import { demoClasses } from '@/lib/learningHub/demoData';
-import { TrendingDown, TrendingUp } from 'lucide-react';
+import { Send, TrendingDown, TrendingUp, Wand2 } from 'lucide-react';
+import type { TabType } from '@/components/Sidebar';
+import { assignDemoQuestion } from '@/lib/demoAssignments';
+import { findQuestionById, grade8Curriculum } from '@/lib/grade8Curriculum';
 
-type Props = { events: LearningEvent[] };
+type Props = { events: LearningEvent[]; setActiveTab?: (tab: TabType) => void };
 
-export function MasteryAnalytics({ events }: Props) {
+export function MasteryAnalytics({ events, setActiveTab }: Props) {
   const classes = useMemo(() => demoClasses(), []);
   const [classId, setClassId] = useState<string>(classes[0]?.classId ?? '');
   const cls = classes.find((c) => c.classId === classId) ?? classes[0];
@@ -78,13 +81,49 @@ export function MasteryAnalytics({ events }: Props) {
         </article>
         <article className="rounded-lg border border-[#ffc43b]/30 bg-[#ffc43b]/5 p-4">
           <p className="text-xs font-black uppercase tracking-wide text-[#ffe08a]">Weakest concepts</p>
-          <ul className="mt-2 space-y-1 text-sm text-slate-100">
-            {profile.weakestConcepts.map((c) => (
-              <li key={c}>
-                <span className="font-black text-white">{c}</span>{' '}
-                <span className="text-[#ffc43b]">· {Math.round(profile.conceptAverages[c] ?? 0)}%</span>
-              </li>
-            ))}
+          <ul className="mt-2 space-y-2 text-sm text-slate-100">
+            {profile.weakestConcepts.map((c) => {
+              const sample = events.find((e) => (e.topic ?? e.concept ?? e.activityTitle) === c);
+              const threeD = recommendIntervention(c, sample?.strand);
+              const question =
+                grade8Curriculum.find((q) => q.threeDType === threeD) ??
+                grade8Curriculum.find((q) => q.topic === c) ??
+                findQuestionById('abstract-linear-equation-balance');
+              return (
+                <li key={c} className="rounded-md border border-white/10 bg-white/[0.03] p-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span>
+                      <span className="font-black text-white">{c}</span>{' '}
+                      <span className="text-[#ffc43b]">· {Math.round(profile.conceptAverages[c] ?? 0)}%</span>
+                    </span>
+                  </div>
+                  {setActiveTab && question ? (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        onClick={async () => {
+                          await assignDemoQuestion(question.id);
+                          setActiveTab('dashboard');
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md bg-[#ffc43b] px-2 py-1 text-[10px] font-black text-[#061126] transition hover:bg-[#ffe08a]"
+                      >
+                        <Send className="h-3 w-3" />
+                        Assign intervention
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await assignDemoQuestion(question.id);
+                          setActiveTab('lesson');
+                        }}
+                        className="inline-flex items-center gap-1 rounded-md bg-[#49c8ff] px-2 py-1 text-[10px] font-black text-[#061126] transition hover:bg-[#8ddfff]"
+                      >
+                        <Wand2 className="h-3 w-3" />
+                        Open 3D lesson
+                      </button>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </article>
         <article className="rounded-lg border border-[#ff3d22]/30 bg-[#ff3d22]/5 p-4">

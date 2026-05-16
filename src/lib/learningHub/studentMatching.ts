@@ -24,29 +24,48 @@ export function normalizeStudentName(name: string | undefined): string {
   return name.toString().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
-/** Cheap Jaccard-on-tokens score [0, 1]. Sufficient for typo-tolerance and
- *  reordered names ("Khan Aisha" ↔ "Aisha Khan"). */
+/** Tiered similarity per the Phase 5 brief. Returns a confidence in [0, 1].
+ *  Rule order:
+ *    - exact normalized name       → 0.95
+ *    - first + last token match    → 0.85
+ *    - one name fully contains other → 0.70
+ *    - fuzzy token-overlap (Jaccard) → 0.40 – 0.65
+ *    - no overlap                  → 0
+ *  Email match is handled by the caller and clamps to 0.99 separately. */
 export function calculateNameSimilarity(a: string, b: string): number {
   const an = normalizeStudentName(a);
   const bn = normalizeStudentName(b);
   if (!an || !bn) return 0;
-  if (an === bn) return 1;
-  const at = new Set(an.split(' ').filter(Boolean));
-  const bt = new Set(bn.split(' ').filter(Boolean));
-  let intersect = 0;
-  at.forEach((t) => { if (bt.has(t)) intersect++; });
-  const union = new Set<string>();
-  at.forEach((t) => union.add(t));
-  bt.forEach((t) => union.add(t));
+  if (an === bn) return 0.95;
+
+  const at = an.split(' ').filter(Boolean);
+  const bt = bn.split(' ').filter(Boolean);
+  const aSet = new Set(at);
+  const bSet = new Set(bt);
+  const intersect = at.filter((t) => bSet.has(t)).length;
+  const union = new Set<string>([...at, ...bt]);
+
+  // First + last token both match (handles ordered "Aisha Khan" vs "Khan Aisha").
+  if (at.length >= 2 && bt.length >= 2) {
+    const aFirst = at[0];
+    const aLast = at[at.length - 1];
+    const bFirst = bt[0];
+    const bLast = bt[bt.length - 1];
+    const firstMatch = aFirst === bFirst || aFirst === bLast;
+    const lastMatch = aLast === bLast || aLast === bFirst;
+    if (firstMatch && lastMatch) return 0.85;
+  }
+
+  // One side fully contains the other (handles "A Khan" vs "Aisha Khan").
+  if (an.includes(bn) || bn.includes(an)) return 0.7;
+
+  // Fuzzy overlap.
   if (union.size === 0) return 0;
-  let score = intersect / union.size;
-  // Bonus when the longest shared token matches at least 4 chars.
-  for (const t of at) if (bt.has(t) && t.length >= 4) score += 0.1;
-  // Bonus when initial+surname matches (e.g. "a khan" vs "aisha khan").
-  const aLast = an.split(' ').pop();
-  const bLast = bn.split(' ').pop();
-  if (aLast && bLast && aLast === bLast) score += 0.15;
-  return Math.min(1, score);
+  const jaccard = intersect / union.size;
+  if (jaccard >= 0.6) return 0.65;
+  if (jaccard >= 0.4) return 0.55;
+  if (jaccard >= 0.2) return 0.4;
+  return 0;
 }
 
 export type SuggestedMapping = {
@@ -79,9 +98,19 @@ export function suggestStudentMappings(
   const suggestions: SuggestedMapping[] = [];
   for (const entry of grouped.values()) {
     let best: { id: string; name: string; score: number } | null = null;
-    for (const student of roster) {
-      const score = calculateNameSimilarity(entry.externalName, student.name);
-      if (!best || score > best.score) best = { id: student.id, name: student.name, score };
+    // Exact email match wins outright (confidence 0.99 per the brief).
+    if (entry.externalEmail) {
+      const emailNorm = entry.externalEmail.toLowerCase().trim();
+      const rosterMatch = roster.find((r) =>
+        r.name.toLowerCase().replace(/\s+/g, '.').includes(emailNorm.split('@')[0]),
+      );
+      if (rosterMatch) best = { id: rosterMatch.id, name: rosterMatch.name, score: 0.99 };
+    }
+    if (!best) {
+      for (const student of roster) {
+        const score = calculateNameSimilarity(entry.externalName, student.name);
+        if (!best || score > best.score) best = { id: student.id, name: student.name, score };
+      }
     }
     if (best) {
       suggestions.push({

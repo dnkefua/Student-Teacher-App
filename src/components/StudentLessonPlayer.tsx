@@ -16,6 +16,8 @@ import { isFirebaseConfigured } from '@/lib/firebase/client';
 import { getLessonProgress, saveLessonProgress } from '@/lib/firebase/firestore';
 import { aiGradeAnswer } from '@/lib/ai/client';
 import type { GradedAnswer } from '@/lib/ai/types';
+import { recordAssignmentSubmissionEvent, recordThreeDInteractionEvent } from '@/lib/learningHub/internalEvents';
+import { getDemoUserId } from '@/lib/firebase/demoUser';
 
 export function StudentLessonPlayer({
   assignment,
@@ -105,7 +107,17 @@ export function StudentLessonPlayer({
     for (let i = 0; i < steps.length; i++) allSteps.add(i);
     setCompletedSteps(allSteps);
     void persistProgress(allSteps);
-  }, [steps.length, persistProgress]);
+    if (question) {
+      void recordThreeDInteractionEvent({
+        studentId: getDemoUserId('student'),
+        studentName: 'Demo Student',
+        lessonId: question.id,
+        lessonTitle: question.title,
+        threeDType: question.threeDType,
+        topic: question.topic,
+      });
+    }
+  }, [steps.length, persistProgress, question]);
 
   const submit = async () => {
     if (!answer.trim() || submitState === 'pending') return;
@@ -114,6 +126,17 @@ export function StudentLessonPlayer({
       const next = await submitDemoAnswer(answer);
       setSubmitState('done');
       void persistProgress(completedSteps, next.submission?.score);
+      // Emit a unified LearningEvent so the Learning Data Hub picks up the
+      // submission alongside Kahoot / MyiMaths / Dr Frost evidence.
+      void recordAssignmentSubmissionEvent({
+        studentId: getDemoUserId('student'),
+        studentName: 'Demo Student',
+        assignmentId: next.id,
+        lessonTitle: next.title,
+        topic: question?.topic,
+        score: next.submission?.score,
+        feedback: next.submission?.feedback,
+      });
       window.setTimeout(() => setSubmitState('idle'), 1800);
     } catch {
       setSubmitState('idle');

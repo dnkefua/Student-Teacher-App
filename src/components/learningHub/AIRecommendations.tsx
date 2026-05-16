@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-import { ArrowRight, ParkingMeter, Sparkles, Wand2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ArrowRight, Loader2, Mail, MonitorPlay, Send, Sparkles, Wand2, X } from 'lucide-react';
 import type { AIRecommendation, LearningEvent } from '@/lib/learningHub/types';
 import {
   generateRecommendationsForClass,
@@ -11,14 +11,22 @@ import { calculateClassMastery, calculateStudentMastery } from '@/lib/learningHu
 import { demoClasses } from '@/lib/learningHub/demoData';
 import type { TabType } from '@/components/Sidebar';
 import { threeDLabels } from '@/lib/grade8Curriculum';
+import {
+  assignInterventionFromRecommendation,
+  dismissRecommendation,
+  draftParentUpdateFromRecommendation,
+  openThreeDLessonFromRecommendation,
+  sendRecommendationToClassroom,
+} from '@/lib/learningHub/recommendationActions';
 
 type Props = {
   events: LearningEvent[];
   mode: 'teacher' | 'student';
-  /** Optional student scope when running in student mode. */
   studentId?: string;
   setActiveTab?: (tab: TabType) => void;
 };
+
+type Source = 'deterministic' | 'ai';
 
 const PRIORITY_STYLES: Record<AIRecommendation['priority'], string> = {
   high: 'border-[#ff3d22]/30 bg-[#ff3d22]/10 text-[#ff8a73]',
@@ -27,7 +35,7 @@ const PRIORITY_STYLES: Record<AIRecommendation['priority'], string> = {
 };
 
 export function AIRecommendations({ events, mode, studentId, setActiveTab }: Props) {
-  const recs: AIRecommendation[] = useMemo(() => {
+  const deterministic = useMemo<AIRecommendation[]>(() => {
     if (mode === 'student' && studentId) {
       const profile = calculateStudentMastery(events, { id: studentId, name: studentId });
       return generateRecommendationsForStudent(profile, events);
@@ -49,6 +57,80 @@ export function AIRecommendations({ events, mode, studentId, setActiveTab }: Pro
     return all.sort((a, b) => (a.priority === b.priority ? 0 : a.priority === 'high' ? -1 : 1)).slice(0, 12);
   }, [events, mode, studentId]);
 
+  const [recs, setRecs] = useState<AIRecommendation[]>(deterministic);
+  const [source, setSource] = useState<Source>('deterministic');
+  const [loadingAi, setLoadingAi] = useState(false);
+  const [busyRec, setBusyRec] = useState<string | null>(null);
+
+  // Keep recs in sync when the underlying deterministic output changes (e.g.
+  // teacher seeded demo data or confirmed a mapping).
+  useEffect(() => {
+    setRecs(deterministic);
+    setSource('deterministic');
+  }, [deterministic]);
+
+  const askAi = useCallback(async () => {
+    if (loadingAi || deterministic.length === 0) return;
+    setLoadingAi(true);
+    try {
+      const res = await fetch('/api/learning-hub/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: mode === 'student' ? 'student' : 'class',
+          events: events.slice(0, 200),
+          classProfile:
+            mode === 'teacher' && events.length > 0
+              ? calculateClassMastery(events, {
+                  classId: demoClasses()[0]?.classId ?? 'class-grade8a',
+                  className: demoClasses()[0]?.className ?? 'Demo class',
+                  grade: 'Grade 8',
+                  studentIds: demoClasses()[0]?.studentIds ?? [],
+                  studentNames: demoClasses()[0]?.studentNames ?? {},
+                })
+              : undefined,
+          studentProfile:
+            mode === 'student' && studentId
+              ? calculateStudentMastery(events, { id: studentId, name: studentId })
+              : undefined,
+        }),
+      });
+      if (!res.ok) return;
+      const json = (await res.json()) as { recommendations: AIRecommendation[]; source: Source };
+      if (Array.isArray(json.recommendations) && json.recommendations.length > 0) {
+        setRecs(json.recommendations);
+        setSource(json.source);
+      }
+    } catch (err) {
+      console.warn('[ai-recommendations] enrichment failed; keeping deterministic output.', err);
+    } finally {
+      setLoadingAi(false);
+    }
+  }, [events, mode, studentId, loadingAi, deterministic.length]);
+
+  const handle = async (rec: AIRecommendation, intent: 'assign' | 'lesson' | 'classroom' | 'email' | 'dismiss') => {
+    if (busyRec) return;
+    setBusyRec(rec.id);
+    try {
+      if (intent === 'dismiss') {
+        await dismissRecommendation(rec);
+        setRecs((prev) => prev.filter((r) => r.id !== rec.id));
+        return;
+      }
+      const result =
+        intent === 'assign'
+          ? await assignInterventionFromRecommendation(rec)
+          : intent === 'lesson'
+          ? await openThreeDLessonFromRecommendation(rec)
+          : intent === 'classroom'
+          ? await sendRecommendationToClassroom(rec)
+          : await draftParentUpdateFromRecommendation(rec);
+      setActiveTab?.(result.target);
+    } finally {
+      setBusyRec(null);
+    }
+  };
+
   if (recs.length === 0) {
     return (
       <section className="rounded-lg border border-emerald-300/30 bg-emerald-300/10 p-4 text-sm leading-6 text-emerald-100">
@@ -59,10 +141,22 @@ export function AIRecommendations({ events, mode, studentId, setActiveTab }: Pro
 
   return (
     <section className="space-y-3">
-      <p className="text-[11px] uppercase tracking-wide text-slate-400 inline-flex items-center gap-2">
-        <Sparkles className="h-3.5 w-3.5 text-[#ffc43b]" />
-        Deterministic, evidence-based recommendations. Gemma 4 augmentation can be enabled via the API route in a follow-up.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[11px] uppercase tracking-wide text-slate-400 inline-flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-[#ffc43b]" />
+          {source === 'ai' ? 'Gemma 4 enrichment · evidence-based' : 'Deterministic engine · evidence-based'}
+        </p>
+        {mode === 'teacher' ? (
+          <button
+            onClick={() => void askAi()}
+            disabled={loadingAi}
+            className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black text-slate-200 transition hover:border-[#49c8ff] hover:text-[#8ddfff] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loadingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+            {loadingAi ? 'Asking Gemma 4…' : 'Generate AI recommendations'}
+          </button>
+        ) : null}
+      </div>
       {recs.map((r) => (
         <article key={r.id} className="rounded-lg border border-white/10 bg-[#050711]/70 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -94,30 +188,65 @@ export function AIRecommendations({ events, mode, studentId, setActiveTab }: Pro
               ) : null}
 
               <p className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-300/25 bg-emerald-300/5 px-3 py-1.5 text-[11px] font-semibold text-emerald-100">
-                <ParkingMeter className="h-3 w-3" />
                 Action · {r.suggestedAction}
               </p>
             </div>
 
             <div className="flex flex-col gap-2">
-              {r.suggestedThreeDType && setActiveTab ? (
-                <button
-                  onClick={() => setActiveTab('lesson')}
-                  className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-3 py-1.5 text-xs font-black text-[#061126] transition hover:bg-[#8ddfff]"
-                >
-                  <Wand2 className="h-3.5 w-3.5" />
-                  Open 3D lesson
-                </button>
+              <button
+                onClick={() => void handle(r, 'assign')}
+                disabled={busyRec === r.id}
+                className="inline-flex items-center gap-2 rounded-md bg-[#ffc43b] px-3 py-1.5 text-xs font-black text-[#061126] transition hover:bg-[#ffe08a] disabled:opacity-60"
+              >
+                <Send className="h-3.5 w-3.5" />
+                Assign intervention
+              </button>
+              <button
+                onClick={() => void handle(r, 'lesson')}
+                disabled={busyRec === r.id}
+                className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-3 py-1.5 text-xs font-black text-[#061126] transition hover:bg-[#8ddfff] disabled:opacity-60"
+              >
+                <Wand2 className="h-3.5 w-3.5" />
+                Open 3D lesson
+              </button>
+              {mode === 'teacher' ? (
+                <>
+                  <button
+                    onClick={() => void handle(r, 'classroom')}
+                    disabled={busyRec === r.id}
+                    className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black text-slate-200 transition hover:border-[#49c8ff] hover:text-[#8ddfff]"
+                  >
+                    <MonitorPlay className="h-3.5 w-3.5" />
+                    Send to classroom
+                  </button>
+                  <button
+                    onClick={() => void handle(r, 'email')}
+                    disabled={busyRec === r.id}
+                    className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black text-slate-200 transition hover:border-[#ffc43b] hover:text-[#ffe08a]"
+                  >
+                    <Mail className="h-3.5 w-3.5" />
+                    Draft parent update
+                  </button>
+                </>
               ) : null}
-              {setActiveTab ? (
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className="inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black text-slate-200 transition hover:border-white/35"
-                >
-                  Assign intervention
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </button>
-              ) : null}
+              <button
+                onClick={() => void handle(r, 'dismiss')}
+                disabled={busyRec === r.id}
+                className="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-black text-slate-400 transition hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" />
+                Dismiss
+              </button>
+              {busyRec === r.id ? (
+                <span className="inline-flex items-center gap-1 text-[10px] text-slate-400">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Routing…
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[10px] text-slate-500">
+                  Audit-logged on action <ArrowRight className="h-3 w-3" />
+                </span>
+              )}
             </div>
           </div>
         </article>

@@ -1,12 +1,53 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Loader2, Trash2 } from 'lucide-react';
 import type { LearningEvent } from '@/lib/learningHub/types';
 import { platformAnalyticsRegistry } from '@/lib/learningHub/platformRegistry';
+import { deleteImportEverywhere } from '@/lib/learningHub/repository';
 
-type Props = { events: LearningEvent[] };
+type Props = { events: LearningEvent[]; onDeleteImport?: () => void };
 
-export function LearningEventsTable({ events }: Props) {
+export function LearningEventsTable({ events, onDeleteImport }: Props) {
+  const [busyImport, setBusyImport] = useState<string | null>(null);
+
+  const importSummary = useMemo(() => {
+    const map = new Map<string, { platform: LearningEvent['platform']; count: number }>();
+    for (const e of events) {
+      if (!e.importId) continue;
+      const existing = map.get(e.importId);
+      if (existing) existing.count += 1;
+      else map.set(e.importId, { platform: e.platform, count: 1 });
+    }
+    return Array.from(map.entries()).map(([importId, v]) => ({ importId, ...v }));
+  }, [events]);
+
+  const deleteImport = async (importId: string) => {
+    if (busyImport) return;
+    if (!confirm('Delete this import and every event it created? This is logged in the audit trail.')) return;
+    setBusyImport(importId);
+    try {
+      await deleteImportEverywhere(importId);
+      onDeleteImport?.();
+    } finally {
+      setBusyImport(null);
+    }
+  };
+
+  return TableInner({ events, importSummary, deleteImport, busyImport });
+}
+
+function TableInner({
+  events,
+  importSummary,
+  deleteImport,
+  busyImport,
+}: {
+  events: LearningEvent[];
+  importSummary: { importId: string; platform: LearningEvent['platform']; count: number }[];
+  deleteImport: (id: string) => void;
+  busyImport: string | null;
+}) {
   const [platform, setPlatform] = useState<string>('all');
   const [topic, setTopic] = useState<string>('all');
   const [signal, setSignal] = useState<string>('all');
@@ -33,6 +74,35 @@ export function LearningEventsTable({ events }: Props) {
 
   return (
     <section className="space-y-3">
+      {importSummary.length > 0 ? (
+        <div className="rounded-lg border border-white/10 bg-[#050711]/70 p-3">
+          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Active imports</p>
+          <ul className="mt-2 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {importSummary.map((row) => (
+              <li key={row.importId} className="flex items-center justify-between gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs">
+                <span className="min-w-0 truncate">
+                  <span className="font-black text-white">{platformAnalyticsRegistry[row.platform].displayName}</span>
+                  <span className="text-slate-400"> · {row.count} events · </span>
+                  <span className="font-mono text-slate-500">{row.importId}</span>
+                </span>
+                <button
+                  onClick={() => deleteImport(row.importId)}
+                  disabled={busyImport === row.importId}
+                  className="inline-flex items-center gap-1 rounded-md border border-white/15 px-2 py-1 text-[10px] font-black text-slate-300 transition hover:border-[#ff3d22]/40 hover:text-[#ff8a73] disabled:opacity-60"
+                >
+                  {busyImport === row.importId ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] text-slate-500">
+            Deleting an import removes it from Firestore (when configured) and the local cache, along with every event
+            it created. Audit-logged.
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid gap-2 sm:grid-cols-4">
         <input
           value={studentQuery}
