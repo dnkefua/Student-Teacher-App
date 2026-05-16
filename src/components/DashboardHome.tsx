@@ -30,6 +30,7 @@ import {
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
 import { StudentAssignmentList } from '@/components/StudentAssignmentList';
 import { SystemStatusStrip } from '@/components/SystemStatusStrip';
+import { SubjectQuickPicker } from '@/components/SubjectQuickPicker';
 import {
   assignDemoQuestion,
   defaultDemoAssignment,
@@ -569,6 +570,7 @@ export function DashboardHome({ mode, setMode, setActiveTab }: DashboardHomeProp
       <div className="relative space-y-6">
         <ModeBar mode={mode} setMode={setMode} />
         <SystemStatusStrip />
+        <SubjectQuickPicker setActiveTab={setActiveTab} />
 
         {mode === 'teacher' ? (
           <TeacherDashboard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />

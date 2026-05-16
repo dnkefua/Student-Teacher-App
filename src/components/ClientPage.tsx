@@ -11,6 +11,8 @@ import { VirtualClassroom } from '@/components/VirtualClassroom';
 import { EmailAssistant } from '@/components/EmailAssistant';
 import { NeuroQuestHub } from '@/components/NeuroQuestHub';
 import { EISMathStudio } from '@/components/EISMathStudio';
+import { EnglishStudio } from '@/components/english/EnglishStudio';
+import { ScienceStudio } from '@/components/science/ScienceStudio';
 import { LessonGenerator } from '@/components/CinematicLessonEngine';
 import { InteractiveLessonRenderer } from '@/components/InteractiveLessonRenderer';
 import { TeacherUploadStudio } from '@/components/TeacherUploadStudio';
@@ -28,7 +30,9 @@ export function ClientPage() {
   const isLesson = activeTab === 'lesson';
   const isUpload = activeTab === 'upload-studio';
   const isLearningHub = activeTab === 'learning-hub';
-  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub;
+  const isEnglish = activeTab === 'english-studio';
+  const isScience = activeTab === 'science-studio';
+  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isEnglish || isScience;
 
   return (
     <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
@@ -66,6 +70,8 @@ export function ClientPage() {
             {activeTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={setActiveTab} />}
             {activeTab === 'learning-hub' && <LearningDataHub mode={mode} setActiveTab={setActiveTab} />}
             {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
+            {activeTab === 'english-studio' && <EnglishStudio setActiveTab={setActiveTab} />}
+            {activeTab === 'science-studio' && <ScienceStudio setActiveTab={setActiveTab} />}
             {activeTab === 'place-value-lesson' && <LessonGenerator setActiveTab={setActiveTab} />}
             {activeTab === 'upload-studio' && <TeacherUploadStudio />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}

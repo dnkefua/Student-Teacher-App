@@ -7,6 +7,8 @@ import {
   Database,
   MonitorPlay,
   Mail,
+  Beaker,
+  Feather,
   Gamepad2,
   Gem,
   GraduationCap,
@@ -19,7 +21,7 @@ import type { LearningMode } from '@/lib/demoAssignments';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
-export type TabType = 'dashboard' | 'lesson' | 'learning-hub' | 'eis-maths' | 'place-value-lesson' | 'upload-studio' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
+export type TabType = 'dashboard' | 'lesson' | 'learning-hub' | 'eis-maths' | 'english-studio' | 'science-studio' | 'place-value-lesson' | 'upload-studio' | 'lesson-planner' | 'grader' | 'classroom' | 'email' | 'neuroquest';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -36,6 +38,8 @@ export function Sidebar({ activeTab, setActiveTab, mode, setMode, isOpen, setIsO
     { id: 'lesson', label: 'Lesson Player', icon: GraduationCap },
     { id: 'learning-hub', label: 'Learning Data Hub', icon: Database },
     { id: 'eis-maths', label: 'EIS Grade 8 Maths', icon: School },
+    { id: 'english-studio', label: 'EIS Year 8 English', icon: Feather },
+    { id: 'science-studio', label: 'EIS Year 8 Science', icon: Beaker },
     { id: 'place-value-lesson', label: 'AI 3D Lesson Generator', icon: Gem },
     { id: 'upload-studio', label: 'Upload Studio', icon: UploadCloud },
     { id: 'lesson-planner', label: 'Lesson Planner', icon: BookOpen },
