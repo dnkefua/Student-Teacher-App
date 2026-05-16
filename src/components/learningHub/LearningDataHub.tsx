@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   BarChart3,
   BrainCircuit,
+  Cloud,
   Database,
   GraduationCap,
   ListChecks,
@@ -34,6 +35,7 @@ import { AIRecommendations } from './AIRecommendations';
 import { StudentLearningGraph } from './StudentLearningGraph';
 import { PlatformIntegrationRoadmap } from './PlatformIntegrationRoadmap';
 import { PrivacyNotice } from './PrivacyNotice';
+import { AutomatedConnections } from './AutomatedConnections';
 import type { TabType } from '@/components/Sidebar';
 import type { LearningMode } from '@/lib/demoAssignments';
 
@@ -44,6 +46,7 @@ type Props = {
 
 type TeacherTab =
   | 'platforms'
+  | 'automation'
   | 'upload'
   | 'matching'
   | 'events'
@@ -54,6 +57,7 @@ type TeacherTab =
 
 const TEACHER_TABS: { id: TeacherTab; label: string; icon: typeof BarChart3 }[] = [
   { id: 'platforms', label: 'Connected platforms', icon: Network },
+  { id: 'automation', label: 'Automated Connections', icon: Cloud },
   { id: 'upload', label: 'Upload reports', icon: UploadCloud },
   { id: 'matching', label: 'Student matching', icon: UserCheck },
   { id: 'events', label: 'Learning events', icon: Table2 },
@@ -240,6 +244,9 @@ export function LearningDataHub({ mode, setActiveTab }: Props) {
                 events={events}
                 onUpload={() => setTeacherTab('upload')}
               />
+            )}
+            {teacherTab === 'automation' && (
+              <AutomatedConnections events={events} setActiveTab={setActiveTab} />
             )}
             {teacherTab === 'upload' && (
               <UploadReports onImported={() => refresh()} />
