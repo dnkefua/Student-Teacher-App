@@ -3,7 +3,7 @@ import { generateContent, DEFAULT_AI_MODEL, TTS_MODEL } from '@/lib/gemini';
 import { Send, Volume2, Users, ShieldAlert, Loader2, UserPlus, Video, VideoOff, Mic, MicOff, PhoneOff, ScreenShare, Copy, Check, Gamepad2, ExternalLink, Settings } from 'lucide-react';
 import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
-import { ActiveLessonPanel } from './ActiveLessonPanel';
+import { ActiveLessonPanel, type ShareableLesson } from './ActiveLessonPanel';
 import type { DemoAssignment } from '@/lib/demoAssignments';
 import type { TabType } from './Sidebar';
 import { recordClassParticipationEvent } from '@/lib/learningHub/internalEvents';
@@ -61,7 +61,7 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
     ]);
   };
 
-  const handleShareLesson = (lesson: DemoAssignment) => {
+  const handleShareLesson = (lesson: ShareableLesson) => {
     postSystemMessage(
       'Mr Smith (live)',
       `📘 We're starting "${lesson.title}" (${lesson.lessonTitle}). Today's inquiry: ${lesson.inquiryQuestion}`,
@@ -76,18 +76,19 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
     });
   };
 
-  const handleShareAssignment = (lesson: DemoAssignment) => {
+  const handleShareAssignment = (lesson: ShareableLesson) => {
     postSystemMessage(
       'Mr Smith (live)',
       `📝 Assignment for today: ${lesson.question} — try this in your notebook and submit on your dashboard.`,
     );
   };
 
-  const handleAskAi = async (lesson: DemoAssignment) => {
+  const handleAskAi = async (lesson: ShareableLesson) => {
     if (isAskingAi) return;
     setIsAskingAi(true);
     try {
-      const prompt = `You are explaining a step in a live Grade 8 maths class. In 2-3 short sentences, explain how to approach this question for a student who is stuck. Be encouraging and concrete. Do not give the final numeric answer — leave that for the student to compute.\n\nQuestion: ${lesson.question}\nInquiry frame: ${lesson.inquiryQuestion}`;
+      const subjectName = lesson.subject === 'english' ? 'English' : lesson.subject === 'science' ? 'science' : 'maths';
+      const prompt = `You are explaining a step in a live Grade 8 ${subjectName} class. In 2-3 short sentences, explain how to approach this question for a student who is stuck. Be encouraging and concrete. Do not give the final answer away — leave the thinking for the student.\n\nQuestion: ${lesson.question}\nInquiry frame: ${lesson.inquiryQuestion}`;
       const response = await generateContent({
         model: DEFAULT_AI_MODEL,
         contents: prompt,

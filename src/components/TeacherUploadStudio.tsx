@@ -21,7 +21,11 @@ import { saveGeneratedLesson } from '@/lib/firebase/firestore';
 import { isFirebaseConfigured } from '@/lib/firebase/client';
 import { getDemoUserId } from '@/lib/firebase/demoUser';
 import { ExplainerByType } from './Math3DExplainers';
+import { EnglishInteractiveRenderer } from './english/EnglishInteractiveRenderer';
+import { ScienceInteractiveRenderer } from './science/ScienceInteractiveRenderer';
 import { threeDLabels, type CurriculumUnit } from '@/lib/grade8Curriculum';
+import type { SubjectId, SubjectLesson, SubjectLabel } from '@/lib/subjects/types';
+import { subjectRegistry } from '@/lib/subjects/subjectRegistry';
 
 const ACCEPTED_FILES: Record<string, string[]> = {
   'application/pdf': ['.pdf'],
@@ -47,7 +51,49 @@ function isExtractableLater(file: File | null): boolean {
 
 type Phase = 'idle' | 'uploading' | 'uploaded' | 'generating' | 'generated' | 'saving' | 'saved' | 'error';
 
+function subjectLabelFor(id: SubjectId): SubjectLabel {
+  return subjectRegistry[id].label;
+}
+
+function asSubjectLesson(gl: AiGeneratedLesson): SubjectLesson {
+  return {
+    id: 'generated',
+    subject: gl.subject,
+    subjectLabel: subjectLabelFor(gl.subject),
+    grade: 'Grade 8',
+    unitId: 'ai-generated',
+    unitTitle: gl.strand,
+    strand: gl.strand,
+    topic: gl.topic,
+    title: gl.title,
+    inquiryQuestion: gl.inquiryQuestion,
+    objectives: gl.objectives,
+    studentExplanation: gl.studentExplanation,
+    teacherNotes: gl.teacherNotes,
+    animatedSteps: gl.animatedSteps,
+    interactiveType: gl.subjectInteractiveType ?? '',
+    modality: 'animated_explainer',
+    workedExamples: gl.workedExamples,
+    practiceQuestions: gl.practiceQuestions.map((q, i) => ({
+      id: `p${i + 1}`,
+      type: 'short_answer',
+      question: q.question,
+      answer: q.answer,
+      explanation: q.explanation,
+    })),
+    assignmentQuestions: gl.assignmentQuestions.map((q, i) => ({
+      id: `a${i + 1}`,
+      question: q.question,
+      expectedAnswer: q.expectedAnswer,
+      rubric: q.rubric,
+      marks: 10,
+    })),
+    extensionChallenge: gl.extensionChallenge,
+  };
+}
+
 export function TeacherUploadStudio() {
+  const [subject, setSubject] = useState<SubjectId>('mathematics');
   const [topic, setTopic] = useState('');
   const [unit, setUnit] = useState<CurriculumUnit | ''>('');
   const [context, setContext] = useState('');
@@ -113,7 +159,8 @@ export function TeacherUploadStudio() {
     try {
       const response = await aiGenerateLesson({
         topic,
-        unit: unit || undefined,
+        subject,
+        unit: subject === 'mathematics' ? (unit || undefined) : undefined,
         context: context || undefined,
       });
       setGenerated(response.data);
@@ -133,6 +180,7 @@ export function TeacherUploadStudio() {
       const teacherId = getDemoUserId('teacher');
       const saved = await saveGeneratedLesson({
         title: generated.title,
+        subject: generated.subject,
         unit: generated.unit,
         strand: generated.strand,
         topic: generated.topic,
@@ -142,6 +190,7 @@ export function TeacherUploadStudio() {
         teacherNotes: generated.teacherNotes,
         animatedSteps: generated.animatedSteps,
         threeDType: generated.threeDType,
+        subjectInteractiveType: generated.subjectInteractiveType,
         workedExamples: generated.workedExamples,
         practiceQuestions: generated.practiceQuestions,
         assignmentQuestions: generated.assignmentQuestions,
@@ -196,6 +245,29 @@ export function TeacherUploadStudio() {
       <section className="grid gap-6 xl:grid-cols-[1.05fr_.95fr]">
         <div className="space-y-4">
           <div className="rounded-lg border border-white/10 bg-[#061126] p-5">
+            <p className="mb-2 text-xs font-black uppercase tracking-wide text-[#ffc43b]">Subject</p>
+            <div className="mb-4 grid grid-cols-3 gap-1.5">
+              {(['mathematics', 'english', 'science'] as const).map((s) => {
+                const reg = subjectRegistry[s];
+                const active = subject === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSubject(s)}
+                    className="rounded-md border px-2 py-2 text-xs font-black uppercase tracking-wide transition"
+                    style={{
+                      borderColor: active ? reg.theme.primary : 'rgba(255,255,255,.15)',
+                      background: active ? `${reg.theme.primary}22` : 'transparent',
+                      color: active ? reg.theme.primary : '#cbd5e1',
+                    }}
+                  >
+                    {reg.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <label className="block text-xs font-black uppercase tracking-wide text-[#ffc43b]">Topic *</label>
             <input
               value={topic}
@@ -204,23 +276,25 @@ export function TeacherUploadStudio() {
               className="mt-2 w-full rounded-md border border-white/10 bg-[#050711]/70 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#ffc43b] focus:ring-2 focus:ring-[#ffc43b]/30"
             />
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-black uppercase tracking-wide text-slate-300">Unit (optional)</label>
-                <select
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value as CurriculumUnit | '')}
-                  className="mt-2 w-full rounded-md border border-white/10 bg-[#050711]/70 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#49c8ff]"
-                >
-                  <option value="">Let the AI choose</option>
-                  {UNIT_OPTIONS.map((u) => (
-                    <option key={u.value} value={u.value}>
-                      {u.label}
-                    </option>
-                  ))}
-                </select>
+            {subject === 'mathematics' && (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-wide text-slate-300">Unit (optional)</label>
+                  <select
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value as CurriculumUnit | '')}
+                    className="mt-2 w-full rounded-md border border-white/10 bg-[#050711]/70 px-3 py-2.5 text-sm text-white outline-none transition focus:border-[#49c8ff]"
+                  >
+                    <option value="">Let the AI choose</option>
+                    {UNIT_OPTIONS.map((u) => (
+                      <option key={u.value} value={u.value}>
+                        {u.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
             <label className="mt-4 block text-xs font-black uppercase tracking-wide text-slate-300">
               Teacher notes / pasted context (optional)
@@ -373,7 +447,9 @@ export function TeacherUploadStudio() {
             <article className="rounded-lg border border-white/10 bg-gradient-to-br from-[#0a1736] via-[#061126] to-[#050711] p-6">
               <h2 className="text-2xl font-black text-white">{generated.title}</h2>
               <p className="mt-2 text-sm font-semibold text-slate-300">
-                {generated.unit} · {generated.strand} · {generated.topic}
+                {[subjectLabelFor(generated.subject), generated.unit, generated.strand, generated.topic]
+                  .filter(Boolean)
+                  .join(' · ')}
               </p>
               <p className="mt-3 text-sm italic leading-6 text-[#ffc43b]">Inquiry: {generated.inquiryQuestion}</p>
 
@@ -402,13 +478,25 @@ export function TeacherUploadStudio() {
             </article>
 
             <div className="space-y-4">
-              <ExplainerByType type={generated.threeDType} />
+              {generated.subject === 'mathematics' && generated.threeDType ? (
+                <ExplainerByType type={generated.threeDType} />
+              ) : generated.subject === 'english' ? (
+                <EnglishInteractiveRenderer lesson={asSubjectLesson(generated)} />
+              ) : generated.subject === 'science' ? (
+                <ScienceInteractiveRenderer lesson={asSubjectLesson(generated)} />
+              ) : null}
               <article className="rounded-lg border border-[#ffc43b]/25 bg-[#ffc43b]/5 p-5">
                 <p className="text-xs font-black uppercase tracking-wide text-[#ffe08a]">Teacher notes</p>
                 <p className="mt-2 text-sm leading-6 text-slate-100">{generated.teacherNotes}</p>
-                <p className="mt-3 text-[10px] font-black uppercase tracking-wide text-slate-300">
-                  3D scene · {threeDLabels[generated.threeDType]}
-                </p>
+                {generated.subject === 'mathematics' && generated.threeDType ? (
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-wide text-slate-300">
+                    3D scene · {threeDLabels[generated.threeDType]}
+                  </p>
+                ) : generated.subjectInteractiveType ? (
+                  <p className="mt-3 text-[10px] font-black uppercase tracking-wide text-slate-300">
+                    Interactive · {generated.subjectInteractiveType.replace(/_/g, ' ')}
+                  </p>
+                ) : null}
               </article>
             </div>
           </div>

@@ -2,39 +2,70 @@
 
 import { useMemo, useState } from 'react';
 import type { ClassMasteryProfile, LearningEvent } from '@/lib/learningHub/types';
-import { calculateClassMastery, calculateStudentMastery, recommendIntervention } from '@/lib/learningHub/mastery';
+import { calculateClassMastery, calculateStudentMastery } from '@/lib/learningHub/mastery';
 import { platformAnalyticsRegistry } from '@/lib/learningHub/platformRegistry';
 import { demoClasses } from '@/lib/learningHub/demoData';
 import { Send, TrendingDown, TrendingUp, Wand2 } from 'lucide-react';
 import type { TabType } from '@/components/Sidebar';
 import { assignDemoQuestion } from '@/lib/demoAssignments';
 import { findQuestionById, grade8Curriculum } from '@/lib/grade8Curriculum';
+import { resolveIntervention } from '@/lib/subjects/interventionRegistry';
+import { subjectRegistry } from '@/lib/subjects/subjectRegistry';
+
+type SubjectFilter = 'all' | 'mathematics' | 'english' | 'science';
+
+const SUBJECT_FILTER_OPTIONS: { id: SubjectFilter; label: string; match?: string }[] = [
+  { id: 'all', label: 'All subjects' },
+  { id: 'mathematics', label: 'Mathematics', match: 'mathematics' },
+  { id: 'english', label: 'English', match: 'english' },
+  { id: 'science', label: 'Science', match: 'science' },
+];
+
+function eventMatchesSubject(event: LearningEvent, filter: SubjectFilter): boolean {
+  if (filter === 'all') return true;
+  return (event.subject ?? '').toLowerCase() === filter;
+}
 
 type Props = { events: LearningEvent[]; setActiveTab?: (tab: TabType) => void };
 
 export function MasteryAnalytics({ events, setActiveTab }: Props) {
   const classes = useMemo(() => demoClasses(), []);
   const [classId, setClassId] = useState<string>(classes[0]?.classId ?? '');
+  const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>('all');
   const cls = classes.find((c) => c.classId === classId) ?? classes[0];
+
+  const filteredEvents = useMemo(
+    () => events.filter((e) => eventMatchesSubject(e, subjectFilter)),
+    [events, subjectFilter],
+  );
+
+  const subjectCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const e of events) {
+      const s = (e.subject ?? '').toLowerCase();
+      counts[s] = (counts[s] ?? 0) + 1;
+    }
+    return counts;
+  }, [events]);
 
   const profile: ClassMasteryProfile | null = useMemo(() => {
     if (!cls) return null;
-    return calculateClassMastery(events, {
+    return calculateClassMastery(filteredEvents, {
       classId: cls.classId,
       className: cls.className,
       grade: 'Grade 8',
       studentIds: cls.studentIds,
       studentNames: cls.studentNames,
     });
-  }, [events, cls]);
+  }, [filteredEvents, cls]);
 
   const heatmap = useMemo(() => {
     if (!cls) return [];
     return cls.studentIds.map((sid) => {
-      const sp = calculateStudentMastery(events, { id: sid, name: cls.studentNames[sid] ?? sid });
+      const sp = calculateStudentMastery(filteredEvents, { id: sid, name: cls.studentNames[sid] ?? sid });
       return { name: sp.studentDisplayName, overall: sp.overallMastery, concepts: sp.conceptMastery };
     });
-  }, [events, cls]);
+  }, [filteredEvents, cls]);
 
   const topicColumns = useMemo(() => {
     if (!profile) return [];
@@ -66,6 +97,33 @@ export function MasteryAnalytics({ events, setActiveTab }: Props) {
         </span>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-white/[.02] p-2">
+        <span className="text-[10px] font-black uppercase tracking-wide text-slate-400">Subject</span>
+        {SUBJECT_FILTER_OPTIONS.map((opt) => {
+          const reg = opt.match ? subjectRegistry[opt.match as keyof typeof subjectRegistry] : null;
+          const color = reg?.theme.primary ?? '#49c8ff';
+          const active = subjectFilter === opt.id;
+          const eventCount = opt.id === 'all'
+            ? events.length
+            : (subjectCounts[opt.id] ?? 0);
+          return (
+            <button
+              key={opt.id}
+              onClick={() => setSubjectFilter(opt.id)}
+              className="rounded-md border px-2.5 py-1 text-[11px] font-black uppercase tracking-wide transition"
+              style={{
+                borderColor: active ? color : 'rgba(255,255,255,.15)',
+                background: active ? `${color}22` : 'transparent',
+                color: active ? color : '#cbd5e1',
+              }}
+            >
+              {opt.label}
+              <span className="ml-1 text-[10px] font-bold opacity-70">{eventCount}</span>
+            </button>
+          );
+        })}
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <article className="rounded-lg border border-emerald-300/25 bg-emerald-300/5 p-4">
           <p className="text-xs font-black uppercase tracking-wide text-emerald-200">Strongest concepts</p>
@@ -83,12 +141,19 @@ export function MasteryAnalytics({ events, setActiveTab }: Props) {
           <p className="text-xs font-black uppercase tracking-wide text-[#ffe08a]">Weakest concepts</p>
           <ul className="mt-2 space-y-2 text-sm text-slate-100">
             {profile.weakestConcepts.map((c) => {
-              const sample = events.find((e) => (e.topic ?? e.concept ?? e.activityTitle) === c);
-              const threeD = recommendIntervention(c, sample?.strand);
-              const question =
-                grade8Curriculum.find((q) => q.threeDType === threeD) ??
-                grade8Curriculum.find((q) => q.topic === c) ??
-                findQuestionById('abstract-linear-equation-balance');
+              const sample = filteredEvents.find((e) => (e.topic ?? e.concept ?? e.activityTitle) === c);
+              const intervention = resolveIntervention(c);
+              const sampleSubject = (sample?.subject ?? '').toLowerCase();
+              // For maths, surface the closest curriculum question so the
+              // 1-tap "Assign intervention" can still write a demoAssignment.
+              const mathsQuestion =
+                intervention.subject === 'mathematics'
+                  ? grade8Curriculum.find((q) => q.threeDType === intervention.interactiveType) ??
+                    grade8Curriculum.find((q) => q.topic === c) ??
+                    findQuestionById('abstract-linear-equation-balance')
+                  : null;
+              const reg = subjectRegistry[intervention.subject];
+              const subjectName = sampleSubject || reg.label.toLowerCase();
               return (
                 <li key={c} className="rounded-md border border-white/10 bg-white/[0.03] p-2">
                   <div className="flex items-center justify-between gap-2">
@@ -96,28 +161,34 @@ export function MasteryAnalytics({ events, setActiveTab }: Props) {
                       <span className="font-black text-white">{c}</span>{' '}
                       <span className="text-[#ffc43b]">· {Math.round(profile.conceptAverages[c] ?? 0)}%</span>
                     </span>
+                    <span
+                      className="rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wide"
+                      style={{ borderColor: `${reg.theme.primary}55`, color: reg.theme.primary }}
+                    >
+                      {subjectName}
+                    </span>
                   </div>
-                  {setActiveTab && question ? (
+                  {setActiveTab ? (
                     <div className="mt-2 flex flex-wrap gap-2">
+                      {mathsQuestion ? (
+                        <button
+                          onClick={async () => {
+                            await assignDemoQuestion(mathsQuestion.id);
+                            setActiveTab('dashboard');
+                          }}
+                          className="inline-flex items-center gap-1 rounded-md bg-[#ffc43b] px-2 py-1 text-[10px] font-black text-[#061126] transition hover:bg-[#ffe08a]"
+                        >
+                          <Send className="h-3 w-3" />
+                          Assign intervention
+                        </button>
+                      ) : null}
                       <button
-                        onClick={async () => {
-                          await assignDemoQuestion(question.id);
-                          setActiveTab('dashboard');
-                        }}
-                        className="inline-flex items-center gap-1 rounded-md bg-[#ffc43b] px-2 py-1 text-[10px] font-black text-[#061126] transition hover:bg-[#ffe08a]"
-                      >
-                        <Send className="h-3 w-3" />
-                        Assign intervention
-                      </button>
-                      <button
-                        onClick={async () => {
-                          await assignDemoQuestion(question.id);
-                          setActiveTab('lesson');
-                        }}
-                        className="inline-flex items-center gap-1 rounded-md bg-[#49c8ff] px-2 py-1 text-[10px] font-black text-[#061126] transition hover:bg-[#8ddfff]"
+                        onClick={() => setActiveTab(intervention.tab as TabType)}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-black uppercase tracking-wide transition"
+                        style={{ background: reg.theme.primary, color: '#061126' }}
                       >
                         <Wand2 className="h-3 w-3" />
-                        Open 3D lesson
+                        Open {intervention.label}
                       </button>
                     </div>
                   ) : null}

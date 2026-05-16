@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { setActiveSubjectLesson } from '@/lib/activeSubjectLesson';
 import {
   Activity,
   ArrowRight,
@@ -57,6 +58,10 @@ export function ScienceStudio({ setActiveTab }: ScienceStudioProps) {
     if (!activeLessonId) return null;
     return year8ScienceLessons.find((l) => l.id === activeLessonId) ?? null;
   }, [activeLessonId]);
+
+  useEffect(() => {
+    if (activeLesson) setActiveSubjectLesson(activeLesson);
+  }, [activeLesson]);
 
   if (activeLesson) {
     return (

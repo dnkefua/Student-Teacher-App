@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { setActiveSubjectLesson } from '@/lib/activeSubjectLesson';
 import {
   ArrowRight,
   BookOpen,
@@ -66,6 +67,10 @@ export function EnglishStudio({ setActiveTab }: EnglishStudioProps) {
     if (!activeLessonId) return null;
     return year8EnglishLessons.find((l) => l.id === activeLessonId) ?? null;
   }, [activeLessonId]);
+
+  useEffect(() => {
+    if (activeLesson) setActiveSubjectLesson(activeLesson);
+  }, [activeLesson]);
 
   if (activeLesson) {
     return (

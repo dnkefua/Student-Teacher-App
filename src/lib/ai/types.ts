@@ -2,11 +2,14 @@
 // routes parse JSON returned by Gemma 4 into these.
 
 import type { CurriculumUnit, Difficulty, ThreeDType } from '@/lib/grade8Curriculum';
+import type { SubjectId } from '@/lib/subjects/types';
 
 /* ─── generate-lesson ────────────────────────────────────────────── */
 
 export type GenerateLessonInput = {
   topic: string;
+  /** Subject the lesson is for. Defaults to 'mathematics' on the server. */
+  subject?: SubjectId;
   unit?: CurriculumUnit;
   strand?: string;
   /** Optional teacher context (e.g. uploaded text). */
@@ -34,7 +37,9 @@ export type GeneratedAssignmentQuestion = {
 
 export type GeneratedLesson = {
   title: string;
-  unit: CurriculumUnit;
+  subject: SubjectId;
+  /** Maths-only — the IB MYP Year 3 strand bucket. */
+  unit?: CurriculumUnit;
   strand: string;
   topic: string;
   inquiryQuestion: string;
@@ -42,7 +47,10 @@ export type GeneratedLesson = {
   studentExplanation: string;
   teacherNotes: string;
   animatedSteps: string[];
-  threeDType: ThreeDType;
+  /** Maths-only: the matching 3D scene id. */
+  threeDType?: ThreeDType;
+  /** English / Science: the matching interactive workshop id (e.g. 'cell_3d', 'essay_planner'). */
+  subjectInteractiveType?: string;
   workedExamples: GeneratedWorkedExample[];
   practiceQuestions: GeneratedPracticeQuestion[];
   assignmentQuestions: GeneratedAssignmentQuestion[];
@@ -53,6 +61,7 @@ export type GeneratedLesson = {
 
 export type GenerateAssignmentInput = {
   topic: string;
+  subject?: SubjectId;
   unit?: CurriculumUnit;
   difficulty?: Difficulty;
   /** How many questions to generate (default 3, max 6). */
@@ -62,8 +71,12 @@ export type GenerateAssignmentInput = {
 
 export type GenerateAssignmentOutput = {
   topic: string;
+  subject: SubjectId;
   difficulty: Difficulty;
-  threeDType: ThreeDType;
+  /** Maths-only. */
+  threeDType?: ThreeDType;
+  /** English / Science. */
+  subjectInteractiveType?: string;
   questions: GeneratedAssignmentQuestion[];
 };
 
@@ -89,13 +102,18 @@ export type GradedAnswer = {
 
 export type Generate3DSceneInput = {
   topic: string;
+  subject?: SubjectId;
   conceptHint?: string;
 };
 
 export type Generated3DScene = {
-  threeDType: ThreeDType;
+  subject: SubjectId;
+  /** Maths-only. */
+  threeDType?: ThreeDType;
+  /** English / Science. */
+  subjectInteractiveType?: string;
   rationale: string;
-  /** Step-by-step narration aligned with the chosen 3D scene. */
+  /** Step-by-step narration aligned with the chosen scene/workshop. */
   animatedSteps: string[];
 };
 

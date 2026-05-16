@@ -57,15 +57,31 @@ const PROFILES: Record<string, DemoProfile> = {
 };
 
 type NumericBias = 'ratioBias' | 'algebraBias' | 'geometryBias' | 'dataBias';
-type Concept = { topic: string; strand: LearningEvent['strand']; bias: NumericBias };
+type SubjectLabel = 'Mathematics' | 'English' | 'Science';
+type Concept = {
+  topic: string;
+  strand: LearningEvent['strand'];
+  bias: NumericBias;
+  subject?: SubjectLabel;
+};
 const CONCEPTS: Concept[] = [
-  { topic: 'Ratio and Proportion', strand: 'numerical', bias: 'ratioBias' },
-  { topic: 'Algebra & Equations', strand: 'abstract', bias: 'algebraBias' },
-  { topic: 'Linear Graphs', strand: 'abstract', bias: 'algebraBias' },
-  { topic: 'Angles and Triangles', strand: 'spatial', bias: 'geometryBias' },
-  { topic: 'Circles', strand: 'spatial', bias: 'geometryBias' },
-  { topic: 'Probability', strand: 'data', bias: 'dataBias' },
-  { topic: 'Averages and Spread', strand: 'data', bias: 'dataBias' },
+  // Mathematics
+  { topic: 'Ratio and Proportion', strand: 'numerical', bias: 'ratioBias', subject: 'Mathematics' },
+  { topic: 'Algebra & Equations', strand: 'abstract', bias: 'algebraBias', subject: 'Mathematics' },
+  { topic: 'Linear Graphs', strand: 'abstract', bias: 'algebraBias', subject: 'Mathematics' },
+  { topic: 'Angles and Triangles', strand: 'spatial', bias: 'geometryBias', subject: 'Mathematics' },
+  { topic: 'Circles', strand: 'spatial', bias: 'geometryBias', subject: 'Mathematics' },
+  { topic: 'Probability', strand: 'data', bias: 'dataBias', subject: 'Mathematics' },
+  { topic: 'Averages and Spread', strand: 'data', bias: 'dataBias', subject: 'Mathematics' },
+  // English (use algebraBias as a proxy for "verbal reasoning" so the bias
+  // map still works; scores still look natural).
+  { topic: 'Persuasive Devices', strand: 'abstract', bias: 'algebraBias', subject: 'English' },
+  { topic: 'PETAL Analysis', strand: 'abstract', bias: 'algebraBias', subject: 'English' },
+  { topic: 'Poetry Devices', strand: 'abstract', bias: 'algebraBias', subject: 'English' },
+  // Science
+  { topic: 'Particle Model', strand: 'spatial', bias: 'geometryBias', subject: 'Science' },
+  { topic: 'Cell Structure', strand: 'spatial', bias: 'geometryBias', subject: 'Science' },
+  { topic: 'Forces and Motion', strand: 'numerical', bias: 'algebraBias', subject: 'Science' },
 ];
 
 const PLATFORMS: ExternalPlatform[] = [
@@ -125,7 +141,7 @@ function eventForStudent(
     externalStudentName: studentName,
     platform,
     importId,
-    subject: 'Mathematics',
+    subject: concept.subject ?? 'Mathematics',
     grade: 'Grade 8',
     topic: concept.topic,
     strand: concept.strand,

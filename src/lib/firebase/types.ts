@@ -61,7 +61,9 @@ export type StudentResponse = {
 export type GeneratedLesson = {
   id: string;
   title: string;
-  unit: 'numerical' | 'abstract' | 'spatial' | 'data';
+  subject: 'mathematics' | 'english' | 'science';
+  /** Maths-only — the four IB MYP Year 3 strand buckets. */
+  unit?: 'numerical' | 'abstract' | 'spatial' | 'data';
   strand: string;
   topic: string;
   inquiryQuestion: string;
@@ -69,7 +71,10 @@ export type GeneratedLesson = {
   studentExplanation: string;
   teacherNotes: string;
   animatedSteps: string[];
-  threeDType: ThreeDType;
+  /** Maths-only: the matching 3D scene id. */
+  threeDType?: ThreeDType;
+  /** English / Science: the matching interactive workshop id. */
+  subjectInteractiveType?: string;
   workedExamples: Array<{ prompt: string; steps: string[]; answer: string }>;
   practiceQuestions: Array<{ question: string; answer: string; explanation: string }>;
   assignmentQuestions: Array<{

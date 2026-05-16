@@ -9,6 +9,7 @@ import type {
   GeneratedWorkedExample,
 } from '@/lib/ai/types';
 import type { CurriculumUnit, ThreeDType } from '@/lib/grade8Curriculum';
+import type { SubjectId } from '@/lib/subjects/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,30 @@ const THREE_D_TYPES = new Set<ThreeDType>([
   'probability_spinner_3d',
   'percentage_bar_3d',
   'data_visualisation_3d',
+]);
+const ENGLISH_INTERACTIVES = new Set<string>([
+  'text_annotation_lab',
+  'essay_planner',
+  'poetry_device_highlighter',
+  'grammar_sentence_builder',
+  'writing_revision_studio',
+  'character_analysis_board',
+  'story_structure_map',
+  'vocabulary_practice',
+  'debate_simulator',
+  'speaking_feedback',
+]);
+const SCIENCE_INTERACTIVES = new Set<string>([
+  'cell_3d',
+  'particle_model_3d',
+  'forces_motion_sim',
+  'electric_circuit_builder',
+  'chemical_reaction_lab',
+  'ecosystem_simulation',
+  'energy_transfer_sim',
+  'body_system_3d',
+  'earth_space_orbit',
+  'scientific_method_lab',
 ]);
 
 function asStringArray(v: unknown): string[] | null {
@@ -74,8 +99,7 @@ function asAssignmentQuestions(v: unknown): GeneratedAssignmentQuestion[] | null
     if (typeof r.question !== 'string' || typeof r.expectedAnswer !== 'string' || typeof r.rubric !== 'string') {
       return null;
     }
-    const acceptedKeywords = asStringArray(r.acceptedKeywords);
-    if (!acceptedKeywords) return null;
+    const acceptedKeywords = asStringArray(r.acceptedKeywords) ?? [];
     out.push({
       question: r.question,
       expectedAnswer: r.expectedAnswer,
@@ -86,54 +110,67 @@ function asAssignmentQuestions(v: unknown): GeneratedAssignmentQuestion[] | null
   return out;
 }
 
-function parseLesson(raw: unknown): GeneratedLesson | null {
-  if (typeof raw !== 'object' || raw === null) return null;
-  const r = raw as Record<string, unknown>;
-  if (
-    typeof r.title !== 'string' ||
-    typeof r.strand !== 'string' ||
-    typeof r.topic !== 'string' ||
-    typeof r.inquiryQuestion !== 'string' ||
-    typeof r.studentExplanation !== 'string' ||
-    typeof r.teacherNotes !== 'string' ||
-    typeof r.extensionChallenge !== 'string'
-  ) {
-    return null;
-  }
-  const unit = r.unit as CurriculumUnit;
-  if (!UNITS.has(unit)) return null;
-  const threeDType = r.threeDType as ThreeDType;
-  if (!THREE_D_TYPES.has(threeDType)) return null;
+function lessonParser(subject: SubjectId) {
+  return (raw: unknown): GeneratedLesson | null => {
+    if (typeof raw !== 'object' || raw === null) return null;
+    const r = raw as Record<string, unknown>;
+    if (
+      typeof r.title !== 'string' ||
+      typeof r.strand !== 'string' ||
+      typeof r.topic !== 'string' ||
+      typeof r.inquiryQuestion !== 'string' ||
+      typeof r.studentExplanation !== 'string' ||
+      typeof r.teacherNotes !== 'string' ||
+      typeof r.extensionChallenge !== 'string'
+    ) {
+      return null;
+    }
 
-  const objectives = asStringArray(r.objectives);
-  const animatedSteps = asStringArray(r.animatedSteps);
-  if (!objectives || !animatedSteps) return null;
-  const workedExamples = asWorkedExamples(r.workedExamples);
-  const practiceQuestions = asPracticeQuestions(r.practiceQuestions);
-  const assignmentQuestions = asAssignmentQuestions(r.assignmentQuestions);
-  if (!workedExamples || !practiceQuestions || !assignmentQuestions) return null;
+    const objectives = asStringArray(r.objectives);
+    const animatedSteps = asStringArray(r.animatedSteps);
+    if (!objectives || !animatedSteps) return null;
+    const workedExamples = asWorkedExamples(r.workedExamples);
+    const practiceQuestions = asPracticeQuestions(r.practiceQuestions);
+    const assignmentQuestions = asAssignmentQuestions(r.assignmentQuestions);
+    if (!workedExamples || !practiceQuestions || !assignmentQuestions) return null;
 
-  return {
-    title: r.title,
-    unit,
-    strand: r.strand,
-    topic: r.topic,
-    inquiryQuestion: r.inquiryQuestion,
-    objectives,
-    studentExplanation: r.studentExplanation,
-    teacherNotes: r.teacherNotes,
-    animatedSteps,
-    threeDType,
-    workedExamples,
-    practiceQuestions,
-    assignmentQuestions,
-    extensionChallenge: r.extensionChallenge,
+    const base: GeneratedLesson = {
+      title: r.title,
+      subject,
+      strand: r.strand,
+      topic: r.topic,
+      inquiryQuestion: r.inquiryQuestion,
+      objectives,
+      studentExplanation: r.studentExplanation,
+      teacherNotes: r.teacherNotes,
+      animatedSteps,
+      workedExamples,
+      practiceQuestions,
+      assignmentQuestions,
+      extensionChallenge: r.extensionChallenge,
+    };
+
+    if (subject === 'mathematics') {
+      const unit = r.unit as CurriculumUnit | undefined;
+      const threeDType = r.threeDType as ThreeDType | undefined;
+      if (!unit || !UNITS.has(unit)) return null;
+      if (!threeDType || !THREE_D_TYPES.has(threeDType)) return null;
+      return { ...base, unit, threeDType };
+    }
+
+    const allowedInteractives = subject === 'english' ? ENGLISH_INTERACTIVES : SCIENCE_INTERACTIVES;
+    const subjectInteractiveType = r.subjectInteractiveType;
+    if (typeof subjectInteractiveType !== 'string' || !allowedInteractives.has(subjectInteractiveType)) {
+      return null;
+    }
+    return { ...base, subjectInteractiveType };
   };
 }
 
-function lessonMock(topic: string): GeneratedLesson {
+function mathsMock(topic: string): GeneratedLesson {
   return {
     title: `Demo lesson · ${topic}`,
+    subject: 'mathematics',
     unit: 'abstract',
     strand: 'Algebra',
     topic,
@@ -181,6 +218,110 @@ function lessonMock(topic: string): GeneratedLesson {
   };
 }
 
+function englishMock(topic: string): GeneratedLesson {
+  return {
+    title: `Demo lesson · ${topic}`,
+    subject: 'english',
+    strand: 'Reading & Writing',
+    topic,
+    inquiryQuestion: `What craft choices make this approach to ${topic.toLowerCase()} effective?`,
+    objectives: [
+      'Identify the techniques the writer uses to shape meaning.',
+      'Explain how each technique affects the reader.',
+      'Apply at least one technique in your own writing.',
+    ],
+    studentExplanation:
+      'Today we look closely at a short extract, name the writer\'s choices, then practise using one of them in our own paragraph.',
+    teacherNotes:
+      'Use the text annotation lab for the close-read step. Anchor PETAL responses to two specific quotes from the extract.',
+    animatedSteps: [
+      'Read the extract aloud and name first impressions.',
+      'Annotate the writer\'s techniques in pairs.',
+      'Model one PETAL paragraph on the board.',
+      'Draft your own paragraph using one of the techniques.',
+    ],
+    subjectInteractiveType: 'text_annotation_lab',
+    workedExamples: [
+      {
+        prompt: 'Model PETAL paragraph for the chosen quote.',
+        steps: ['Point.', 'Evidence.', 'Technique.', 'Analysis.', 'Link back.'],
+        answer: 'A model paragraph that earns the top band.',
+      },
+    ],
+    practiceQuestions: [
+      {
+        question: 'Name two techniques in the extract and explain their effect.',
+        answer: 'Sample: rhetorical question + emotive language; together they pull the reader to take a side.',
+        explanation: 'Both devices push the reader toward agreement without stating it plainly.',
+      },
+    ],
+    assignmentQuestions: [
+      {
+        question: 'Write a PETAL paragraph analysing one technique in the extract.',
+        expectedAnswer: 'Top-band paragraph with embedded quote and clear analysis.',
+        acceptedKeywords: ['rhetorical question', 'direct address', 'emotive'],
+        rubric: 'Criteria A: 4 marks for analysis; Criteria B: 4 marks for structure. Top band: quote embedded into the sentence; analysis goes beyond identification.',
+      },
+    ],
+    extensionChallenge: 'Re-write the extract for a different audience. What changes?',
+  };
+}
+
+function scienceMock(topic: string): GeneratedLesson {
+  return {
+    title: `Demo lesson · ${topic}`,
+    subject: 'science',
+    strand: 'Biology',
+    topic,
+    inquiryQuestion: `What does ${topic.toLowerCase()} tell us about how living systems work?`,
+    objectives: [
+      'Define the key terms.',
+      'Use a diagram or model to explain the process.',
+      'Apply the idea to predict an outcome.',
+    ],
+    studentExplanation:
+      'We start with a 3D model of the system, name its parts, then trace what happens at each step. Finally we predict what would change if one part broke.',
+    teacherNotes:
+      'Use the matching interactive simulation as the anchor. Predict-Observe-Explain is a good routine here.',
+    animatedSteps: [
+      'Introduce the inquiry question.',
+      'Spin the 3D model and label the parts.',
+      'Trace the process step by step.',
+      'Predict the effect of removing one component.',
+    ],
+    subjectInteractiveType: 'cell_3d',
+    workedExamples: [
+      {
+        prompt: 'Worked example showing the process end-to-end.',
+        steps: ['Identify the inputs.', 'Apply the process.', 'Name the outputs.'],
+        answer: 'A model answer with the right scientific vocabulary.',
+      },
+    ],
+    practiceQuestions: [
+      {
+        question: 'Describe the role of one component in your own words.',
+        answer: 'Sample: the nucleus stores DNA and directs protein synthesis.',
+        explanation: 'Function follows structure — the nucleus is membrane-bound to protect DNA.',
+      },
+    ],
+    assignmentQuestions: [
+      {
+        question: 'Predict what happens to the system if one component is removed. Justify scientifically.',
+        expectedAnswer: 'A reasoned prediction backed by the model.',
+        acceptedKeywords: ['nucleus', 'mitochondria', 'membrane'],
+        rubric: 'Top band: clear prediction + 2 scientific reasons + correct vocabulary throughout.',
+      },
+    ],
+    extensionChallenge: 'Design a fair-test experiment to verify your prediction.',
+  };
+}
+
+function mockForSubject(subject: SubjectId, topic: string): GeneratedLesson {
+  if (subject === 'english') return englishMock(topic);
+  if (subject === 'science') return scienceMock(topic);
+  return mathsMock(topic);
+}
+
 export async function POST(request: Request) {
   let body: GenerateLessonInput;
   try {
@@ -192,10 +333,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Request must include a topic string.' }, { status: 400 });
   }
 
+  const subject: SubjectId = body.subject === 'english' || body.subject === 'science' ? body.subject : 'mathematics';
+
   const result = await callStructured<GeneratedLesson>({
-    userPrompt: lessonPrompt(body),
-    mock: lessonMock(body.topic),
-    parse: parseLesson,
+    userPrompt: lessonPrompt({ ...body, subject }),
+    subject,
+    mock: mockForSubject(subject, body.topic),
+    parse: lessonParser(subject),
   });
 
   return NextResponse.json(result);

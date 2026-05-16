@@ -6,8 +6,9 @@
 // does for the open-ended chat flow.
 
 import { DEFAULT_AI_MODEL } from '@/lib/genkit';
-import { SYSTEM_PROMPT } from './prompts';
+import { systemPromptForSubject } from './prompts';
 import type { AIFlowResponse } from './types';
+import type { SubjectId } from '@/lib/subjects/types';
 
 const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -16,6 +17,8 @@ type CallOptions<T> = {
   userPrompt: string;
   /** Override the default model (e.g. `gemini-2.5-flash`) if the caller needs a non-Gemma path. */
   model?: string;
+  /** Optional subject — picks the right system prompt. Defaults to maths. */
+  subject?: SubjectId;
   /** Returned verbatim when GEMINI_API_KEY is missing or the model errors. */
   mock: T;
   /** Validates / narrows the parsed JSON. Return null to fall back to the mock. */
@@ -55,7 +58,7 @@ function extractJson(raw: string): unknown | null {
   return null;
 }
 
-async function callGemmaRest(model: string, apiKey: string, prompt: string): Promise<string> {
+async function callGemmaRest(model: string, apiKey: string, prompt: string, systemPrompt: string): Promise<string> {
   const url = `${GEMINI_ENDPOINT}/${model}:generateContent?key=${apiKey}`;
   const res = await fetch(url, {
     method: 'POST',
@@ -66,7 +69,7 @@ async function callGemmaRest(model: string, apiKey: string, prompt: string): Pro
           parts: [
             // Embed the system prompt up-front since Gemma rejects
             // separate systemInstruction.
-            { text: `${SYSTEM_PROMPT}\n\n${prompt}` },
+            { text: `${systemPrompt}\n\n${prompt}` },
           ],
         },
       ],
@@ -91,14 +94,14 @@ async function callGemmaRest(model: string, apiKey: string, prompt: string): Pro
   return visible;
 }
 
-async function callGeminiRest(model: string, apiKey: string, prompt: string): Promise<string> {
+async function callGeminiRest(model: string, apiKey: string, prompt: string, systemPrompt: string): Promise<string> {
   // For non-Gemma models. Same shape but Gemini accepts systemInstruction.
   const url = `${GEMINI_ENDPOINT}/${model}:generateContent?key=${apiKey}`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         responseMimeType: 'application/json',
@@ -127,10 +130,12 @@ export async function callStructured<T>(opts: CallOptions<T>): Promise<AIFlowRes
     return { data: opts.mock, source: 'mock' };
   }
 
+  const systemPrompt = systemPromptForSubject(opts.subject ?? 'mathematics');
+
   try {
     const raw = model.startsWith('gemma')
-      ? await callGemmaRest(model, apiKey, opts.userPrompt)
-      : await callGeminiRest(model, apiKey, opts.userPrompt);
+      ? await callGemmaRest(model, apiKey, opts.userPrompt, systemPrompt)
+      : await callGeminiRest(model, apiKey, opts.userPrompt, systemPrompt);
     const json = extractJson(raw);
     if (!json) {
       console.warn('[ai] Could not extract JSON from model output, returning mock.');
