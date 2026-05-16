@@ -35,8 +35,44 @@ body {
   overscroll-behavior-y: contain;
 }
 
-/* Prevent long tokens (accepted-keyword strings, IDs, URLs) from blowing
- * out card widths on phones. */
+/* Mobile spillage prevention. Long unbreakable tokens (accepted-keyword
+ * strings, IDs, URLs, large numbers, code snippets, file paths) and very
+ * long headings can blow out card widths on phones because the body has
+ * overflow-x-hidden — the content gets clipped instead of scrolled. Force
+ * a wrap on every common content element below the md breakpoint. */
+@media (max-width: 767px) {
+  p,
+  li,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  span,
+  a,
+  td,
+  th,
+  label,
+  blockquote {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  /* Code/pre always wrap on small screens, never force a horizontal scroll
+   * inside a card. Authors that *want* scroll can opt back in with
+   * overflow-x-auto on a wrapper. */
+  pre,
+  code,
+  kbd,
+  samp {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Desktop+ still respects long-token wrapping for the mono surfaces that
+ * carry IDs and keyword arrays — keeps the previous behavior. */
 .font-mono {
   word-break: break-word;
   overflow-wrap: anywhere;
@@ -67,4 +103,11 @@ select {
   select {
     font-size: inherit;
   }
+}
+
+/* SVG inside cards must never push parent width. Several lesson
+ * components emit fixed-viewbox SVGs (`<svg className="h-72 w-full">`),
+ * which is fine, but a few use intrinsic width — clamp them. */
+svg {
+  max-width: 100%;
 }

@@ -240,7 +240,7 @@ function TeacherAssignmentCard({
       </div>
 
       <div className="relative mt-6 rounded-lg border border-white/10 bg-[#050711]/60 p-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs font-black uppercase tracking-wide text-slate-300">MYP 3 curriculum bank</p>
           <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">EIS MYP Mathematics Overview</p>
         </div>
