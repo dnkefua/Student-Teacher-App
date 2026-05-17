@@ -8,6 +8,7 @@ import { cinematicDemoLessons, createTemplateForSceneType } from '@/lib/cinemati
 import { cinematicSceneTypes } from '@/lib/cinematic/sceneSchema';
 import { listCinematicLessonSpecs, saveCinematicLessonSpec } from '@/lib/cinematic/assetPipeline';
 import { CinematicLessonPlayer } from './CinematicLessonPlayer';
+import { PlatformDirectionCard } from '@/components/PlatformDirectionCard';
 
 const subjectOptions: { id: SubjectId; label: string }[] = [
   { id: 'mathematics', label: 'Maths' },
@@ -140,16 +141,24 @@ export function CinematicStudio({ mode = 'teacher' }: { mode?: LearningMode }) {
               <Sparkles className="h-3.5 w-3.5" />
               Cinematic Studio
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-normal">Build app-rendered cinematic lessons</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
-              Generate a structured CinematicLessonSpec, preview the interactive R3F or subject tool, and optionally create short HeyGen avatar video assets around the lesson.
+            <h1 className="mt-4 text-3xl font-black tracking-normal">Cinematic Studio</h1>
+            <p className="mt-1 text-sm font-semibold text-[#8ddfff]">Reusable lesson engine for Maths, Science, and English.</p>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+              Generate a structured CinematicLessonSpec, preview the app-rendered interactive scene, and optionally create short HeyGen avatar videos around the lesson.
             </p>
+            <ul className="mt-3 grid gap-1 text-xs leading-5 text-slate-300 sm:grid-cols-3">
+              <li><span className="font-black text-white">App</span> → renders the interactive 3D / lab / workshop scene.</li>
+              <li><span className="font-black text-white">HeyGen</span> → renders the avatar/video layer only.</li>
+              <li><span className="font-black text-white">Learning Data Hub</span> → records mastery and recommends next steps.</li>
+            </ul>
           </div>
           <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">
             Source: {source}
           </span>
         </div>
       </header>
+
+      <PlatformDirectionCard compact />
 
       <section className="grid gap-4 rounded-lg border border-white/10 bg-[#061126] p-4 xl:grid-cols-[1fr_1fr_auto] xl:items-end">
         <div>

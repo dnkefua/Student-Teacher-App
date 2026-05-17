@@ -18,6 +18,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import { ClientPage } from '@/components/ClientPage';
+import { PlatformDirectionCard } from '@/components/PlatformDirectionCard';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
@@ -108,11 +109,11 @@ export function LandingPage() {
         <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5">
           <div className="flex items-center gap-3">
             <div className="grid h-14 w-14 place-items-center overflow-hidden rounded-md border border-[#49c8ff]/25 bg-[#071126] shadow-[0_0_35px_rgba(73,200,255,.22)]">
-              <Image src={brandLogoSrc} alt="EIS Maths Studio logo" width={48} height={48} priority className="h-12 w-12 object-contain" />
+              <Image src={brandLogoSrc} alt="EIS Learning Studio logo" width={48} height={48} priority className="h-12 w-12 object-contain" />
             </div>
             <div>
-              <p className="text-sm font-black uppercase tracking-wide text-white">EIS Maths Studio</p>
-              <p className="text-xs font-semibold text-[#8ddfff]">Student Teacher App</p>
+              <p className="text-sm font-black uppercase tracking-wide text-white">EIS Learning Studio</p>
+              <p className="text-xs font-semibold text-[#8ddfff]">Maths · Science · English</p>
             </div>
           </div>
           <button onClick={() => setShowPlatform(true)} className="hidden items-center gap-2 rounded-md bg-[#ffc43b] px-4 py-2 text-sm font-black text-[#061126] transition hover:bg-[#ffe08a] sm:inline-flex">
@@ -144,10 +145,11 @@ export function LandingPage() {
 
           <div className="rounded-lg border border-white/10 bg-white/10 p-5 backdrop-blur">
             <div className="mb-5 flex items-center gap-4 rounded-md border border-white/10 bg-[#050711]/70 p-3">
-              <Image src={brandLogoSrc} alt="EIS Maths Studio logo" width={80} height={80} priority className="h-20 w-20 rounded-md object-contain" />
+              <Image src={brandLogoSrc} alt="EIS Learning Studio logo" width={80} height={80} priority className="h-20 w-20 rounded-md object-contain" />
               <div>
                 <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Built for Emirates International School</p>
-                <p className="mt-1 text-xl font-black text-white">EIS Maths Studio</p>
+                <p className="mt-1 text-xl font-black text-white">EIS Learning Studio</p>
+                <p className="mt-1 text-xs font-semibold text-[#8ddfff]">AI-powered Year 8 learning platform for Maths, Science, and English.</p>
               </div>
             </div>
             <div className="mt-4 grid gap-3">
@@ -187,6 +189,9 @@ export function LandingPage() {
       </section>
 
       <section className="bg-[#050711]">
+        <div className="mx-auto max-w-7xl px-5 pt-12">
+          <PlatformDirectionCard />
+        </div>
         <div className="mx-auto max-w-7xl px-5 py-16">
           <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>

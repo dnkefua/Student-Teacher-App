@@ -16,12 +16,14 @@ import {
   Zap,
 } from 'lucide-react';
 import type { TabType } from '@/components/Sidebar';
+import type { LearningMode } from '@/lib/demoAssignments';
 import type { SubjectLesson, SubjectUnit } from '@/lib/subjects/types';
 import { subjectRegistry } from '@/lib/subjects/subjectRegistry';
 import { year8ScienceUnits, year8ScienceLessons } from '@/lib/subjects/science/year8ScienceCurriculum';
 import { ScienceLessonPlayer } from './ScienceLessonPlayer';
 
 interface ScienceStudioProps {
+  mode?: LearningMode;
   setActiveTab: (tab: TabType) => void;
 }
 
@@ -44,8 +46,9 @@ const interactiveIcon: Record<string, IconComponent> = {
   energy_transfer_sim: Leaf,
 };
 
-export function ScienceStudio({ setActiveTab }: ScienceStudioProps) {
+export function ScienceStudio({ mode = 'teacher', setActiveTab }: ScienceStudioProps) {
   const theme = subjectRegistry.science.theme;
+  const isTeacher = mode === 'teacher';
   const [activeUnitId, setActiveUnitId] = useState<string>(year8ScienceUnits[0].id);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
 
@@ -101,13 +104,19 @@ export function ScienceStudio({ setActiveTab }: ScienceStudioProps) {
             <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
               {year8ScienceUnits.length} units · {year8ScienceLessons.length} lessons
             </span>
-            <button
-              onClick={() => setActiveTab('learning-hub')}
-              className="inline-flex items-center gap-1 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 transition hover:border-white/40 hover:text-white"
-            >
-              Learning Data Hub
-              <ArrowRight className="h-3 w-3" />
-            </button>
+            {isTeacher ? (
+              <button
+                onClick={() => setActiveTab('learning-hub')}
+                className="inline-flex items-center gap-1 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 transition hover:border-white/40 hover:text-white"
+              >
+                Learning Data Hub
+                <ArrowRight className="h-3 w-3" />
+              </button>
+            ) : (
+              <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">
+                Continue your lab
+              </span>
+            )}
           </div>
         </div>
       </header>

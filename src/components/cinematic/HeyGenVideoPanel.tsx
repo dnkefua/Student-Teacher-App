@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Clapperboard, Loader2, PlayCircle, ShieldCheck, Wand2 } from 'lucide-react';
+import { Clapperboard, Info, Loader2, PlayCircle, ShieldCheck, Wand2 } from 'lucide-react';
 import { createMockHeyGenAsset, saveCinematicAsset, updateCinematicAssetStatus } from '@/lib/cinematic/assetPipeline';
 import type { CinematicAsset, CinematicLessonSpec } from '@/lib/cinematic/types';
 
@@ -123,6 +123,19 @@ export function HeyGenVideoPanel({
     }
   };
 
+  const statusLabel =
+    status === 'generated'
+      ? 'Generated'
+      : status === 'queued'
+        ? 'Queued in HeyGen'
+        : status === 'processing'
+          ? 'Processing in HeyGen'
+          : status === 'failed'
+            ? 'Failed'
+            : status === 'demo'
+              ? 'Demo (no HeyGen key)'
+              : 'Not generated';
+
   return (
     <div className="rounded-lg border border-white/10 bg-[#061126] p-4">
       <div className="flex items-center justify-between gap-3">
@@ -132,17 +145,47 @@ export function HeyGenVideoPanel({
             {spec.heygen.videoPurpose.replace(/_/g, ' ')} · {spec.heygen.durationTargetSeconds}s target
           </p>
         </div>
-        <Clapperboard className="h-5 w-5 text-[#8ddfff]" />
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-md border px-2 py-1 text-[10px] font-black uppercase tracking-wide ${
+              status === 'generated'
+                ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200'
+                : status === 'failed'
+                  ? 'border-red-300/30 bg-red-300/10 text-red-100'
+                  : status === 'demo'
+                    ? 'border-[#ffc43b]/35 bg-[#ffc43b]/10 text-[#ffe08a]'
+                    : 'border-white/15 bg-white/5 text-slate-200'
+            }`}
+          >
+            {statusLabel}
+          </span>
+          <Clapperboard className="h-5 w-5 text-[#8ddfff]" />
+        </div>
       </div>
 
-      {videoUrl ? (
+      <div className="mt-3 flex items-start gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-5 text-slate-300">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8ddfff]" />
+        <p>
+          HeyGen creates the avatar/video layer only. The interactive 3D, simulation, or workshop lesson runs inside EIS Learning Studio.
+        </p>
+      </div>
+
+      {videoUrl && status === 'generated' ? (
         <video src={videoUrl} controls className="mt-4 aspect-video w-full rounded-md border border-white/10 bg-black" />
       ) : (
         <div className="mt-4 rounded-md border border-[#49c8ff]/25 bg-[#49c8ff]/5 p-4">
           <div className="flex items-start gap-3">
             <PlayCircle className="mt-0.5 h-5 w-5 text-[#8ddfff]" />
             <div>
-              <p className="text-sm font-black text-white">{status === 'demo' ? 'Demo video card' : 'No avatar video generated yet'}</p>
+              <p className="text-sm font-black text-white">
+                {status === 'demo'
+                  ? 'Demo card — no real HeyGen video was generated'
+                  : status === 'queued' || status === 'processing'
+                    ? 'Avatar video is being prepared in HeyGen'
+                    : status === 'failed'
+                      ? 'HeyGen could not generate this avatar video'
+                      : 'No avatar video generated yet'}
+              </p>
               <p className="mt-2 text-xs leading-5 text-slate-300">{spec.heygen.script}</p>
               {spec.heygen.includeCaptions ? <p className="mt-2 text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">Captions requested</p> : null}
             </div>
@@ -160,7 +203,7 @@ export function HeyGenVideoPanel({
           className="inline-flex items-center gap-2 rounded-md bg-[#ffc43b] px-3 py-2 text-xs font-black text-[#061126] transition hover:bg-[#ffe08a] disabled:cursor-not-allowed disabled:opacity-45"
         >
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-          Generate Avatar Explainer
+          {status === 'failed' ? 'Retry Avatar Explainer' : 'Generate Avatar Explainer'}
         </button>
         <button
           type="button"

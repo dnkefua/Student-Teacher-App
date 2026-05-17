@@ -23,6 +23,7 @@ import { Math3DShowcase } from '@/components/Math3DShowcase';
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
 import { StudentAssignmentList } from '@/components/StudentAssignmentList';
 import { StudentCinematicAssignmentList } from '@/components/cinematic/StudentCinematicAssignmentList';
+import { PlatformDirectionCard } from '@/components/PlatformDirectionCard';
 import { SubjectQuickPicker } from '@/components/SubjectQuickPicker';
 import { ActiveSubjectLessonCard } from '@/components/ActiveSubjectLessonCard';
 import { ClassPicker } from '@/components/ClassPicker';
@@ -93,7 +94,7 @@ function HeroBackdrop() {
 function TopBar() {
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 backdrop-blur">
-      <p className="text-xs font-semibold text-slate-400">EIS Grade 8 · MYP Mathematics</p>
+      <p className="text-xs font-semibold text-slate-400">EIS Learning Studio · Year 8 · Maths · Science · English</p>
       <div className="flex items-center gap-2">
         <AuthButton compact />
         <ClassPicker />
@@ -381,6 +382,9 @@ function TeacherDashboard({
         ))}
       </section>
 
+      {/* Platform framing */}
+      <PlatformDirectionCard />
+
       {/* Subject quick access */}
       <SubjectQuickPicker setActiveTab={setActiveTab} />
       <ActiveSubjectLessonCard setActiveTab={setActiveTab} />
@@ -444,6 +448,8 @@ function StudentDashboard({
           <ExplainerByType type={assignment.threeDType} />
         </div>
       </section>
+
+      <PlatformDirectionCard compact />
 
       <StudentAssignmentList
         activeAssignmentId={assignment.id}

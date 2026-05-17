@@ -15,6 +15,10 @@ export type ExternalPlatform =
   | 'drfrost'
   | 'myimaths'
   | 'neuroquest'
+  // Legacy platform key kept for backwards-compatible reads of existing
+  // events. New analytics writes should use `eis_learning_studio`. Keep this
+  // key until we run a Firestore migration to rewrite historical events.
+  // TODO: rename platform value to `eis_learning_studio` in a future data migration.
   | 'eis_maths_studio'
   | 'eis_learning_studio'
   | 'google_classroom'

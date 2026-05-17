@@ -73,6 +73,10 @@ const NeuroQuestHub = dynamic(
 );
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
+// Learning Hub is teacher-only because it contains class analytics, external
+// data imports, and individual student performance evidence. Students stay
+// inside subject lessons, assignments, cinematic lessons, NeuroQuest, and
+// the virtual classroom — never the raw analytics hub.
 const teacherOnlyTabs: TabType[] = [
   'learning-hub',
   'place-value-lesson',
@@ -136,9 +140,9 @@ function ClientPageInner() {
         {/* Mobile Header */}
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-[#18345f] bg-[#050711] px-4 md:hidden">
           <div className="flex min-w-0 items-center gap-3">
-            <Image src={brandLogoSrc} alt="EIS Maths Studio logo" width={40} height={40} className="h-10 w-10 rounded-md object-contain" />
+            <Image src={brandLogoSrc} alt="EIS Learning Studio logo" width={40} height={40} className="h-10 w-10 rounded-md object-contain" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-black uppercase tracking-wide text-white">EIS Maths Studio</p>
+              <p className="truncate text-sm font-black uppercase tracking-wide text-white">EIS Learning Studio</p>
               <p className="truncate text-xs font-semibold capitalize text-[#8ddfff]">{mode} workspace</p>
             </div>
           </div>
@@ -158,7 +162,7 @@ function ClientPageInner() {
             {effectiveActiveTab === 'learning-hub' && mode === 'teacher' && <LearningDataHub mode={mode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'eis-maths' && <EISMathStudio setActiveTab={selectTab} />}
             {effectiveActiveTab === 'english-studio' && <EnglishStudio mode={mode} setActiveTab={selectTab} />}
-            {effectiveActiveTab === 'science-studio' && <ScienceStudio setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'science-studio' && <ScienceStudio mode={mode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'place-value-lesson' && mode === 'teacher' && <LessonGenerator setActiveTab={selectTab} />}
             {effectiveActiveTab === 'cinematic-studio' && mode === 'teacher' && <CinematicStudio mode={mode} />}
             {effectiveActiveTab === 'upload-studio' && mode === 'teacher' && <TeacherUploadStudio setActiveTab={selectTab} />}

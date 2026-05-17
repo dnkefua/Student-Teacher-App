@@ -135,7 +135,7 @@ export function Sidebar({
             <div className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-md border border-[#49c8ff]/25 bg-[#071126]">
               <Image
                 src={brandLogoSrc}
-                alt="EIS logo"
+                alt="EIS Learning Studio logo"
                 width={28}
                 height={28}
                 className="h-7 w-7 object-contain"
@@ -144,7 +144,7 @@ export function Sidebar({
             {!collapsed && (
               <div className="min-w-0">
                 <p className="truncate text-xs font-black uppercase tracking-wide text-white">
-                  EIS Studio
+                  EIS Learning Studio
                 </p>
                 <p className="truncate text-[10px] font-semibold text-[#8ddfff]">Grade 8 · MYP</p>
               </div>
