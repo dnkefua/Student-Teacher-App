@@ -18,6 +18,7 @@ import {
   Wand2,
 } from 'lucide-react';
 import type { TabType } from '@/components/Sidebar';
+import type { LearningMode } from '@/lib/demoAssignments';
 import type { SubjectLesson, SubjectUnit } from '@/lib/subjects/types';
 import { subjectRegistry } from '@/lib/subjects/subjectRegistry';
 import {
@@ -28,6 +29,7 @@ import { EnglishLessonPlayer } from './EnglishLessonPlayer';
 
 interface EnglishStudioProps {
   setActiveTab: (tab: TabType) => void;
+  mode?: LearningMode;
 }
 
 type IconComponent = React.ComponentType<React.SVGProps<SVGSVGElement>>;
@@ -53,7 +55,7 @@ const interactiveIcon: Record<string, IconComponent> = {
   speaking_feedback: Mic,
 };
 
-export function EnglishStudio({ setActiveTab }: EnglishStudioProps) {
+export function EnglishStudio({ setActiveTab, mode = 'teacher' }: EnglishStudioProps) {
   const theme = subjectRegistry.english.theme;
   const [activeUnitId, setActiveUnitId] = useState<string>(year8EnglishUnits[0].id);
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
@@ -76,6 +78,7 @@ export function EnglishStudio({ setActiveTab }: EnglishStudioProps) {
     return (
       <EnglishLessonPlayer
         lesson={activeLesson}
+        mode={mode}
         onBack={() => setActiveLessonId(null)}
         setActiveTab={setActiveTab}
       />
@@ -114,19 +117,21 @@ export function EnglishStudio({ setActiveTab }: EnglishStudioProps) {
             <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
               {year8EnglishUnits.length} units · {year8EnglishLessons.length} lessons
             </span>
-            <button
-              onClick={() => setActiveTab('learning-hub')}
-              className="inline-flex items-center gap-1 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 transition hover:border-white/40 hover:text-white"
-            >
-              Learning Data Hub
-              <ArrowRight className="h-3 w-3" />
-            </button>
+            {mode === 'teacher' ? (
+              <button
+                onClick={() => setActiveTab('learning-hub')}
+                className="inline-flex items-center gap-1 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 transition hover:border-white/40 hover:text-white"
+              >
+                Learning Data Hub
+                <ArrowRight className="h-3 w-3" />
+              </button>
+            ) : null}
           </div>
         </div>
       </header>
 
       <section>
-        <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-slate-400">Units</h2>
+        <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-slate-400">1. Choose chapter</h2>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {year8EnglishUnits.map((unit) => {
             const Icon = unitIcon[unit.title] ?? BookOpen;
@@ -174,6 +179,7 @@ export function EnglishStudio({ setActiveTab }: EnglishStudioProps) {
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
             <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">Active unit</p>
+            <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">2. Choose topic</p>
             <h3 className="text-lg font-black text-white">{activeUnit.title}</h3>
             {activeUnit.statementOfInquiry && (
               <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-300">

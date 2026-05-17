@@ -22,6 +22,7 @@ import { ExplainerByType } from '@/components/Math3DExplainers';
 import { Math3DShowcase } from '@/components/Math3DShowcase';
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
 import { StudentAssignmentList } from '@/components/StudentAssignmentList';
+import { StudentCinematicAssignmentList } from '@/components/cinematic/StudentCinematicAssignmentList';
 import { SubjectQuickPicker } from '@/components/SubjectQuickPicker';
 import { ActiveSubjectLessonCard } from '@/components/ActiveSubjectLessonCard';
 import { ClassPicker } from '@/components/ClassPicker';
@@ -449,6 +450,8 @@ function StudentDashboard({
         onSelect={setAssignment}
         onOpenLesson={() => setActiveTab('lesson')}
       />
+
+      <StudentCinematicAssignmentList />
 
       <StudentAssignmentCard
         assignment={assignment}

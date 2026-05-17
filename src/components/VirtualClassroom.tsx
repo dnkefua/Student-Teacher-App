@@ -1,6 +1,35 @@
-import React, { useState, useRef, useEffect } from 'react';
+'use client';
+
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { generateContent, DEFAULT_AI_MODEL, TTS_MODEL } from '@/lib/gemini';
-import { Send, Volume2, Users, ShieldAlert, Loader2, UserPlus, Video, VideoOff, Mic, MicOff, PhoneOff, ScreenShare, Copy, Check, Gamepad2, ExternalLink, Settings } from 'lucide-react';
+import {
+  Send,
+  Volume2,
+  Users,
+  ShieldAlert,
+  Loader2,
+  UserPlus,
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  PhoneOff,
+  ScreenShare,
+  Copy,
+  Check,
+  Gamepad2,
+  ExternalLink,
+  Settings,
+  Presentation,
+  MessageSquare,
+  Hand,
+  Sparkles,
+  Eraser,
+  Pencil,
+  Maximize2,
+  Image as ImageIcon,
+  CircleDot,
+} from 'lucide-react';
 import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
 import { ActiveLessonPanel, type ShareableLesson } from './ActiveLessonPanel';
@@ -53,6 +82,20 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isAskingAi, setIsAskingAi] = useState(false);
+
+  // Stage / layout state for the premium classroom shell
+  type StageView = 'lesson' | 'screen' | 'spotlight' | 'whiteboard' | 'slide';
+  const [stageView, setStageView] = useState<StageView>('lesson');
+  type RightTab = 'chat' | 'people' | 'tools';
+  const [rightTab, setRightTab] = useState<RightTab>('chat');
+  const [classStartedAt, setClassStartedAt] = useState<number | null>(null);
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [raisedHands, setRaisedHands] = useState<number[]>([]);
+  const [currentSlide, setCurrentSlide] = useState<{ dataUrl: string; title: string } | null>(null);
+  const slideInputRef = useRef<HTMLInputElement>(null);
+  const whiteboardCanvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const [whiteboardColor, setWhiteboardColor] = useState('#ffc43b');
 
   const postSystemMessage = (sender: string, text: string, isTeacher = true) => {
     setMessages((prev) => [
@@ -409,6 +452,114 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
     }
   };
 
+  // ── Premium classroom shell helpers ───────────────────────────────────
+  // Tick the class timer once per second while video is active.
+  useEffect(() => {
+    if (!isVideoActive) {
+      setClassStartedAt(null);
+      setElapsedSec(0);
+      return;
+    }
+    if (!classStartedAt) setClassStartedAt(Date.now());
+    const id = window.setInterval(() => {
+      setElapsedSec((s) => s + 1);
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [isVideoActive, classStartedAt]);
+
+  // Auto-switch the stage when the teacher starts screen-sharing.
+  useEffect(() => {
+    if (isScreenSharing) setStageView('screen');
+    else if (stageView === 'screen') setStageView('lesson');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isScreenSharing]);
+
+  const formatElapsed = useCallback((s: number) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+  }, []);
+
+  const onSlideFileChosen = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      setCurrentSlide({ dataUrl, title: file.name });
+      setStageView('slide');
+      postSystemMessage('Mr Smith (live)', `🖼️ Shared slide: ${file.name}`);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
+  // Whiteboard drawing — local-only sketch surface for live teaching.
+  const startDraw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = whiteboardCanvasRef.current;
+    if (!canvas) return;
+    isDrawingRef.current = true;
+    const rect = canvas.getBoundingClientRect();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  };
+  const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isDrawingRef.current) return;
+    const canvas = whiteboardCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = whiteboardColor;
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+  };
+  const endDraw = () => {
+    isDrawingRef.current = false;
+  };
+  const clearWhiteboard = () => {
+    const canvas = whiteboardCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  // A few random hands going up while the class is "live" to simulate
+  // a real cohort — purely cosmetic for the demo.
+  useEffect(() => {
+    if (!isVideoActive) return;
+    const interval = window.setInterval(() => {
+      setRaisedHands((prev) => {
+        if (Math.random() > 0.7 && prev.length < 5) {
+          const candidate = Math.floor(Math.random() * FAKE_STUDENTS.length);
+          return prev.includes(candidate) ? prev : [...prev, candidate];
+        }
+        if (prev.length > 0 && Math.random() > 0.6) {
+          return prev.slice(1);
+        }
+        return prev;
+      });
+    }, 4500);
+    return () => window.clearInterval(interval);
+  }, [isVideoActive]);
+
+  const stageTabs: { id: StageView; label: string; icon: typeof Presentation; available: boolean }[] = useMemo(
+    () => [
+      { id: 'lesson', label: 'Lesson', icon: Presentation, available: true },
+      { id: 'slide', label: 'Slide', icon: ImageIcon, available: Boolean(currentSlide) },
+      { id: 'screen', label: 'Screen', icon: ScreenShare, available: isScreenSharing },
+      { id: 'whiteboard', label: 'Whiteboard', icon: Pencil, available: true },
+      { id: 'spotlight', label: 'Spotlight', icon: Maximize2, available: true },
+    ],
+    [currentSlide, isScreenSharing],
+  );
+
   // Chat and Sidebar UI (reused in both layouts)
   const ChatSection = () => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-full min-h-[400px]">
@@ -551,31 +702,529 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
     </div>
   );
 
+  // ── Premium classroom shell rendering ─────────────────────────────────
+  if (isVideoActive) {
+    return (
+      <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0d14] text-white">
+        {/* Top bar */}
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#070a12] px-4 py-2.5">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/15 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-red-400">
+              <CircleDot className="h-3 w-3 animate-pulse fill-red-500 text-red-500" />
+              Live
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-white">EIS Grade 8 · Live Class</p>
+              <p className="truncate text-[11px] text-slate-400">{FAKE_STUDENTS.length + 1} present · {raisedHands.length} hand{raisedHands.length === 1 ? '' : 's'} raised</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 font-mono text-xs text-slate-200">
+              {formatElapsed(elapsedSec)}
+            </span>
+            <button
+              onClick={copyClassLink}
+              className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+            >
+              {copiedClassLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedClassLink ? 'Copied' : 'Invite'}
+            </button>
+            <button
+              onClick={endVideoCall}
+              className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-[0_0_0_1px_rgba(255,255,255,.05),0_8px_22px_-6px_rgba(220,38,38,.6)] transition hover:bg-red-500"
+            >
+              <PhoneOff className="h-3.5 w-3.5" />
+              End class
+            </button>
+          </div>
+        </header>
+
+        {cameraError && (
+          <div className="mx-4 mt-3 shrink-0 rounded-lg border border-red-300/30 bg-red-500/10 p-3 text-xs text-red-200">
+            {cameraError}
+          </div>
+        )}
+
+        {/* Main split: Stage + Filmstrip on the left, Right Rail on the right */}
+        <div className="flex flex-1 min-h-0 flex-col xl:flex-row">
+          {/* LEFT — Stage + filmstrip */}
+          <div className="flex flex-1 flex-col min-h-0 border-white/10 xl:border-r">
+            {/* Stage tabs */}
+            <div className="flex shrink-0 items-center gap-1 border-b border-white/10 bg-[#070a12] px-3 py-2">
+              {stageTabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = stageView === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => tab.available && setStageView(tab.id)}
+                    disabled={!tab.available}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition ${
+                      isActive
+                        ? 'bg-[#49c8ff] text-[#061126] shadow-[0_0_16px_rgba(73,200,255,.4)]'
+                        : tab.available
+                          ? 'text-slate-300 hover:bg-white/5 hover:text-white'
+                          : 'cursor-not-allowed text-slate-600'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+              <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                <Sparkles className="h-3 w-3" /> Stage
+              </span>
+            </div>
+
+            {/* Stage content */}
+            <div className="relative flex-1 overflow-hidden bg-[#0a0d14]">
+              {stageView === 'lesson' && (
+                <div className="absolute inset-0 overflow-y-auto p-5">
+                  <div className="mx-auto max-w-4xl">
+                    <ActiveLessonPanel
+                      onShareLesson={handleShareLesson}
+                      onShareAssignment={handleShareAssignment}
+                      onAskAi={handleAskAi}
+                      onOpenLessonPlayer={setActiveTab ? handleOpenLessonPlayer : undefined}
+                      isAskingAi={isAskingAi}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {stageView === 'slide' && currentSlide && (
+                <div className="absolute inset-0 grid place-items-center bg-black p-4">
+                  <img
+                    src={currentSlide.dataUrl}
+                    alt={currentSlide.title}
+                    className="max-h-full max-w-full rounded-md object-contain shadow-2xl"
+                  />
+                  <p className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-white">
+                    {currentSlide.title}
+                  </p>
+                </div>
+              )}
+
+              {stageView === 'screen' && (
+                <div className="absolute inset-0 grid place-items-center bg-black">
+                  <video
+                    ref={screenVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="h-full w-full object-contain"
+                  />
+                  {!isScreenSharing && (
+                    <div className="absolute inset-0 grid place-items-center text-center">
+                      <div>
+                        <ScreenShare className="mx-auto h-10 w-10 text-slate-500" />
+                        <p className="mt-2 text-sm font-semibold text-slate-300">Screen share inactive</p>
+                        <button
+                          onClick={startScreenShare}
+                          className="mt-3 inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-3 py-2 text-xs font-bold text-[#061126] transition hover:bg-[#8ddfff]"
+                        >
+                          <ScreenShare className="h-4 w-4" /> Share screen
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {stageView === 'whiteboard' && (
+                <div className="absolute inset-0 flex flex-col bg-white">
+                  <div className="flex shrink-0 items-center gap-2 border-b border-slate-200 px-3 py-2">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Whiteboard</span>
+                    <div className="flex items-center gap-1">
+                      {['#ffc43b', '#49c8ff', '#22c55e', '#ef4444', '#0f172a'].map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => setWhiteboardColor(c)}
+                          className={`h-5 w-5 rounded-full border-2 transition ${whiteboardColor === c ? 'border-slate-900 scale-110' : 'border-white'}`}
+                          style={{ background: c }}
+                          aria-label={`Pen ${c}`}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      onClick={clearWhiteboard}
+                      className="ml-auto inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      <Eraser className="h-3.5 w-3.5" /> Clear
+                    </button>
+                  </div>
+                  <canvas
+                    ref={whiteboardCanvasRef}
+                    width={1600}
+                    height={900}
+                    className="h-full w-full cursor-crosshair touch-none"
+                    onPointerDown={startDraw}
+                    onPointerMove={draw}
+                    onPointerUp={endDraw}
+                    onPointerLeave={endDraw}
+                  />
+                </div>
+              )}
+
+              {stageView === 'spotlight' && (
+                <div className="absolute inset-0 grid place-items-center bg-black">
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`h-full w-full object-cover ${isVideoOff ? 'hidden' : ''}`}
+                  />
+                  {isVideoOff && (
+                    <div className="grid h-32 w-32 place-items-center rounded-full bg-indigo-600 text-5xl font-black text-white">T</div>
+                  )}
+                  <span className="absolute bottom-3 left-3 rounded-md bg-black/60 px-2.5 py-1 text-xs font-semibold text-white">
+                    Teacher · Spotlight
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Filmstrip — teacher + students */}
+            <div className="shrink-0 border-t border-white/10 bg-[#070a12] px-3 py-2">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                <FilmstripTile label="You" muted={isMuted}>
+                  <video
+                    ref={localVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`h-full w-full object-cover ${isVideoOff ? 'hidden' : ''}`}
+                  />
+                  {isVideoOff && (
+                    <div className="grid h-full w-full place-items-center bg-indigo-600 text-lg font-bold">T</div>
+                  )}
+                </FilmstripTile>
+                {FAKE_STUDENTS.slice(0, 10).map((student) => (
+                  <FilmstripTile
+                    key={student.id}
+                    label={student.name.replace('Student ', 'S')}
+                    handRaised={raisedHands.includes(student.id)}
+                  >
+                    <div className="grid h-full w-full place-items-center" style={{ backgroundColor: student.avatarColor }}>
+                      <span className="text-lg font-bold text-slate-800/60">{student.name.charAt(0)}</span>
+                    </div>
+                  </FilmstripTile>
+                ))}
+                <button
+                  onClick={() => setRightTab('people')}
+                  className="grid h-16 w-24 shrink-0 place-items-center rounded-md border border-dashed border-white/20 text-[10px] font-semibold text-slate-400 hover:border-white/40 hover:text-white"
+                >
+                  +{FAKE_STUDENTS.length - 10} more
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom control bar */}
+            <div className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 bg-[#050811] px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <ControlButton
+                  active={!isMuted}
+                  danger={isMuted}
+                  onClick={toggleMute}
+                  icon={isMuted ? MicOff : Mic}
+                  label={isMuted ? 'Unmute' : 'Mute'}
+                />
+                <ControlButton
+                  active={!isVideoOff}
+                  danger={isVideoOff}
+                  onClick={toggleVideo}
+                  icon={isVideoOff ? VideoOff : Video}
+                  label={isVideoOff ? 'Start video' : 'Stop video'}
+                />
+                <ControlButton
+                  active={isScreenSharing}
+                  onClick={isScreenSharing ? stopScreenShare : startScreenShare}
+                  icon={ScreenShare}
+                  label={isScreenSharing ? 'Stop share' : 'Share screen'}
+                />
+                <ControlButton
+                  onClick={() => slideInputRef.current?.click()}
+                  icon={ImageIcon}
+                  label="Share slide"
+                />
+                <ControlButton
+                  onClick={() => setStageView('whiteboard')}
+                  icon={Pencil}
+                  label="Whiteboard"
+                />
+                <input
+                  ref={slideInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={onSlideFileChosen}
+                  className="hidden"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <ControlButton
+                  onClick={() => setRightTab('chat')}
+                  icon={MessageSquare}
+                  label="Chat"
+                />
+                <ControlButton
+                  onClick={() => setRightTab('people')}
+                  icon={Users}
+                  label="People"
+                />
+                <ControlButton
+                  onClick={() => setRightTab('tools')}
+                  icon={Hand}
+                  label="Tools"
+                />
+                <button
+                  onClick={endVideoCall}
+                  className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-500"
+                >
+                  <PhoneOff className="h-3.5 w-3.5" /> Leave
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT RAIL */}
+          <aside className="flex w-full shrink-0 flex-col border-t border-white/10 bg-[#070a12] xl:w-[360px] xl:border-t-0">
+            {/* Right rail tabs */}
+            <div className="flex shrink-0 border-b border-white/10">
+              {([
+                { id: 'chat', label: 'Chat', icon: MessageSquare, badge: messages.length },
+                { id: 'people', label: 'People', icon: Users, badge: FAKE_STUDENTS.length + 1 },
+                { id: 'tools', label: 'AI', icon: Sparkles, badge: 0 },
+              ] as { id: RightTab; label: string; icon: typeof MessageSquare; badge: number }[]).map((tab) => {
+                const Icon = tab.icon;
+                const isActive = rightTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setRightTab(tab.id)}
+                    className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs font-semibold transition ${
+                      isActive ? 'border-b-2 border-[#49c8ff] bg-white/5 text-white' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                    {tab.badge > 0 && (
+                      <span className="ml-0.5 rounded-full bg-white/10 px-1.5 text-[9px] font-black text-slate-300">
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex-1 overflow-hidden">
+              {rightTab === 'chat' && (
+                <div className="flex h-full flex-col">
+                  <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                    {messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`flex flex-col ${msg.isTeacher ? 'items-end' : 'items-start'}`}
+                      >
+                        <span className="mb-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          {msg.sender}
+                        </span>
+                        <div
+                          className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-5 ${
+                            msg.sender === 'System'
+                              ? 'w-full bg-white/5 text-center text-xs text-slate-400'
+                              : msg.isTeacher
+                                ? 'bg-[#49c8ff] text-[#061126]'
+                                : 'bg-white/10 text-slate-100'
+                          }`}
+                        >
+                          {msg.text}
+                        </div>
+                        {!msg.isTeacher && msg.sender !== 'System' && (
+                          <button
+                            onClick={() => answerWithAI(msg.text)}
+                            className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#8ddfff] hover:underline"
+                          >
+                            <Volume2 className="h-3 w-3" /> Answer with AI voice
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                  <div className="shrink-0 border-t border-white/10 p-2">
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder="Message the class…"
+                        className="flex-1 rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-slate-500 outline-none focus:border-[#49c8ff]"
+                      />
+                      <button
+                        onClick={handleSend}
+                        className="shrink-0 rounded-md bg-[#49c8ff] p-2 text-[#061126] transition hover:bg-[#8ddfff]"
+                      >
+                        <Send className="h-4 w-4" />
+                      </button>
+                    </div>
+                    {isAnswering && (
+                      <p className="mt-1.5 flex items-center gap-1 text-[10px] text-[#8ddfff]">
+                        <Loader2 className="h-3 w-3 animate-spin" /> AI generating response…
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {rightTab === 'people' && (
+                <div className="flex h-full flex-col">
+                  <div className="flex-1 overflow-y-auto p-3 space-y-3">
+                    {waitingRoom.length > 0 && (
+                      <div>
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-amber-400">
+                          Waiting room ({waitingRoom.length})
+                        </p>
+                        <div className="space-y-1.5">
+                          {waitingRoom.map((s) => (
+                            <div
+                              key={s}
+                              className="flex items-center justify-between rounded-md border border-amber-400/20 bg-amber-400/5 px-2.5 py-1.5"
+                            >
+                              <div className="flex items-center gap-2">
+                                <UserPlus className="h-3.5 w-3.5 text-amber-300" />
+                                <span className="text-sm font-medium text-white">{s}</span>
+                              </div>
+                              <button
+                                onClick={() => admitStudent(s)}
+                                className="rounded bg-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950 hover:bg-amber-300"
+                              >
+                                Admit
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        In class ({FAKE_STUDENTS.length + 1})
+                      </p>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 rounded-md bg-[#49c8ff]/10 px-2.5 py-1.5">
+                          <div className="grid h-7 w-7 place-items-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                            T
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-white">Teacher (You)</p>
+                            <p className="text-[10px] text-slate-400">Host · presenter</p>
+                          </div>
+                          {isMuted && <MicOff className="h-3.5 w-3.5 text-red-400" />}
+                        </div>
+                        {FAKE_STUDENTS.map((s) => (
+                          <div
+                            key={s.id}
+                            className="flex items-center gap-2 rounded-md px-2.5 py-1.5 hover:bg-white/5"
+                          >
+                            <div
+                              className="grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-slate-800"
+                              style={{ background: s.avatarColor }}
+                            >
+                              {s.name.charAt(8)}
+                            </div>
+                            <p className="min-w-0 flex-1 truncate text-sm text-slate-200">{s.name}</p>
+                            {raisedHands.includes(s.id) && <Hand className="h-3.5 w-3.5 text-amber-400" />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {rightTab === 'tools' && (
+                <div className="h-full overflow-y-auto p-3 space-y-3">
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="flex items-center gap-1.5 text-sm font-bold text-white">
+                        <ShieldAlert className="h-4 w-4 text-orange-400" /> Behavior monitor
+                      </p>
+                      <button
+                        onClick={analyzeBehavior}
+                        disabled={isAnalyzing}
+                        className="inline-flex items-center gap-1 rounded-md bg-orange-500/15 px-2 py-1 text-[10px] font-bold text-orange-300 hover:bg-orange-500/25 disabled:opacity-50"
+                      >
+                        {isAnalyzing ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Analyze'}
+                      </button>
+                    </div>
+                    <p className="mt-2 max-h-32 overflow-y-auto rounded bg-black/30 p-2 text-[11px] leading-5 text-slate-300 whitespace-pre-wrap">
+                      {behaviorReport || 'Click "Analyze" to get an AI assessment of chat behavior and engagement.'}
+                    </p>
+                  </div>
+
+                  <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                    <p className="flex items-center gap-1.5 text-sm font-bold text-white">
+                      <Gamepad2 className="h-4 w-4 text-indigo-300" /> Active NeuroQuest
+                    </p>
+                    {activeAssignment ? (
+                      <div className="mt-2 space-y-2">
+                        <p className="text-xs font-semibold text-slate-200">{activeAssignment.title}</p>
+                        <p className="text-[10px] text-slate-400">
+                          {getNeuroQuestGame(activeAssignment.gameSlug).title} · {activeAssignment.duration}
+                        </p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            onClick={shareQuestToClass}
+                            className="rounded-md bg-indigo-500 px-2 py-1.5 text-[11px] font-bold text-white hover:bg-indigo-400"
+                          >
+                            Share in chat
+                          </button>
+                          <a
+                            href={getNeuroQuestGame(activeAssignment.gameSlug).href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center justify-center gap-1 rounded-md border border-white/10 px-2 py-1.5 text-[11px] font-bold text-slate-200 hover:bg-white/5"
+                          >
+                            Open <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[11px] text-slate-400">Save a quest from NeuroQuest Academy to share it.</p>
+                    )}
+                  </div>
+
+                  {audioUrl && (
+                    <audio controls src={audioUrl} className="w-full" />
+                  )}
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
+  // ── PRE-CLASS LOBBY ────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex flex-wrap items-start justify-between gap-3 shrink-0">
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Virtual Classroom Assistant</h2>
-          <p className="text-sm sm:text-base text-gray-600">Run camera-based online learning, share NeuroQuest activities, answer with AI voice, and monitor behavior.</p>
+          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Virtual Classroom</h2>
+          <p className="text-sm text-gray-600">Premium online teaching shell — stage, filmstrip, whiteboard, AI tools.</p>
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
-          <button
-            onClick={copyClassLink}
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 flex items-center gap-2"
-          >
-            {copiedClassLink ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-            {copiedClassLink ? 'Copied' : 'Class Link'}
-          </button>
-          {!isVideoActive && (
-          <button 
-            onClick={startVideoCall}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2"
-          >
-            <Video className="w-5 h-5" />
-            Start Online Class
-          </button>
-          )}
-        </div>
+        <button
+          onClick={copyClassLink}
+          className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+        >
+          {copiedClassLink ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+          {copiedClassLink ? 'Copied' : 'Copy class link'}
+        </button>
       </div>
 
       <ActiveLessonPanel
@@ -587,201 +1236,189 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
       />
 
       {cameraError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {cameraError}
-        </div>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{cameraError}</div>
       )}
 
-      {isVideoActive ? (
-        <div className="flex-1 grid grid-cols-1 xl:grid-cols-4 gap-6 min-h-0">
-          {/* Video Grid Area (Takes up 3 columns on large screens) */}
-          <div className="xl:col-span-3 flex flex-col bg-gray-900 rounded-xl overflow-hidden shadow-lg relative min-h-[50vh] xl:min-h-0">
-            <div className="flex-1 p-4 overflow-y-auto">
-              <div className="mb-4 grid gap-3 rounded-lg border border-white/10 bg-white/5 p-3 text-white md:grid-cols-[1fr_1fr_auto_auto]">
-                <label className="text-xs font-semibold uppercase tracking-wide text-gray-300">
-                  Camera
-                  <select
-                    value={selectedVideoDevice}
-                    onChange={(event) => setSelectedVideoDevice(event.target.value)}
-                    className="mt-1 w-full rounded-md border border-white/10 bg-gray-950 px-2 py-2 text-sm normal-case text-white"
-                  >
-                    {devices.filter(device => device.kind === 'videoinput').map((device, index) => (
-                      <option key={device.deviceId || index} value={device.deviceId}>
-                        {device.label || `Camera ${index + 1}`}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-xs font-semibold uppercase tracking-wide text-gray-300">
-                  Microphone
-                  <select
-                    value={selectedAudioDevice}
-                    onChange={(event) => setSelectedAudioDevice(event.target.value)}
-                    className="mt-1 w-full rounded-md border border-white/10 bg-gray-950 px-2 py-2 text-sm normal-case text-white"
-                  >
-                    {devices.filter(device => device.kind === 'audioinput').map((device, index) => (
-                      <option key={device.deviceId || index} value={device.deviceId}>
-                        {device.label || `Microphone ${index + 1}`}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  onClick={restartVideoWithDevices}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20"
-                >
-                  <Settings className="h-4 w-4" />
-                  Apply
-                </button>
-                <button
-                  onClick={isScreenSharing ? stopScreenShare : startScreenShare}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/20"
-                >
-                  <ScreenShare className="h-4 w-4" />
-                  {isScreenSharing ? 'Stop Share' : 'Share Screen'}
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                {isScreenSharing && (
-                  <div className="relative col-span-2 aspect-video overflow-hidden rounded-lg border-2 border-cyan-400 bg-gray-800 md:col-span-3">
-                    <video ref={screenVideoRef} autoPlay playsInline muted className="h-full w-full object-contain" />
-                    <div className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-1 text-xs font-medium text-white">
-                      Screen Share
-                    </div>
-                  </div>
-                )}
-
-                {/* Teacher's Video (Local) */}
-                <div className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden border-2 border-indigo-500">
-                  <video 
-                    ref={localVideoRef} 
-                    autoPlay 
-                    playsInline 
-                    muted 
-                    className={`w-full h-full object-cover ${isVideoOff ? 'hidden' : ''}`}
-                  />
-                  {isVideoOff && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                      <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-bold">
-                        T
-                      </div>
-                    </div>
-                  )}
-                  <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1">
-                    Teacher (You)
-                    {isMuted && <MicOff className="w-3 h-3 text-red-400" />}
-                  </div>
+      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        {/* Camera test — big left card */}
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 font-bold text-gray-900">
+              <Video className="h-5 w-5 text-indigo-600" /> Camera & mic check
+            </h3>
+            <span className="text-[10px] font-black uppercase tracking-wide text-slate-500">Pre-class lobby</span>
+          </div>
+          <div className="relative aspect-video overflow-hidden rounded-lg bg-slate-900">
+            {isPreviewing ? (
+              <video
+                ref={previewVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="grid h-full place-items-center text-center text-sm text-slate-400">
+                <div>
+                  <Video className="mx-auto h-8 w-8 text-slate-600" />
+                  <p className="mt-2">Test your camera and mic before starting</p>
                 </div>
-
-                {/* Simulated Students */}
-                {FAKE_STUDENTS.map((student) => (
-                  <div key={student.id} className="relative aspect-video bg-gray-800 rounded-lg overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: student.avatarColor }}>
-                      <span className="text-2xl font-bold text-gray-800 opacity-50">
-                        {student.name.charAt(0)}
-                      </span>
-                    </div>
-                    <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-1 rounded text-xs text-white font-medium truncate max-w-[90%]">
-                      {student.name}
-                    </div>
-                  </div>
+              </div>
+            )}
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <label className="text-[10px] font-black uppercase tracking-wide text-slate-500">
+              Camera
+              <select
+                value={selectedVideoDevice}
+                onChange={(e) => setSelectedVideoDevice(e.target.value)}
+                className="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm normal-case outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {devices.filter((d) => d.kind === 'videoinput').map((d, i) => (
+                  <option key={d.deviceId || i} value={d.deviceId}>
+                    {d.label || `Camera ${i + 1}`}
+                  </option>
                 ))}
-              </div>
-            </div>
+              </select>
+            </label>
+            <label className="text-[10px] font-black uppercase tracking-wide text-slate-500">
+              Microphone
+              <select
+                value={selectedAudioDevice}
+                onChange={(e) => setSelectedAudioDevice(e.target.value)}
+                className="mt-1 w-full rounded-md border border-gray-300 px-2.5 py-2 text-sm normal-case outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                {devices.filter((d) => d.kind === 'audioinput').map((d, i) => (
+                  <option key={d.deviceId || i} value={d.deviceId}>
+                    {d.label || `Mic ${i + 1}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              onClick={isPreviewing ? stopCameraTest : startCameraTest}
+              className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3.5 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+            >
+              {isPreviewing ? 'Stop test' : 'Test camera'}
+            </button>
+            <button
+              onClick={startVideoCall}
+              className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-indigo-700"
+            >
+              <Video className="h-4 w-4" /> Start class
+            </button>
+          </div>
+        </section>
 
-            {/* Video Controls */}
-            <div className="h-16 bg-gray-950 flex items-center justify-center gap-4 shrink-0">
-              <button 
-                onClick={toggleMute}
-                className={`p-3 rounded-full ${isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'} text-white transition-colors`}
-              >
-                {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
-              <button 
-                onClick={toggleVideo}
-                className={`p-3 rounded-full ${isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'} text-white transition-colors`}
-              >
-                {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
-              </button>
-              <button 
-                onClick={endVideoCall}
-                className="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white transition-colors ml-4"
-              >
-                <PhoneOff className="w-5 h-5" />
-              </button>
-            </div>
+        {/* Right side: lobby info */}
+        <aside className="space-y-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-2 flex items-center gap-2 font-bold text-gray-900">
+              <UserPlus className="h-5 w-5 text-blue-500" />
+              Waiting room ({waitingRoom.length})
+            </h3>
+            {waitingRoom.length === 0 ? (
+              <p className="text-sm text-gray-500">No students waiting.</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {waitingRoom.map((s) => (
+                  <li
+                    key={s}
+                    className="flex items-center justify-between rounded-md border border-gray-100 bg-gray-50 px-2.5 py-1.5 text-sm"
+                  >
+                    <span className="font-medium text-gray-700">{s}</span>
+                    <button
+                      onClick={() => admitStudent(s)}
+                      className="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-200"
+                    >
+                      Admit
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-2 flex items-center gap-2 font-bold text-gray-900">
+              <Gamepad2 className="h-5 w-5 text-indigo-500" /> Active NeuroQuest
+            </h3>
+            {activeAssignment ? (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-gray-900">{activeAssignment.title}</p>
+                <p className="text-xs text-gray-500">
+                  {getNeuroQuestGame(activeAssignment.gameSlug).title} · {activeAssignment.duration}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Save a quest from NeuroQuest Academy to share it during class.</p>
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
 
-          {/* Side Panel (Chat + Waiting Room) */}
-          <div className="xl:col-span-1 flex flex-col gap-6 min-h-0">
-            <div className="flex-1 min-h-0">
-              <ChatSection />
-            </div>
-            <div className="h-[300px] shrink-0">
-              <SidebarSection />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
-          <div className="lg:col-span-2 min-h-0">
-            <ChatSection />
-          </div>
-          <div className="min-h-0 space-y-6">
-            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <h3 className="mb-3 flex items-center gap-2 font-semibold text-gray-900">
-                <Video className="h-5 w-5 text-indigo-600" />
-                Camera and Mic Check
-              </h3>
-              <div className="aspect-video overflow-hidden rounded-lg bg-gray-900">
-                {isPreviewing ? (
-                  <video ref={previewVideoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-center text-sm text-gray-400">
-                    Test your camera before starting the EIS online class.
-                  </div>
-                )}
-              </div>
-              <div className="mt-3 grid gap-2">
-                <select
-                  value={selectedVideoDevice}
-                  onChange={(event) => setSelectedVideoDevice(event.target.value)}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {devices.filter(device => device.kind === 'videoinput').map((device, index) => (
-                    <option key={device.deviceId || index} value={device.deviceId}>{device.label || `Camera ${index + 1}`}</option>
-                  ))}
-                </select>
-                <select
-                  value={selectedAudioDevice}
-                  onChange={(event) => setSelectedAudioDevice(event.target.value)}
-                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {devices.filter(device => device.kind === 'audioinput').map((device, index) => (
-                    <option key={device.deviceId || index} value={device.deviceId}>{device.label || `Microphone ${index + 1}`}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <button
-                  onClick={isPreviewing ? stopCameraTest : startCameraTest}
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  {isPreviewing ? 'Stop Test' : 'Test Camera'}
-                </button>
-                <button
-                  onClick={startVideoCall}
-                  className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
-                >
-                  Start Class
-                </button>
-              </div>
-            </div>
-            <SidebarSection />
-          </div>
-        </div>
+// ── Reusable shell pieces ──────────────────────────────────────────────
+function FilmstripTile({
+  children,
+  label,
+  muted,
+  handRaised,
+}: {
+  children: React.ReactNode;
+  label: string;
+  muted?: boolean;
+  handRaised?: boolean;
+}) {
+  return (
+    <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-md border border-white/10 bg-black">
+      {children}
+      <div className="absolute bottom-0.5 left-0.5 max-w-[80%] truncate rounded bg-black/60 px-1 py-0.5 text-[9px] font-bold text-white">
+        {label}
+      </div>
+      {handRaised && (
+        <span className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-amber-400 text-[10px]">
+          <Hand className="h-3 w-3 text-amber-900" />
+        </span>
+      )}
+      {muted && (
+        <span className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-red-500">
+          <MicOff className="h-3 w-3 text-white" />
+        </span>
       )}
     </div>
+  );
+}
+
+function ControlButton({
+  icon: Icon,
+  label,
+  onClick,
+  active,
+  danger,
+}: {
+  icon: typeof Mic;
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+  danger?: boolean;
+}) {
+  const tone = danger
+    ? 'bg-red-500 hover:bg-red-400 text-white'
+    : active
+      ? 'bg-[#49c8ff]/20 hover:bg-[#49c8ff]/30 text-[#8ddfff]'
+      : 'bg-white/5 hover:bg-white/10 text-slate-200';
+  return (
+    <button
+      onClick={onClick}
+      className={`group inline-flex flex-col items-center gap-0.5 rounded-md px-2.5 py-1.5 transition ${tone}`}
+      title={label}
+    >
+      <Icon className="h-4 w-4" />
+      <span className="text-[9px] font-semibold">{label}</span>
+    </button>
   );
 }

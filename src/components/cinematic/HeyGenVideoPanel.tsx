@@ -1,16 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Clapperboard, Loader2, PlayCircle, Wand2 } from 'lucide-react';
-import { createMockHeyGenAsset, saveCinematicAsset } from '@/lib/cinematic/assetPipeline';
+import { Clapperboard, Loader2, PlayCircle, ShieldCheck, Wand2 } from 'lucide-react';
+import { createMockHeyGenAsset, saveCinematicAsset, updateCinematicAssetStatus } from '@/lib/cinematic/assetPipeline';
 import type { CinematicAsset, CinematicLessonSpec } from '@/lib/cinematic/types';
 
 type CreateResponse = {
   videoId: string;
   status: 'queued' | 'processing' | 'generated' | 'failed' | 'demo';
   videoUrl?: string | null;
+  thumbnailUrl?: string | null;
   message?: string;
   source: 'heygen' | 'mock';
+};
+
+type ValidateResponse = {
+  ok: boolean;
+  source: 'heygen' | 'mock';
+  message: string;
 };
 
 export function HeyGenVideoPanel({
@@ -26,6 +33,7 @@ export function HeyGenVideoPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState(spec.heygen.videoUrl ?? '');
   const [providerId, setProviderId] = useState(spec.heygen.heygenVideoId ?? '');
+  const [assetId, setAssetId] = useState('');
   const [status, setStatus] = useState<'not_generated' | 'queued' | 'processing' | 'generated' | 'failed' | 'demo'>(spec.heygen.status ?? 'not_generated');
 
   const generate = async () => {
@@ -63,7 +71,8 @@ export function HeyGenVideoPanel({
         videoUrl: data.videoUrl,
         status: data.status === 'demo' ? 'demo' : 'queued',
       });
-      const saved = saveCinematicAsset(asset);
+      const saved = await saveCinematicAsset(asset);
+      setAssetId(saved.id);
       onAssetSaved?.(saved);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'HeyGen generation failed.');
@@ -83,8 +92,32 @@ export function HeyGenVideoPanel({
       setStatus(data.status === 'generated' ? 'generated' : data.status);
       setVideoUrl(data.videoUrl ?? '');
       setMessage(data.message ?? `Video status: ${data.status}`);
+      if (assetId) {
+        await updateCinematicAssetStatus(assetId, {
+          status: data.status === 'generated' ? 'ready' : data.status === 'demo' ? 'demo' : data.status,
+          videoUrl: data.videoUrl ?? undefined,
+          thumbnailUrl: data.thumbnailUrl ?? undefined,
+          providerId,
+        });
+      }
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Video status check failed.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const validateConnection = async () => {
+    if (!teacherMode || busy) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/heygen/validate');
+      const data = (await res.json()) as ValidateResponse;
+      if (!res.ok) throw new Error(data.message ?? 'HeyGen validation failed.');
+      setMessage(data.message);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'HeyGen validation failed.');
     } finally {
       setBusy(false);
     }
@@ -136,6 +169,15 @@ export function HeyGenVideoPanel({
           className="rounded-md border border-white/10 px-3 py-2 text-xs font-black text-slate-200 transition hover:border-[#49c8ff]/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
         >
           Check Status
+        </button>
+        <button
+          type="button"
+          onClick={validateConnection}
+          disabled={!teacherMode || busy}
+          className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2 text-xs font-black text-slate-200 transition hover:border-emerald-300/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          <ShieldCheck className="h-3.5 w-3.5" />
+          Validate HeyGen
         </button>
       </div>
     </div>

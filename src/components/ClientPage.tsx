@@ -73,6 +73,15 @@ const NeuroQuestHub = dynamic(
 );
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
+const teacherOnlyTabs: TabType[] = [
+  'learning-hub',
+  'place-value-lesson',
+  'cinematic-studio',
+  'upload-studio',
+  'lesson-planner',
+  'grader',
+  'email',
+];
 
 export function ClientPage() {
   return (
@@ -87,20 +96,25 @@ function ClientPageInner() {
   const [mode, setMode] = useState<LearningMode>('teacher');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const isDashboard = activeTab === 'dashboard';
-  const isLesson = activeTab === 'lesson';
-  const isUpload = activeTab === 'upload-studio';
-  const isLearningHub = activeTab === 'learning-hub';
-  const isEnglish = activeTab === 'english-studio';
-  const isScience = activeTab === 'science-studio';
-  const isCinematic = activeTab === 'cinematic-studio';
+  const effectiveActiveTab = mode === 'student' && teacherOnlyTabs.includes(activeTab) ? 'dashboard' : activeTab;
+  const selectTab = (tab: TabType) => {
+    setActiveTab(mode === 'student' && teacherOnlyTabs.includes(tab) ? 'dashboard' : tab);
+  };
+
+  const isDashboard = effectiveActiveTab === 'dashboard';
+  const isLesson = effectiveActiveTab === 'lesson';
+  const isUpload = effectiveActiveTab === 'upload-studio';
+  const isLearningHub = effectiveActiveTab === 'learning-hub';
+  const isEnglish = effectiveActiveTab === 'english-studio';
+  const isScience = effectiveActiveTab === 'science-studio';
+  const isCinematic = effectiveActiveTab === 'cinematic-studio';
   const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isEnglish || isScience || isCinematic;
 
   return (
     <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
       <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        activeTab={effectiveActiveTab}
+        setActiveTab={selectTab}
         mode={mode}
         setMode={setMode}
         isOpen={isSidebarOpen}
@@ -128,20 +142,20 @@ function ClientPageInner() {
         {/* Main Content Area */}
         <main className={`flex-1 overflow-y-auto p-4 md:p-8 ${useDarkSurface ? 'bg-[#050711]' : ''}`}>
           <div className="max-w-6xl mx-auto h-full">
-            {activeTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={setActiveTab} />}
-            {activeTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={setActiveTab} />}
-            {activeTab === 'learning-hub' && <LearningDataHub mode={mode} setActiveTab={setActiveTab} />}
-            {activeTab === 'eis-maths' && <EISMathStudio setActiveTab={setActiveTab} />}
-            {activeTab === 'english-studio' && <EnglishStudio setActiveTab={setActiveTab} />}
-            {activeTab === 'science-studio' && <ScienceStudio setActiveTab={setActiveTab} />}
-            {activeTab === 'place-value-lesson' && <LessonGenerator setActiveTab={setActiveTab} />}
-            {activeTab === 'cinematic-studio' && <CinematicStudio mode={mode} />}
-            {activeTab === 'upload-studio' && <TeacherUploadStudio setActiveTab={setActiveTab} />}
-            {activeTab === 'lesson-planner' && <LessonPlanner />}
-            {activeTab === 'grader' && <Grader />}
-            {activeTab === 'classroom' && <VirtualClassroom setActiveTab={setActiveTab} />}
-            {activeTab === 'email' && <EmailAssistant />}
-            {activeTab === 'neuroquest' && <NeuroQuestHub setActiveTab={setActiveTab} />}
+            {effectiveActiveTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'learning-hub' && mode === 'teacher' && <LearningDataHub mode={mode} setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'eis-maths' && <EISMathStudio setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'english-studio' && <EnglishStudio mode={mode} setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'science-studio' && <ScienceStudio setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'place-value-lesson' && mode === 'teacher' && <LessonGenerator setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'cinematic-studio' && mode === 'teacher' && <CinematicStudio mode={mode} />}
+            {effectiveActiveTab === 'upload-studio' && mode === 'teacher' && <TeacherUploadStudio setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'lesson-planner' && mode === 'teacher' && <LessonPlanner />}
+            {effectiveActiveTab === 'grader' && mode === 'teacher' && <Grader />}
+            {effectiveActiveTab === 'classroom' && <VirtualClassroom setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'email' && mode === 'teacher' && <EmailAssistant />}
+            {effectiveActiveTab === 'neuroquest' && <NeuroQuestHub setActiveTab={selectTab} />}
           </div>
         </main>
       </div>

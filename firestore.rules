@@ -1,26 +1,177 @@
 rules_version = '2';
 
-// EIS Maths Studio · DEMO RULES
-// These rules are intentionally OPEN for the EIS evaluation period so the
-// platform works without a real auth flow (the demo uses per-role IDs
-// stored in localStorage, not Firebase Auth).
-//
-// Before any non-demo production traffic, tighten by:
-//   1. Adding Firebase Auth and requiring `request.auth.uid` matches the
-//      document's `studentId` / `teacherId` / `createdBy` field.
-//   2. Scoping reads to a user's own classIds.
-//   3. Locking writes to authenticated teachers for the `assignments`,
-//      `lessons` and `generatedLessons` collections.
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}           { allow read, write: if true; }
-    match /classes/{classId}        { allow read, write: if true; }
-    match /courses/{courseId}       { allow read, write: if true; }
-    match /lessons/{lessonId}       { allow read, write: if true; }
-    match /assignments/{aid}        { allow read, write: if true; }
-    match /studentResponses/{rid}   { allow read, write: if true; }
-    match /generatedLessons/{lid}   { allow read, write: if true; }
-    match /lessonProgress/{pid}     { allow read, write: if true; }
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return signedIn() && request.auth.token.role is string ? request.auth.token.role : '';
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function isTeacher() {
+      return role() == 'teacher' || isAdmin();
+    }
+
+    function isStudent() {
+      return role() == 'student';
+    }
+
+    function ownsUser(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function writesSchoolScopedDoc() {
+      return signedIn()
+        && (!('schoolId' in request.resource.data) || request.auth.token.schoolId == request.resource.data.schoolId);
+    }
+
+    function readsSchoolScopedDoc() {
+      return signedIn()
+        && (!('schoolId' in resource.data) || isAdmin() || request.auth.token.schoolId == resource.data.schoolId);
+    }
+
+    match /users/{userId} {
+      allow read: if ownsUser(userId) || isTeacher();
+      allow create, update: if ownsUser(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /classes/{classId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /courses/{courseId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /lessons/{lessonId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /generatedLessons/{lessonId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /cinematicLessons/{lessonId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /cinematicAssets/{assetId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /cinematicAssignments/{assignmentId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /assignments/{assignmentId} {
+      allow read: if readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /studentResponses/{responseId} {
+      allow read: if isTeacher() || (isStudent() && request.auth.uid == resource.data.studentId);
+      allow create: if signedIn()
+        && writesSchoolScopedDoc()
+        && (isTeacher() || request.auth.uid == request.resource.data.studentId);
+      allow update: if signedIn()
+        && writesSchoolScopedDoc()
+        && (isTeacher() || request.auth.uid == resource.data.studentId);
+      allow delete: if isTeacher();
+    }
+
+    match /lessonProgress/{progressId} {
+      allow read: if isTeacher() || (isStudent() && request.auth.uid == resource.data.studentId);
+      allow create, update: if signedIn()
+        && writesSchoolScopedDoc()
+        && (isTeacher() || request.auth.uid == request.resource.data.studentId);
+      allow delete: if isTeacher();
+    }
+
+    match /platformConnections/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update, delete: if isAdmin() && writesSchoolScopedDoc();
+    }
+
+    match /platformCredentials/{id} {
+      allow read, write: if isAdmin() && writesSchoolScopedDoc();
+    }
+
+    match /externalImports/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /platformStudentMappings/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /learningEvents/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create: if signedIn()
+        && writesSchoolScopedDoc()
+        && (isTeacher() || request.auth.uid == request.resource.data.studentId);
+      allow update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /studentMasteryProfiles/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /classMasteryProfiles/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /aiRecommendations/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update, delete: if isTeacher() && writesSchoolScopedDoc();
+    }
+
+    match /integrationAuditLogs/{id} {
+      allow read: if isAdmin() && readsSchoolScopedDoc();
+      allow create: if isTeacher() && writesSchoolScopedDoc();
+      allow update, delete: if false;
+    }
+
+    match /syncSchedules/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update, delete: if isAdmin() && writesSchoolScopedDoc();
+    }
+
+    match /syncJobs/{id} {
+      allow read: if isTeacher() && readsSchoolScopedDoc();
+      allow create, update: if isTeacher() && writesSchoolScopedDoc();
+      allow delete: if isAdmin();
+    }
+
+    match /driveIngestionConfigs/{id} {
+      allow read, write: if isAdmin() && writesSchoolScopedDoc();
+    }
+
+    match /connectorAuditLogs/{id} {
+      allow read: if isAdmin() && readsSchoolScopedDoc();
+      allow create: if isTeacher() && writesSchoolScopedDoc();
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

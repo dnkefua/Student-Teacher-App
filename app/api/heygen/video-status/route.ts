@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getHeyGenVideoStatus } from '@/lib/cinematic/heygen';
+import { getHeyGenVideoStatus, HeyGenServiceError } from '@/lib/cinematic/heygen';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -11,15 +12,17 @@ export async function GET(request: Request) {
   try {
     return NextResponse.json(await getHeyGenVideoStatus(videoId));
   } catch (err) {
+    const statusCode = err instanceof HeyGenServiceError ? err.statusCode : 502;
     return NextResponse.json(
       {
         videoId,
         status: 'failed',
-        source: 'mock',
+        source: 'heygen',
         videoUrl: null,
         message: err instanceof Error ? err.message : 'HeyGen status check failed.',
+        retryable: err instanceof HeyGenServiceError ? err.retryable : true,
       },
-      { status: 502 },
+      { status: statusCode },
     );
   }
 }

@@ -85,6 +85,16 @@ const navGroups = [
   },
 ] as const;
 
+const teacherOnlyTabs: TabType[] = [
+  'learning-hub',
+  'place-value-lesson',
+  'cinematic-studio',
+  'upload-studio',
+  'lesson-planner',
+  'grader',
+  'email',
+];
+
 export function Sidebar({
   activeTab,
   setActiveTab,
@@ -138,13 +148,16 @@ export function Sidebar({
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-2 py-3">
-          {navGroups.map((group, gi) => (
+          {navGroups.map((group, gi) => {
+            const visibleItems = group.items.filter((item) => mode === 'teacher' || !teacherOnlyTabs.includes(item.id as TabType));
+            if (visibleItems.length === 0) return null;
+            return (
             <div key={group.label} className={gi > 0 ? 'mt-5' : ''}>
               <p className="mb-1.5 px-3 text-[9px] font-black uppercase tracking-widest text-slate-500">
                 {group.label}
               </p>
               <div className="space-y-0.5">
-                {group.items.map((item) => {
+                {visibleItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
                   return (
@@ -173,7 +186,7 @@ export function Sidebar({
                 })}
               </div>
             </div>
-          ))}
+          )})}
         </nav>
 
         {/* Footer: role toggle + profile */}

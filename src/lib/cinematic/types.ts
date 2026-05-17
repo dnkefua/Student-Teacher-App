@@ -213,6 +213,18 @@ export type CinematicAsset = {
   updatedAt?: string;
 };
 
+export type CinematicLessonRecord = {
+  id: string;
+  spec: CinematicLessonSpec;
+  subject: SubjectId;
+  title: string;
+  topic: string;
+  createdBy: string;
+  source: 'template' | 'ai' | 'mock' | 'upload' | 'manual';
+  createdAt: string;
+  updatedAt?: string;
+};
+
 export type CinematicInteractionEvent = {
   lessonId: string;
   stepId?: string;

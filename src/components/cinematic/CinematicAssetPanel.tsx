@@ -9,10 +9,17 @@ export function CinematicAssetPanel({ lessonId }: { lessonId: string }) {
   const [assets, setAssets] = useState<CinematicAsset[]>([]);
 
   useEffect(() => {
-    const load = () => setAssets(listAssetsForLesson(lessonId));
-    load();
+    let alive = true;
+    const load = async () => {
+      const next = await listAssetsForLesson(lessonId);
+      if (alive) setAssets(next);
+    };
+    void load();
     window.addEventListener('eis-cinematic-assets-changed', load);
-    return () => window.removeEventListener('eis-cinematic-assets-changed', load);
+    return () => {
+      alive = false;
+      window.removeEventListener('eis-cinematic-assets-changed', load);
+    };
   }, [lessonId]);
 
   return (

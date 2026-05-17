@@ -1013,6 +1013,181 @@ function ConceptLabWindow({
   );
 }
 
+/** Compact hero for the currently-selected lesson. Combines inquiry,
+ *  objectives, primary CTA and delivery actions into ONE card so the
+ *  studio body starts with a clear single anchor instead of three. */
+function LessonHeroCard({
+  lesson,
+  accent,
+  onOpenLab,
+  onBuildPlan,
+  onTeachLive,
+}: {
+  lesson: CourseLesson;
+  accent: string;
+  onOpenLab: () => void;
+  onBuildPlan: () => void;
+  onTeachLive: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">{lesson.textbookSection}</p>
+          <h2 className="mt-1 text-2xl font-bold text-gray-900">{lesson.title}</h2>
+        </div>
+        <button
+          onClick={onOpenLab}
+          className="inline-flex shrink-0 items-center gap-2 rounded-md px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+          style={{ background: accent }}
+        >
+          Open Concept Lab <MonitorPlay className="h-4 w-4" />
+        </button>
+      </div>
+
+      <p className="mt-4 rounded-md border-l-4 border-amber-300 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+        <strong>Inquiry:</strong> {lesson.inquiry}
+      </p>
+
+      <div className="mt-4 grid gap-2 md:grid-cols-3">
+        {lesson.objectives.map((objective) => (
+          <div
+            key={objective}
+            className="flex items-start gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
+          >
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <p className="text-xs leading-5 text-gray-700">{objective}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+        <button
+          onClick={onBuildPlan}
+          className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-700"
+        >
+          <BookOpen className="h-3.5 w-3.5" /> Build Lesson Plan
+        </button>
+        <button
+          onClick={onTeachLive}
+          className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3.5 py-2 text-xs font-bold text-gray-700 transition hover:bg-gray-50"
+        >
+          <Video className="h-3.5 w-3.5" /> Teach With Camera
+        </button>
+        <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-gray-500">
+          <Gamepad2 className="h-3.5 w-3.5" /> Saves to planner, grader, classroom chat
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Section wrapper with a header (title + count) and a children slot. */
+function ExpandableSection({
+  title,
+  subtitle,
+  count,
+  accent,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  count: number;
+  accent: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <header className="flex items-end justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black text-white"
+              style={{ background: accent }}
+            >
+              {count}
+            </span>
+            <h3 className="text-base font-bold text-gray-900">{title}</h3>
+          </div>
+          {subtitle ? <p className="mt-1 text-xs text-gray-500">{subtitle}</p> : null}
+        </div>
+      </header>
+      {children}
+    </section>
+  );
+}
+
+/** A controlled expandable card. When `isOpen` it claims the full grid
+ *  row (col-span-full) and renders rich detail. Collapsed it shows the
+ *  number + title only. The parent owns selection state, so only one
+ *  card in a group can be open at a time — eliminates dead space and
+ *  keeps the viewport focused on what the user clicked. */
+function ExpandableCard({
+  index,
+  accent,
+  title,
+  preview,
+  children,
+  variant,
+  isOpen,
+  onToggle,
+  fullWidth = false,
+}: {
+  index: number | string;
+  accent: string;
+  title: string;
+  preview?: string;
+  children: React.ReactNode;
+  variant: 'example' | 'exercise' | 'extension' | 'project';
+  isOpen: boolean;
+  onToggle: () => void;
+  fullWidth?: boolean;
+}) {
+  const palette = {
+    example: { bg: 'bg-white', border: 'border-gray-200', hover: 'hover:border-gray-400 hover:bg-gray-50' },
+    exercise: { bg: 'bg-indigo-50/60', border: 'border-indigo-200', hover: 'hover:border-indigo-400 hover:bg-indigo-50' },
+    extension: { bg: 'bg-emerald-50/60', border: 'border-emerald-200', hover: 'hover:border-emerald-400 hover:bg-emerald-50' },
+    project: { bg: 'bg-white', border: 'border-gray-200', hover: 'hover:border-gray-400' },
+  }[variant];
+
+  return (
+    <article
+      className={`group relative overflow-hidden rounded-lg border shadow-sm transition-all ${palette.bg} ${palette.border} ${palette.hover} ${isOpen || fullWidth ? 'col-span-full' : ''}`}
+      style={isOpen ? { boxShadow: `0 0 0 2px ${accent}, 0 12px 32px -8px ${accent}55` } : undefined}
+    >
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex w-full items-start gap-3 text-left transition ${isOpen ? 'p-5' : 'p-4'}`}
+        aria-expanded={isOpen}
+      >
+        <span
+          className={`grid shrink-0 place-items-center rounded-full font-black text-white transition-all ${isOpen ? 'h-10 w-10 text-base' : 'h-7 w-7 text-xs'}`}
+          style={{ background: accent }}
+        >
+          {index}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className={`font-semibold text-gray-900 transition-all ${isOpen ? 'text-lg leading-7' : 'text-sm leading-5'}`}>
+            {title}
+          </p>
+          {!isOpen && preview ? (
+            <p className="mt-1 line-clamp-1 text-xs text-gray-500">{preview}</p>
+          ) : null}
+        </div>
+        <ChevronDown
+          className={`mt-1 h-4 w-4 shrink-0 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      {isOpen ? (
+        <div className="border-t border-gray-100 bg-gradient-to-b from-transparent to-gray-50/40 px-6 pb-6 pt-5">
+          <div className="ml-[3.25rem] max-w-4xl">{children}</div>
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
 export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
   const [chapterId, setChapterId] = useState(eisMypMathCourse[0].id);
   const activeChapter = useMemo(() => eisMypMathCourse.find((chapter) => chapter.id === chapterId) ?? eisMypMathCourse[0], [chapterId]);
@@ -1020,6 +1195,9 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
   const [isLessonWindowOpen, setIsLessonWindowOpen] = useState(false);
   const [isCourseMapOpen, setIsCourseMapOpen] = useState(false);
   const [isChapterPanelOpen, setIsChapterPanelOpen] = useState(false);
+  const [openExample, setOpenExample] = useState<string | null>(null);
+  const [openExercise, setOpenExercise] = useState<string | null>('extension');
+  const [openProject, setOpenProject] = useState(true);
   const lesson = useMemo(() => activeChapter.lessons.find((item) => item.id === lessonId) ?? activeChapter.lessons[0], [activeChapter, lessonId]);
   const conceptPack = useMemo(() => getConceptResearchPack(lesson, activeChapter), [lesson, activeChapter]);
   const generatedLessonPackage = useMemo(
@@ -1236,91 +1414,109 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
             )}
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-            <div className="space-y-6">
-              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <p className="text-sm font-bold uppercase tracking-wide text-gray-500">{lesson.textbookSection}</p>
-                <h2 className="mt-2 text-2xl font-bold text-gray-900">{lesson.title}</h2>
-                <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                  <strong>Inquiry:</strong> {lesson.inquiry}
-                </p>
-                <div className="mt-5 grid gap-3 md:grid-cols-3">
-                  {lesson.objectives.map((objective) => (
-                    <div key={objective} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                      <CheckCircle2 className="mb-3 h-5 w-5 text-green-600" />
-                      <p className="text-sm font-medium leading-6 text-gray-800">{objective}</p>
+          {/* Active lesson hero — title, inquiry, objectives, primary CTA + delivery controls in one compact row */}
+          <LessonHeroCard
+            lesson={lesson}
+            accent={accent}
+            onOpenLab={() => setIsLessonWindowOpen(true)}
+            onBuildPlan={() => saveLessonAssignment('lesson-planner')}
+            onTeachLive={() => saveLessonAssignment('classroom')}
+          />
+
+          {/* Worked Examples — controlled single-select. Opened card spans full row. */}
+          <ExpandableSection
+            title="Worked Examples"
+            subtitle="Click any card — it expands to fill the row with method and answer."
+            count={conceptPack.examples.length}
+            accent={accent}
+          >
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" style={{ gridAutoRows: 'min-content' }}>
+              {conceptPack.examples.map((example, index) => {
+                const key = `${example.label}-${index}`;
+                const isOpen = openExample === key;
+                return (
+                  <ExpandableCard
+                    key={key}
+                    index={index + 1}
+                    accent={accent}
+                    title={example.prompt}
+                    preview={example.method}
+                    variant="example"
+                    isOpen={isOpen}
+                    onToggle={() => setOpenExample(isOpen ? null : key)}
+                  >
+                    <p className="text-base leading-7 text-gray-700">{example.method}</p>
+                    <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5">
+                      <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Answer</span>
+                      <span className="font-mono text-base font-bold text-amber-200">{example.answer}</span>
                     </div>
-                  ))}
-                </div>
-                <button onClick={() => setIsLessonWindowOpen(true)} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white transition hover:bg-slate-800">
-                  Open Full-Window Concept Lab <MonitorPlay className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900">Five Worked Examples</h3>
-                <div className="mt-4 space-y-3">
-                  {conceptPack.examples.map((example, index) => (
-                    <article key={`${example.label}-${example.prompt}`} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                      <div className="flex gap-3">
-                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-sm font-bold text-white" style={{ background: accent }}>{index + 1}</span>
-                        <div>
-                          <p className="font-semibold text-gray-900">{example.prompt}</p>
-                          <p className="mt-2 text-sm leading-6 text-gray-700">{example.method}</p>
-                          <p className="mt-2 font-mono text-sm font-bold text-slate-950">Answer: {example.answer}</p>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              </div>
+                  </ExpandableCard>
+                );
+              })}
             </div>
+          </ExpandableSection>
 
-            <div className="space-y-6">
-              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900">Five Exercises</h3>
-                <div className="mt-4 space-y-3">
-                  {conceptPack.exercises.map((exercise, index) => (
-                    <article key={`${exercise.label}-${exercise.prompt}`} className="rounded-lg bg-indigo-50 p-4 text-sm text-indigo-950">
-                      <div className="flex gap-3">
-                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white text-sm font-black text-indigo-700">{index + 1}</span>
-                        <div>
-                          <p className="font-semibold">{exercise.prompt}</p>
-                          <p className="mt-2 leading-6 text-indigo-800"><strong>Success check:</strong> {exercise.successCheck}</p>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                  <div className="rounded-lg bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">
-                    <strong>Extension:</strong> {lesson.exercises.extension}
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900">Delivery Controls</h3>
-                <div className="mt-4 space-y-3 text-sm leading-6 text-gray-700">
-                  <p className="flex gap-2"><Camera className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />Use Virtual Classroom camera preflight before live teaching.</p>
-                  <p className="flex gap-2"><MonitorPlay className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />Screen-share the animated explanation and game walkthrough.</p>
-                  <p className="flex gap-2"><Gamepad2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />Saved lesson flows into planner, grader, email and classroom chat.</p>
-                </div>
-                <div className="mt-5 grid gap-2">
-                  <button onClick={() => saveLessonAssignment('lesson-planner')} className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white transition hover:bg-indigo-700">
-                    Build Complete Lesson Plan <ArrowRight className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => saveLessonAssignment('classroom')} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2 font-medium text-gray-700 transition hover:bg-gray-50">
-                    Open Camera Classroom <Video className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
+          {/* Exercises — same pattern. Extension is its own emerald card. */}
+          <ExpandableSection
+            title="Student Exercises"
+            subtitle="Each exercise has its own success check — click to expand."
+            count={conceptPack.exercises.length + 1}
+            accent={accent}
+          >
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" style={{ gridAutoRows: 'min-content' }}>
+              {conceptPack.exercises.map((exercise, index) => {
+                const key = `${exercise.label}-${index}`;
+                const isOpen = openExercise === key;
+                return (
+                  <ExpandableCard
+                    key={key}
+                    index={index + 1}
+                    accent={accent}
+                    title={exercise.prompt}
+                    preview={exercise.successCheck}
+                    variant="exercise"
+                    isOpen={isOpen}
+                    onToggle={() => setOpenExercise(isOpen ? null : key)}
+                  >
+                    <div className="rounded-lg bg-white/70 p-4">
+                      <p className="text-xs font-black uppercase tracking-wide text-indigo-700">Success check</p>
+                      <p className="mt-2 text-base leading-7 text-indigo-900">{exercise.successCheck}</p>
+                    </div>
+                  </ExpandableCard>
+                );
+              })}
+              <ExpandableCard
+                index="+"
+                accent="#10b981"
+                title="Extension challenge"
+                preview={lesson.exercises.extension}
+                variant="extension"
+                isOpen={openExercise === 'extension'}
+                onToggle={() =>
+                  setOpenExercise(openExercise === 'extension' ? null : 'extension')
+                }
+              >
+                <p className="text-base leading-7 text-emerald-900">{lesson.exercises.extension}</p>
+              </ExpandableCard>
             </div>
-          </div>
+          </ExpandableSection>
 
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900">Chapter Project</h3>
-            <p className="mt-2 text-gray-700">{activeChapter.project}</p>
-            <p className="mt-3 text-sm text-gray-500">Global context: {activeChapter.globalContext}</p>
-          </div>
+          {/* Chapter Project — always full-width */}
+          <ExpandableCard
+            index="P"
+            accent={accent}
+            title={`Chapter Project · ${activeChapter.chapter}`}
+            preview={activeChapter.project}
+            variant="project"
+            isOpen={openProject}
+            onToggle={() => setOpenProject((v) => !v)}
+            fullWidth
+          >
+            <p className="text-base leading-7 text-gray-700">{activeChapter.project}</p>
+            <p className="mt-3 text-sm text-gray-500">
+              <strong>Global context:</strong> {activeChapter.globalContext}
+            </p>
+          </ExpandableCard>
         </div>
       </section>
 

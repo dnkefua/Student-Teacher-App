@@ -1,15 +1,39 @@
 rules_version = '2';
 
-// EIS Maths Studio · DEMO STORAGE RULES
-// Intentionally OPEN for the EIS evaluation period — uploads use the
-// demo-user pattern (no Firebase Auth yet). Before any non-demo
-// production traffic, scope writes to authenticated teachers and
-// require request.auth.uid to match the path prefix.
-
 service firebase.storage {
   match /b/{bucket}/o {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function role() {
+      return signedIn() && request.auth.token.role is string ? request.auth.token.role : '';
+    }
+
+    function isAdmin() {
+      return role() == 'admin';
+    }
+
+    function isTeacher() {
+      return role() == 'teacher' || isAdmin();
+    }
+
+    function ownsPath(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
     match /uploads/{userId}/{allPaths=**} {
-      allow read, write: if true;
+      allow read: if ownsPath(userId) || isTeacher();
+      allow write: if ownsPath(userId) || isTeacher();
+    }
+
+    match /cinematic-assets/{schoolId}/{allPaths=**} {
+      allow read: if signedIn() && (isAdmin() || request.auth.token.schoolId == schoolId);
+      allow write: if isTeacher() && (isAdmin() || request.auth.token.schoolId == schoolId);
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

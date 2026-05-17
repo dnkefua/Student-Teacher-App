@@ -5,6 +5,8 @@ import { CheckCircle2, Loader2, Send, Users, Video } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { LearningMode } from '@/lib/demoAssignments';
 import type { CinematicAsset, CinematicInteractionEvent, CinematicLessonSpec } from '@/lib/cinematic/types';
+import { setActiveSubjectLesson } from '@/lib/activeSubjectLesson';
+import { lessonFromCinematicSpec } from '@/lib/cinematic/subjectLessonAdapter';
 import {
   recordCinematicAssignmentSubmitted,
   recordCinematicCheckpointAnswered,
@@ -12,6 +14,7 @@ import {
   recordCinematicLessonStarted,
   recordCinematicStepViewed,
 } from '@/lib/cinematic/analytics';
+import { assignCinematicLessonToClass } from '@/lib/cinematic/assignments';
 import { CinematicSceneRenderer } from './CinematicSceneRenderer';
 import { CinematicTimeline } from './CinematicTimeline';
 import { CinematicNarrationPanel } from './CinematicNarrationPanel';
@@ -34,6 +37,7 @@ export function CinematicLessonPlayer({
   const [assignmentAnswer, setAssignmentAnswer] = useState('');
   const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [assetNotice, setAssetNotice] = useState<string | null>(null);
+  const [teacherNotice, setTeacherNotice] = useState<string | null>(null);
 
   const currentStep = useMemo(
     () => spec.storyboard.find((step) => step.id === currentStepId) ?? spec.storyboard[0],
@@ -77,6 +81,26 @@ export function CinematicLessonPlayer({
     setCompletedStepIds([]);
     setCheckpointAnswers({});
     setAssignmentAnswer('');
+  };
+
+  const handleTeacherAction = async (action: 'assign_to_class' | 'teach_live' | 'generate_recap_video' | 'send_to_learning_hub') => {
+    if (action === 'teach_live') {
+      setActiveSubjectLesson(lessonFromCinematicSpec(spec));
+      setTeacherNotice('Lesson is now live in the cross-subject teaching store.');
+    } else if (action === 'generate_recap_video') {
+      setTeacherNotice('Use the HeyGen panel to generate a short recap video from the lesson script.');
+    } else if (action === 'assign_to_class') {
+      const assignment = await assignCinematicLessonToClass(spec);
+      setTeacherNotice(`Assigned "${assignment.lesson.title}" to the current class. Students receive the lesson view, not the teacher spec.`);
+    } else {
+      setTeacherNotice('Learning Data Hub event recorded for this cinematic lesson.');
+    }
+    await recordCinematicInteraction(spec, {
+      lessonId: spec.id,
+      stepId: currentStep?.id,
+      interactionId: `teacher_${action}`,
+      action,
+    });
   };
 
   return (
@@ -140,7 +164,8 @@ export function CinematicLessonPlayer({
           <HeyGenVideoPanel spec={spec} teacherMode={teacherMode} onAssetSaved={onAssetSaved} />
           {assetNotice ? <p className="rounded-md border border-emerald-300/25 bg-emerald-300/10 px-3 py-2 text-xs text-emerald-100">{assetNotice}</p> : null}
           <CinematicAssetPanel lessonId={spec.id} />
-          {teacherMode ? <TeacherActions /> : <StudentActions />}
+          {teacherNotice ? <p className="rounded-md border border-[#49c8ff]/25 bg-[#49c8ff]/10 px-3 py-2 text-xs text-[#d9f6ff]">{teacherNotice}</p> : null}
+          {teacherMode ? <TeacherActions onAction={handleTeacherAction} /> : <StudentActions />}
         </aside>
       </section>
 
@@ -237,19 +262,24 @@ function AssignmentPanel({
   );
 }
 
-function TeacherActions() {
-  const actions: { label: string; Icon: LucideIcon }[] = [
-    { label: 'Assign to class', Icon: Users },
-    { label: 'Teach live', Icon: Video },
-    { label: 'Generate recap video', Icon: Video },
-    { label: 'Send to Learning Data Hub', Icon: Send },
+function TeacherActions({ onAction }: { onAction: (action: 'assign_to_class' | 'teach_live' | 'generate_recap_video' | 'send_to_learning_hub') => void }) {
+  const actions: { label: string; action: 'assign_to_class' | 'teach_live' | 'generate_recap_video' | 'send_to_learning_hub'; Icon: LucideIcon }[] = [
+    { label: 'Assign to class', action: 'assign_to_class', Icon: Users },
+    { label: 'Teach live', action: 'teach_live', Icon: Video },
+    { label: 'Generate recap video', action: 'generate_recap_video', Icon: Video },
+    { label: 'Send to Learning Data Hub', action: 'send_to_learning_hub', Icon: Send },
   ];
   return (
     <div className="rounded-lg border border-white/10 bg-[#061126] p-4">
       <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Teacher controls</p>
       <div className="mt-3 grid gap-2">
-        {actions.map(({ label, Icon }) => (
-          <button key={label} type="button" className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2 text-xs font-black text-slate-200 hover:border-[#49c8ff]/60 hover:text-white">
+        {actions.map(({ label, action, Icon }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => onAction(action)}
+            className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2 text-xs font-black text-slate-200 hover:border-[#49c8ff]/60 hover:text-white"
+          >
             <Icon className="h-3.5 w-3.5" />
             {label}
           </button>
@@ -264,7 +294,7 @@ function StudentActions() {
     <div className="rounded-lg border border-white/10 bg-[#061126] p-4">
       <p className="text-xs font-black uppercase tracking-wide text-[#8ddfff]">Student controls</p>
       <div className="mt-3 grid gap-2">
-        {['Start lesson', 'Continue', 'Ask AI tutor', 'Submit checkpoint'].map((label) => (
+        {['Start lesson', 'Continue', 'Submit checkpoint'].map((label) => (
           <button key={label} type="button" className="rounded-md border border-white/10 px-3 py-2 text-left text-xs font-black text-slate-200 hover:border-[#49c8ff]/60 hover:text-white">
             {label}
           </button>
