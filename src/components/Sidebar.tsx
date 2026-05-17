@@ -3,6 +3,8 @@ import Image from 'next/image';
 import {
   BookOpen,
   CheckSquare,
+  ChevronLeft,
+  ChevronRight,
   Database,
   MonitorPlay,
   Mail,
@@ -46,6 +48,8 @@ interface SidebarProps {
   setMode: (mode: LearningMode) => void;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  isCollapsed?: boolean;
+  setIsCollapsed?: (next: boolean) => void;
 }
 
 const navGroups = [
@@ -102,7 +106,12 @@ export function Sidebar({
   setMode,
   isOpen,
   setIsOpen,
+  isCollapsed = false,
+  setIsCollapsed,
 }: SidebarProps) {
+  // On mobile the sidebar is a drawer — collapse only applies on desktop.
+  const collapsed = isCollapsed && !isOpen;
+
   return (
     <>
       {/* Mobile overlay */}
@@ -115,12 +124,13 @@ export function Sidebar({
 
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-[#18345f] bg-[#050711] text-white shadow-2xl transition-transform duration-200 ease-in-out md:static md:h-screen md:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-56 flex-col border-r border-[#18345f] bg-[#050711] text-white shadow-2xl transition-[width,transform] duration-200 ease-in-out md:static md:h-screen md:translate-x-0',
+          collapsed && 'md:w-14',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
         {/* Header */}
-        <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
+        <div className={cn('flex h-14 items-center justify-between border-b border-white/10', collapsed ? 'px-2' : 'px-4')}>
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-md border border-[#49c8ff]/25 bg-[#071126]">
               <Image
@@ -131,31 +141,49 @@ export function Sidebar({
                 className="h-7 w-7 object-contain"
               />
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-black uppercase tracking-wide text-white">
-                EIS Studio
-              </p>
-              <p className="truncate text-[10px] font-semibold text-[#8ddfff]">Grade 8 · MYP</p>
-            </div>
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-xs font-black uppercase tracking-wide text-white">
+                  EIS Studio
+                </p>
+                <p className="truncate text-[10px] font-semibold text-[#8ddfff]">Grade 8 · MYP</p>
+              </div>
+            )}
           </div>
           <button
             onClick={() => setIsOpen(false)}
             className="rounded-md p-1 text-slate-400 hover:bg-white/10 hover:text-white md:hidden"
+            aria-label="Close sidebar"
           >
             <X className="h-4 w-4" />
           </button>
+          {setIsCollapsed && (
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className={cn(
+                'hidden rounded-md p-1 text-slate-400 hover:bg-white/10 hover:text-white md:block',
+                collapsed && 'ml-0',
+              )}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto px-2 py-3">
+        <nav className={cn('flex-1 overflow-y-auto py-3', collapsed ? 'px-1' : 'px-2')}>
           {navGroups.map((group, gi) => {
             const visibleItems = group.items.filter((item) => mode === 'teacher' || !teacherOnlyTabs.includes(item.id as TabType));
             if (visibleItems.length === 0) return null;
             return (
-            <div key={group.label} className={gi > 0 ? 'mt-5' : ''}>
-              <p className="mb-1.5 px-3 text-[9px] font-black uppercase tracking-widest text-slate-500">
-                {group.label}
-              </p>
+            <div key={group.label} className={gi > 0 ? (collapsed ? 'mt-3 border-t border-white/5 pt-3' : 'mt-5') : ''}>
+              {!collapsed && (
+                <p className="mb-1.5 px-3 text-[9px] font-black uppercase tracking-widest text-slate-500">
+                  {group.label}
+                </p>
+              )}
               <div className="space-y-0.5">
                 {visibleItems.map((item) => {
                   const Icon = item.icon;
@@ -167,8 +195,11 @@ export function Sidebar({
                         setActiveTab(item.id as TabType);
                         setIsOpen(false);
                       }}
+                      title={collapsed ? item.label : undefined}
+                      aria-label={item.label}
                       className={cn(
-                        'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-semibold transition-colors',
+                        'flex w-full items-center rounded-md text-sm font-semibold transition-colors',
+                        collapsed ? 'justify-center px-2 py-2' : 'gap-2.5 px-3 py-2',
                         isActive
                           ? 'bg-[#ffc43b] text-[#061126]'
                           : 'text-slate-300 hover:bg-[#0d1e43] hover:text-white',
@@ -180,7 +211,7 @@ export function Sidebar({
                           isActive ? 'text-[#061126]' : 'text-[#8ddfff]',
                         )}
                       />
-                      {item.label}
+                      {!collapsed && item.label}
                     </button>
                   );
                 })}
@@ -190,8 +221,13 @@ export function Sidebar({
         </nav>
 
         {/* Footer: role toggle + profile */}
-        <div className="border-t border-white/10 p-3">
-          <div className="mb-3 grid grid-cols-2 gap-1 rounded-md border border-white/10 bg-[#050711]/70 p-1">
+        <div className={cn('border-t border-white/10', collapsed ? 'p-2' : 'p-3')}>
+          <div
+            className={cn(
+              'mb-3 gap-1 rounded-md border border-white/10 bg-[#050711]/70 p-1',
+              collapsed ? 'grid grid-cols-1' : 'grid grid-cols-2',
+            )}
+          >
             {(['teacher', 'student'] as const).map((item) => (
               <button
                 key={item}
@@ -200,25 +236,30 @@ export function Sidebar({
                   setActiveTab('dashboard');
                   setIsOpen(false);
                 }}
+                title={collapsed ? item : undefined}
+                aria-label={item}
                 className={cn(
-                  'rounded px-2 py-1.5 text-xs font-black capitalize transition',
+                  'rounded text-xs font-black capitalize transition',
+                  collapsed ? 'px-1 py-1.5' : 'px-2 py-1.5',
                   mode === item
                     ? 'bg-[#49c8ff] text-[#061126] shadow-[0_0_16px_rgba(73,200,255,.3)]'
                     : 'text-slate-400 hover:text-white',
                 )}
               >
-                {item}
+                {collapsed ? item[0].toUpperCase() : item}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2 px-1">
+          <div className={cn('flex items-center gap-2', collapsed ? 'justify-center' : 'px-1')}>
             <UserCircle className="h-5 w-5 shrink-0 text-[#49c8ff]" />
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-white">
-                {mode === 'teacher' ? 'Teacher' : 'Student'}
-              </p>
-              <p className="truncate text-[10px] text-slate-500">EIS Grade 8</p>
-            </div>
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-xs font-bold text-white">
+                  {mode === 'teacher' ? 'Teacher' : 'Student'}
+                </p>
+                <p className="truncate text-[10px] text-slate-500">EIS Grade 8</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

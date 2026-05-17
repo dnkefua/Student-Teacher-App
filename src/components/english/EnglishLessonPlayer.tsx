@@ -8,6 +8,11 @@ import type { SubjectLesson } from '@/lib/subjects/types';
 import { subjectRegistry } from '@/lib/subjects/subjectRegistry';
 import { EnglishInteractiveRenderer } from './EnglishInteractiveRenderer';
 import { MediaAdvertisementLab } from './MediaAdvertisementLab';
+import { NovelStudyLab } from './NovelStudyLab';
+import { PoetryAnthologyLab } from './PoetryAnthologyLab';
+import { DocumentaryFilmLab } from './DocumentaryFilmLab';
+import { DramaStageLab } from './DramaStageLab';
+import { AcademicFlowGrammarPanel } from './AcademicFlowGrammarPanel';
 
 type Tab = 'explore' | 'practice' | 'assignment';
 
@@ -30,6 +35,10 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
   const [heygenMessage, setHeygenMessage] = useState<string | null>(null);
   const isTeacher = mode === 'teacher';
   const isAdvertisingLesson = lesson.unitId === 'eis-eng-y8-u1-advertising';
+  const isNovelLesson = lesson.unitId === 'eis-eng-y8-u2-novel';
+  const isPoetryLesson = lesson.unitId === 'eis-eng-y8-u3-poetry';
+  const isDocumentaryLesson = lesson.unitId === 'eis-eng-y8-u4-our-planet';
+  const isDramaLesson = lesson.unitId === 'eis-eng-y8-u5-taming-shrew';
   const studentExplanation = isAdvertisingLesson
     ? 'Adverts persuade through choices students can see: image, colour, layout, slogan, price, audience and cultural context. In this lesson, use the highlighted McDonald\'s US and UAE adverts to point to the evidence first, then explain the persuasive device and its effect.'
     : lesson.studentExplanation;
@@ -225,6 +234,10 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
       {tab === 'explore' && (
         <div className="space-y-3">
           {isAdvertisingLesson ? <MediaAdvertisementLab compact /> : null}
+          {isNovelLesson ? <NovelStudyLab /> : null}
+          {isPoetryLesson ? <PoetryAnthologyLab /> : null}
+          {isDocumentaryLesson ? <DocumentaryFilmLab /> : null}
+          {isDramaLesson ? <DramaStageLab /> : null}
 
           <div className="grid gap-3 lg:grid-cols-[1.05fr_1fr]">
             <div className="space-y-3">
@@ -289,6 +302,8 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
               <EnglishInteractiveRenderer lesson={lesson} />
             </div>
           </div>
+
+          <AcademicFlowGrammarPanel />
         </div>
       )}
 

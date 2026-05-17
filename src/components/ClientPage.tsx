@@ -95,6 +95,15 @@ function ClientPageInner() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [mode, setMode] = useState<LearningMode>('teacher');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  React.useEffect(() => {
+    const stored = window.localStorage.getItem('eis.sidebar.collapsed');
+    if (stored === '1') setIsSidebarCollapsed(true);
+  }, []);
+  React.useEffect(() => {
+    window.localStorage.setItem('eis.sidebar.collapsed', isSidebarCollapsed ? '1' : '0');
+  }, [isSidebarCollapsed]);
 
   const effectiveActiveTab = mode === 'student' && teacherOnlyTabs.includes(activeTab) ? 'dashboard' : activeTab;
   const selectTab = (tab: TabType) => {
@@ -119,6 +128,8 @@ function ClientPageInner() {
         setMode={setMode}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
       />
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">

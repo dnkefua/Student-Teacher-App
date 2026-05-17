@@ -71,6 +71,24 @@ const u1Lessons: SubjectLesson[] = [
         choices: ['Slogan', 'Rhetorical question', 'Statistic', 'Logo'],
         answer: 'Rhetorical question',
       },
+      {
+        id: 'p3-myp-ethos',
+        type: 'multiple_choice',
+        question: 'Which rhetorical appeal relies on demonstrating authority, expertise or trust?',
+        choices: ['Ethos', 'Pathos', 'Logos', 'Kairos'],
+        answer: 'Ethos',
+        explanation:
+          'Ethos = credibility. A doctor recommending a brand, an Olympic athlete wearing a kit, or a celebrity chef cooking with a product are all ethos appeals.',
+      },
+      {
+        id: 'p4-myp-pathos',
+        type: 'multiple_choice',
+        question: 'A slogan that reads "Life\'s too short to be average" primarily uses which appeal?',
+        choices: ['Logos · logic', 'Pathos · feeling', 'Ethos · trust', 'Anecdote'],
+        answer: 'Pathos · feeling',
+        explanation:
+          'It works on emotion through hyperbole — exaggerating the cost of being "average" to provoke desire for the product.',
+      },
     ],
     assignmentQuestions: [
       {
@@ -270,6 +288,29 @@ const u2Lessons: SubjectLesson[] = [
         type: 'short_answer',
         question: 'Give one example of indirect characterisation from the chocolate-sharing chapter and explain what it reveals.',
         answer: 'Charlie cuts the chocolate into tiny pieces to make it last for his family — indirect, but reveals patience, generosity, and an awareness of scarcity.',
+      },
+      {
+        id: 'p2-myp-clauses',
+        type: 'multiple_choice',
+        question: 'Identify the MAIN clause in: "Because the rain stopped, we decided to walk outside."',
+        choices: [
+          'Because the rain stopped',
+          'we decided to walk outside',
+          'the rain stopped',
+          'to walk outside',
+        ],
+        answer: 'we decided to walk outside',
+        explanation:
+          'A main (independent) clause makes sense on its own. "We decided to walk outside" stands alone; "Because the rain stopped" is subordinate.',
+      },
+      {
+        id: 'p3-myp-subjunctive',
+        type: 'short_answer',
+        question: 'Rewrite the indicative sentence "He is going to school" in the SUBJUNCTIVE mood to express a wish.',
+        answer:
+          'I wish that he WERE at home right now. (Subjunctive uses "were" for all persons in wish-statements.)',
+        explanation:
+          'The subjunctive mood is used for wishes, hypotheticals and demands. Note "were", not "was" — this is the marker that proves the subjunctive is intentional.',
       },
     ],
     assignmentQuestions: [
@@ -732,6 +773,22 @@ const u4Lessons: SubjectLesson[] = [
         type: 'short_answer',
         question: 'Define diegetic sound and give one example from a documentary you have watched.',
         answer: 'Diegetic sound exists within the world of the scene (wind, footsteps, animal calls). Example: the wing-beats of a flock of starlings inside an Our Planet sequence.',
+      },
+      {
+        id: 'p2-myp-non-diegetic',
+        type: 'multiple_choice',
+        question: 'A sweeping orchestral score plays as a polar bear walks across the ice. The bear cannot hear it. What kind of sound is this?',
+        choices: ['Diegetic', 'Non-diegetic', 'Voiceover', 'Foley'],
+        answer: 'Non-diegetic',
+        explanation:
+          'Non-diegetic sound sits outside the world of the scene — added by the editor to shape audience emotion. Diegetic sound exists inside the scene; voiceover is a narrator speaking over the action.',
+      },
+      {
+        id: 'p3-myp-storyboard',
+        type: 'short_answer',
+        question: 'In a 3-frame sustainability storyboard — Wide → Close-up → ECU — what does each shot type do for the argument?',
+        answer:
+          'Wide establishes the unspoiled environment (audience trusts what is at stake). Close-up introduces the threat (audience focuses on the agent). ECU on a struggling animal\'s eye creates accountability — the audience cannot look away.',
       },
     ],
     assignmentQuestions: [

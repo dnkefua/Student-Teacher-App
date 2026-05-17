@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { ArrowRight, ExternalLink, Highlighter, PenLine } from 'lucide-react';
+import { ArrowRight, ExternalLink, Highlighter, PenLine, Scale } from 'lucide-react';
 
 type AdId = 'us-mcvalue' | 'uae-ramadan';
 
@@ -118,6 +118,55 @@ const realAds: RealAd[] = [
         arrow: 'down',
       },
     ],
+  },
+];
+
+type RhetoricRow = {
+  component: 'Headline' | 'Visuals / Colour' | 'Call to action';
+  observation: { us: string; uae: string };
+  appeal: { us: string; uae: string };
+  function: string;
+};
+
+const rhetoricAnalyzer: RhetoricRow[] = [
+  {
+    component: 'Headline',
+    observation: {
+      us: '"$5 Meal Deal" — large yellow type, dollar sign first.',
+      uae: '"Rediscover Ramadan" — soft serif, white on warm gold.',
+    },
+    appeal: {
+      us: 'Logos · value as a numeric promise.',
+      uae: 'Pathos · invitation to a shared cultural memory.',
+    },
+    function:
+      'A headline either solves a problem ("save money") or names a feeling ("rediscover"). Same brand, opposite hook.',
+  },
+  {
+    component: 'Visuals / Colour',
+    observation: {
+      us: 'Saturated red and yellow. Product photography dominates the frame.',
+      uae: 'Warm dusk palette. People in the foreground, brand mark in the corner.',
+    },
+    appeal: {
+      us: 'Pathos / hyperbole · appetite manufactured by colour.',
+      uae: 'Ethos · the brand earns trust by stepping back for the people.',
+    },
+    function:
+      'Colour is a mood setter: high-contrast for impulse, warm low-saturation for connection. The audience reads colour before words.',
+  },
+  {
+    component: 'Call to action',
+    observation: {
+      us: '"Get yours now." Imperative, present tense.',
+      uae: '"Share kindness this Ramadan." Imperative softened by abstract noun.',
+    },
+    appeal: {
+      us: 'Modal urgency · "must / will" energy without the auxiliary.',
+      uae: 'Ethos · the action is moral, not commercial.',
+    },
+    function:
+      'Imperatives carry power. A US CTA tells the audience to buy; a UAE CTA tells the audience to BE — the brand benefits by association.',
   },
 ];
 
@@ -261,6 +310,45 @@ export function MediaAdvertisementLab({ compact = false }: { compact?: boolean }
             </a>
           </div>
         </aside>
+      </div>
+
+      <div className="border-t border-white/10 bg-[#071126] p-4">
+        <div className="flex items-center gap-2">
+          <Scale className="h-4 w-4 text-[#8ddfff]" />
+          <p className="text-xs font-black uppercase tracking-wide text-[#8ddfff]">
+            MYP Rhetoric Analyzer · Ethos · Pathos · Logos
+          </p>
+        </div>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full min-w-[820px] border-separate border-spacing-0 text-left text-xs">
+            <thead>
+              <tr className="text-[10px] font-black uppercase tracking-wide text-slate-400">
+                <th className="rounded-tl-md border border-white/10 bg-white/[.03] px-3 py-2">Component</th>
+                <th className="border border-white/10 bg-white/[.03] px-3 py-2 text-[#ffe08a]">Observation (US)</th>
+                <th className="border border-white/10 bg-white/[.03] px-3 py-2 text-[#fda4af]">Observation (UAE)</th>
+                <th className="border border-white/10 bg-white/[.03] px-3 py-2 text-[#c084fc]">Primary appeal</th>
+                <th className="rounded-tr-md border border-white/10 bg-white/[.03] px-3 py-2 text-[#8ddfff]">Function / impact</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rhetoricAnalyzer.map((row) => (
+                <tr key={row.component} className="text-slate-200">
+                  <td className="border border-white/10 px-3 py-2 font-bold text-white">{row.component}</td>
+                  <td className="border border-white/10 px-3 py-2 leading-5">{row.observation.us}</td>
+                  <td className="border border-white/10 px-3 py-2 leading-5">{row.observation.uae}</td>
+                  <td className="border border-white/10 px-3 py-2 leading-5">
+                    <span className="block text-[#ffe08a]">US · {row.appeal.us}</span>
+                    <span className="mt-1 block text-[#fda4af]">UAE · {row.appeal.uae}</span>
+                  </td>
+                  <td className="border border-white/10 px-3 py-2 leading-5">{row.function}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-[11px] italic text-slate-400">
+          Use the chart in pairs: one student observes, the other names the appeal. A strong PETAL sentence names the device, places it in the image, and explains audience effect.
+        </p>
       </div>
     </section>
   );
