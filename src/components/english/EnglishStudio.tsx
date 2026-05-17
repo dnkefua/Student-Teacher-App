@@ -105,7 +105,7 @@ export function EnglishStudio({ setActiveTab }: EnglishStudioProps) {
               Read closely. Write deliberately. Speak with intent.
             </h1>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-300">
-              Grade 8 English taught through the school's real Sequence-of-Learning — advertising, the novel, the
+              Grade 8 English taught through the school&apos;s real Sequence-of-Learning — advertising, the novel, the
               anthology, documentary film, and Shakespeare. Every lesson opens an interactive studio: annotate texts,
               plan PETAL paragraphs, highlight poetic devices, build sentences, and revise drafts with AI feedback.
             </p>

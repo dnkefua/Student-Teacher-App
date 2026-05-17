@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Mic, MicOff, RotateCcw, Volume2 } from 'lucide-react';
 import type { SubjectLesson } from '@/lib/subjects/types';
 
@@ -23,13 +23,12 @@ export function SpeakingFeedback({ lesson }: { lesson: SubjectLesson }) {
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const startRef = useRef<number>(0);
-  const [supported, setSupported] = useState(true);
-
-  useEffect(() => {
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setSupported(false);
-    }
-  }, []);
+  const [micBlocked, setMicBlocked] = useState(false);
+  const supported =
+    typeof navigator !== 'undefined' &&
+    !micBlocked &&
+    Boolean(navigator.mediaDevices?.getUserMedia) &&
+    typeof MediaRecorder !== 'undefined';
 
   const start = async () => {
     if (!supported) return;
@@ -53,7 +52,7 @@ export function SpeakingFeedback({ lesson }: { lesson: SubjectLesson }) {
       setRecording(true);
     } catch (err) {
       console.warn('[SpeakingFeedback] mic failed', err);
-      setSupported(false);
+      setMicBlocked(true);
     }
   };
 

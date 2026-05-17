@@ -47,7 +47,8 @@ function Particles({ state }: { state: State }) {
       const x = (i % side) - side / 2 + 0.5;
       const y = (Math.floor(i / side) % side) - side / 2 + 0.5;
       const z = Math.floor(i / (side * side)) - side / 2 + 0.5;
-      arr.push({ homeX: x * 0.65, homeY: y * 0.65, homeZ: z * 0.65, phase: Math.random() * Math.PI * 2 });
+      const phaseSeed = ((i * 9301 + 49297) % 233280) / 233280;
+      arr.push({ homeX: x * 0.65, homeY: y * 0.65, homeZ: z * 0.65, phase: phaseSeed * Math.PI * 2 });
     }
     return arr;
   }, []);

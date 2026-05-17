@@ -43,6 +43,10 @@ const LessonGenerator = dynamic(
   () => import('@/components/CinematicLessonEngine').then((m) => ({ default: m.LessonGenerator })),
   { loading: SkeletonLoading },
 );
+const CinematicStudio = dynamic(
+  () => import('@/components/cinematic/CinematicStudio').then((m) => ({ default: m.CinematicStudio })),
+  { loading: SkeletonLoading },
+);
 const TeacherUploadStudio = dynamic(
   () => import('@/components/TeacherUploadStudio').then((m) => ({ default: m.TeacherUploadStudio })),
   { loading: SkeletonLoading },
@@ -89,7 +93,8 @@ function ClientPageInner() {
   const isLearningHub = activeTab === 'learning-hub';
   const isEnglish = activeTab === 'english-studio';
   const isScience = activeTab === 'science-studio';
-  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isEnglish || isScience;
+  const isCinematic = activeTab === 'cinematic-studio';
+  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isEnglish || isScience || isCinematic;
 
   return (
     <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
@@ -130,6 +135,7 @@ function ClientPageInner() {
             {activeTab === 'english-studio' && <EnglishStudio setActiveTab={setActiveTab} />}
             {activeTab === 'science-studio' && <ScienceStudio setActiveTab={setActiveTab} />}
             {activeTab === 'place-value-lesson' && <LessonGenerator setActiveTab={setActiveTab} />}
+            {activeTab === 'cinematic-studio' && <CinematicStudio mode={mode} />}
             {activeTab === 'upload-studio' && <TeacherUploadStudio setActiveTab={setActiveTab} />}
             {activeTab === 'lesson-planner' && <LessonPlanner />}
             {activeTab === 'grader' && <Grader />}

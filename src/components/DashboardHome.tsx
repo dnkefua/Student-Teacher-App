@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
@@ -9,27 +9,19 @@ import {
   Check,
   CheckCircle2,
   ClipboardCheck,
-  Gem,
   Loader2,
   MonitorPlay,
   Play,
-  School,
   Send,
   Sparkles,
   Trophy,
   UserCheck,
 } from 'lucide-react';
 import { TabType } from './Sidebar';
-import {
-  AngleLab3D,
-  CircleLab3D,
-  ExplainerByType,
-  PercentageBar3D,
-  ProbabilitySpinner3D,
-} from '@/components/Math3DExplainers';
+import { ExplainerByType } from '@/components/Math3DExplainers';
+import { Math3DShowcase } from '@/components/Math3DShowcase';
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
 import { StudentAssignmentList } from '@/components/StudentAssignmentList';
-import { SystemStatusStrip } from '@/components/SystemStatusStrip';
 import { SubjectQuickPicker } from '@/components/SubjectQuickPicker';
 import { ActiveSubjectLessonCard } from '@/components/ActiveSubjectLessonCard';
 import { ClassPicker } from '@/components/ClassPicker';
@@ -37,18 +29,12 @@ import { AuthButton } from '@/components/AuthButton';
 import {
   assignDemoQuestion,
   defaultDemoAssignment,
-  isFirestoreBacked,
   loadDemoAssignment,
   submitDemoAnswer,
   type LearningMode,
   type DemoAssignment,
 } from '@/lib/demoAssignments';
-import {
-  grade8Curriculum,
-  threeDLabels,
-  unitLabels,
-  type CurriculumUnit,
-} from '@/lib/grade8Curriculum';
+import { threeDLabels } from '@/lib/grade8Curriculum';
 
 interface DashboardHomeProps {
   mode: LearningMode;
@@ -74,13 +60,11 @@ function useDemoAssignmentState() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => setAssignment(loadDemoAssignment()), 0);
-
     const onStorage = () => setAssignment(loadDemoAssignment());
     const onAssignment = (event: Event) => {
       const custom = event as CustomEvent<DemoAssignment>;
       setAssignment(custom.detail ?? loadDemoAssignment());
     };
-
     window.addEventListener('storage', onStorage);
     window.addEventListener('eis-demo-assignment', onAssignment);
     return () => {
@@ -104,52 +88,14 @@ function HeroBackdrop() {
   );
 }
 
-function PersistenceBadge() {
-  const backed = isFirestoreBacked();
-  if (backed) {
-    return (
-      <span className="inline-flex items-center gap-2 rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#49c8ff]" />
-        Firestore persistence on
-      </span>
-    );
-  }
+/** Compact top bar — class picker + auth only. Role toggle lives in the sidebar. */
+function TopBar() {
   return (
-    <span className="inline-flex items-center gap-2 rounded-md border border-[#ffc43b]/35 bg-[#ffc43b]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#ffe08a]">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#ffc43b]" />
-      Demo mode · Firestore not configured
-    </span>
-  );
-}
-
-function ModeBar({ mode, setMode }: { mode: LearningMode; setMode: (mode: LearningMode) => void }) {
-  return (
-    <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-white/5 p-3 backdrop-blur md:flex-row md:items-center md:justify-between">
-      <div>
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Premium demo path</p>
-          <PersistenceBadge />
-        </div>
-        <p className="mt-1 text-sm font-semibold text-slate-200">
-          Landing → Launch App → Teacher Dashboard → EIS Maths → AI 3D Generator → Assign → Student Submit → Virtual Classroom
-        </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 backdrop-blur">
+      <p className="text-xs font-semibold text-slate-400">EIS Grade 8 · MYP Mathematics</p>
+      <div className="flex items-center gap-2">
         <AuthButton compact />
         <ClassPicker />
-        <div className="grid grid-cols-2 rounded-md border border-white/10 bg-[#050711]/70 p-1">
-          {(['teacher', 'student'] as const).map((item) => (
-            <button
-              key={item}
-              onClick={() => setMode(item)}
-              className={`rounded px-4 py-2 text-sm font-black capitalize transition ${
-                mode === item ? 'bg-[#49c8ff] text-[#061126] shadow-[0_0_22px_rgba(73,200,255,.35)]' : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -176,8 +122,6 @@ function ProgressCard({ card }: { card: typeof progressCards[number] }) {
   );
 }
 
-const curriculumUnits: CurriculumUnit[] = ['abstract', 'numerical', 'spatial', 'data'];
-
 function TeacherAssignmentCard({
   assignment,
   onAssign,
@@ -187,18 +131,13 @@ function TeacherAssignmentCard({
   onAssign: (questionId: string) => Promise<void>;
   setActiveTab: (tab: TabType) => void;
 }) {
-  const [selectedUnit, setSelectedUnit] = useState<CurriculumUnit>(() => {
-    const current = grade8Curriculum.find((q) => q.id === assignment.questionId);
-    return current?.unit ?? 'abstract';
-  });
-  const [selectedId, setSelectedId] = useState<string>(assignment.questionId);
   const [assignState, setAssignState] = useState<'idle' | 'pending' | 'done'>('idle');
 
   const handleAssign = async () => {
     if (assignState === 'pending') return;
     setAssignState('pending');
     try {
-      await onAssign(selectedId);
+      await onAssign(assignment.questionId);
       setAssignState('done');
       window.setTimeout(() => setAssignState('idle'), 1800);
     } catch {
@@ -206,95 +145,31 @@ function TeacherAssignmentCard({
     }
   };
 
-  const visibleQuestions = useMemo(
-    () => grade8Curriculum.filter((q) => q.unit === selectedUnit),
-    [selectedUnit],
-  );
-
   return (
     <article className="relative overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-[#0a1736] via-[#061126] to-[#050711] p-6 text-white">
       <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-[#ffc43b]/15 blur-3xl" />
       <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Active assignment · {assignment.lessonTitle}</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">
+            Active assignment · {assignment.lessonTitle}
+          </p>
           <h3 className="mt-2 text-2xl font-black">{assignment.title}</h3>
-          <p className="mt-2 max-w-2xl text-sm italic leading-6 text-[#8ddfff]">Inquiry: {assignment.inquiryQuestion}</p>
-          <p className="mt-1 max-w-2xl text-xs leading-6 text-slate-400">Objective · {assignment.objective}</p>
+          <p className="mt-2 max-w-2xl text-sm italic leading-6 text-[#8ddfff]">
+            {assignment.inquiryQuestion}
+          </p>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">{assignment.question}</p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex shrink-0 flex-col items-end gap-2">
           <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">
             {assignment.status}
           </span>
           <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
             3D · {threeDLabels[assignment.threeDType]}
           </span>
-          <button
-            onClick={() => setActiveTab('lesson')}
-            className="inline-flex items-center gap-1 rounded-md border border-[#49c8ff]/35 bg-[#49c8ff]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-[#8ddfff] transition hover:border-[#49c8ff] hover:bg-[#49c8ff]/20"
-          >
-            Open lesson workspace
-            <ArrowRight className="h-3 w-3" />
-          </button>
         </div>
       </div>
 
-      <div className="relative mt-6 rounded-lg border border-white/10 bg-[#050711]/60 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-300">MYP 3 curriculum bank</p>
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">EIS MYP Mathematics Overview</p>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {curriculumUnits.map((unit) => (
-            <button
-              key={unit}
-              onClick={() => setSelectedUnit(unit)}
-              className={`rounded-md px-3 py-1.5 text-xs font-black uppercase tracking-wide transition ${
-                selectedUnit === unit
-                  ? 'bg-[#49c8ff] text-[#061126]'
-                  : 'border border-white/15 text-slate-300 hover:text-white'
-              }`}
-            >
-              {unitLabels[unit]}
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 grid gap-2 md:grid-cols-2">
-          {visibleQuestions.map((q) => {
-            const difficultyStyle =
-              q.difficulty === 'support'
-                ? 'bg-[#49c8ff]/15 text-[#8ddfff] border-[#49c8ff]/30'
-                : q.difficulty === 'extension'
-                ? 'bg-[#ff3d22]/15 text-[#ff8a73] border-[#ff3d22]/30'
-                : 'bg-[#ffc43b]/15 text-[#ffe08a] border-[#ffc43b]/30';
-            return (
-              <button
-                key={q.id}
-                onClick={() => setSelectedId(q.id)}
-                className={`group rounded-md border p-3 text-left transition ${
-                  selectedId === q.id
-                    ? 'border-[#ffc43b] bg-[#ffc43b]/10'
-                    : 'border-white/10 bg-white/5 hover:border-white/30'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">{q.topic}</p>
-                  <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide ${difficultyStyle}`}>
-                    {q.difficulty}
-                  </span>
-                </div>
-                <p className="mt-1 text-sm font-black text-white">{q.title}</p>
-                <p className="mt-1 text-xs leading-5 text-slate-400">{q.question}</p>
-                <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                  3D · {threeDLabels[q.threeDType]}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="relative mt-5 grid gap-3 md:grid-cols-3">
+      <div className="relative mt-6 grid gap-3 md:grid-cols-3">
         <button
           onClick={handleAssign}
           disabled={assignState === 'pending'}
@@ -303,33 +178,28 @@ function TeacherAssignmentCard({
               ? 'bg-emerald-400 text-[#061126] shadow-[0_0_24px_rgba(74,222,128,.55)]'
               : assignState === 'pending'
               ? 'bg-[#ffc43b]/80 text-[#061126]'
-              : 'animate-eis-pulse bg-[#ffc43b] text-[#061126] shadow-[0_0_22px_rgba(255,196,59,.35)] hover:bg-[#ffe08a] hover:shadow-[0_0_28px_rgba(255,196,59,.55)] active:scale-[0.97]'
+              : 'animate-eis-pulse bg-[#ffc43b] text-[#061126] shadow-[0_0_22px_rgba(255,196,59,.35)] hover:bg-[#ffe08a]'
           }`}
         >
           {assignState === 'done' ? (
-            <>
-              <Check className="h-4 w-4" />
-              Assigned!
-            </>
+            <><Check className="h-4 w-4" /> Assigned!</>
           ) : assignState === 'pending' ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Assigning…
-            </>
+            <><Loader2 className="h-4 w-4 animate-spin" /> Assigning…</>
           ) : (
-            <>
-              <Send className="h-4 w-4" />
-              Assign to Student
-            </>
+            <><Send className="h-4 w-4" /> Assign to Student</>
           )}
         </button>
-        <button onClick={() => setActiveTab('place-value-lesson')} className="inline-flex items-center justify-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#49c8ff] hover:text-[#8ddfff]">
-          <Gem className="h-4 w-4" />
-          Open AI 3D Generator
+        <button
+          onClick={() => setActiveTab('eis-maths')}
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#49c8ff] hover:text-[#8ddfff]"
+        >
+          Browse Curriculum <ArrowRight className="h-4 w-4" />
         </button>
-        <button onClick={() => setActiveTab('classroom')} className="inline-flex items-center justify-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]">
-          <MonitorPlay className="h-4 w-4" />
-          Send to Live Class
+        <button
+          onClick={() => setActiveTab('classroom')}
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]"
+        >
+          <MonitorPlay className="h-4 w-4" /> Send to Live Class
         </button>
       </div>
 
@@ -341,13 +211,23 @@ function TeacherAssignmentCard({
           <p className="mt-3 text-2xl font-black text-green-100">{assignment.submission.score}%</p>
         </div>
       ) : (
-        <p className="relative mt-4 text-sm font-semibold text-slate-400">No submission yet. Switch to Student view to complete the demo flow.</p>
+        <p className="relative mt-4 text-sm font-semibold text-slate-400">
+          No submission yet. Switch to Student view to complete the demo flow.
+        </p>
       )}
     </article>
   );
 }
 
-function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { assignment: DemoAssignment; setAssignment: (assignment: DemoAssignment) => void; setActiveTab: (tab: TabType) => void }) {
+function StudentAssignmentCard({
+  assignment,
+  setAssignment,
+  setActiveTab,
+}: {
+  assignment: DemoAssignment;
+  setAssignment: (assignment: DemoAssignment) => void;
+  setActiveTab: (tab: TabType) => void;
+}) {
   const [answer, setAnswer] = useState(assignment.submission?.answer ?? '');
   const [submitState, setSubmitState] = useState<'idle' | 'pending' | 'done'>('idle');
   const assigned = assignment.status !== 'draft';
@@ -374,17 +254,19 @@ function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { as
           <h3 className="mt-2 text-2xl font-black">{assigned ? assignment.title : 'No assignment yet'}</h3>
           {assigned ? (
             <>
-              <p className="mt-2 max-w-2xl text-sm italic leading-6 text-[#ffc43b]">Inquiry: {assignment.inquiryQuestion}</p>
+              <p className="mt-2 max-w-2xl text-sm italic leading-6 text-[#ffc43b]">
+                {assignment.inquiryQuestion}
+              </p>
               <p className="mt-2 text-sm leading-6 text-slate-300">{assignment.prompt}</p>
             </>
           ) : (
             <p className="mt-2 text-sm leading-6 text-slate-300">Ask the teacher to assign a checkpoint.</p>
           )}
         </div>
-        <ClipboardCheck className="h-8 w-8 text-[#ffc43b]" />
+        <ClipboardCheck className="h-8 w-8 shrink-0 text-[#ffc43b]" />
       </div>
 
-      {assigned ? (
+      {assigned && (
         <>
           <div className="relative mt-5 rounded-lg border border-[#ffc43b]/20 bg-[#ffc43b]/5 p-5">
             <p className="text-xs font-black uppercase tracking-wide text-[#ffc43b]">Question</p>
@@ -394,7 +276,7 @@ function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { as
             value={answer}
             onChange={(event) => setAnswer(event.target.value)}
             className="relative mt-4 min-h-32 w-full rounded-lg border border-white/10 bg-[#050711]/70 p-4 text-sm leading-6 text-white placeholder:text-slate-500 outline-none transition focus:border-[#49c8ff] focus:ring-2 focus:ring-[#49c8ff]/30"
-            placeholder="Example: Add 7 to both sides, then divide by 5. x = 7. Check: 5(7) - 7 = 28."
+            placeholder="Write your answer here…"
           />
           <div className="relative mt-4 flex flex-wrap gap-3">
             <button
@@ -406,34 +288,29 @@ function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { as
                   : submitState === 'pending'
                   ? 'bg-[#49c8ff]/80 text-[#061126]'
                   : !answer.trim()
-                  ? 'bg-[#49c8ff]/30 text-[#061126]/50 cursor-not-allowed'
-                  : 'animate-eis-pulse bg-[#49c8ff] text-[#061126] shadow-[0_0_22px_rgba(73,200,255,.35)] hover:bg-[#8ddfff] hover:shadow-[0_0_28px_rgba(73,200,255,.55)] active:scale-[0.97]'
+                  ? 'cursor-not-allowed bg-[#49c8ff]/30 text-[#061126]/50'
+                  : 'animate-eis-pulse bg-[#49c8ff] text-[#061126] shadow-[0_0_22px_rgba(73,200,255,.35)] hover:bg-[#8ddfff]'
               }`}
             >
               {submitState === 'done' ? (
-                <>
-                  <Check className="h-4 w-4" />
-                  Submitted!
-                </>
+                <><Check className="h-4 w-4" /> Submitted!</>
               ) : submitState === 'pending' ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Submitting…
-                </>
+                <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
               ) : (
-                <>
-                  Submit Answer <Send className="h-4 w-4" />
-                </>
+                <>Submit Answer <Send className="h-4 w-4" /></>
               )}
             </button>
-            <button onClick={() => setActiveTab('eis-maths')} className="inline-flex items-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]">
+            <button
+              onClick={() => setActiveTab('eis-maths')}
+              className="inline-flex items-center gap-2 rounded-md border border-white/15 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]"
+            >
               Study 3D Lesson <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </>
-      ) : null}
+      )}
 
-      {assignment.submission ? (
+      {assignment.submission && (
         <div className="relative mt-5 rounded-lg border border-green-300/30 bg-green-300/10 p-4">
           <p className="flex items-center gap-2 text-sm font-black text-green-100">
             <CheckCircle2 className="h-4 w-4" />
@@ -441,21 +318,28 @@ function StudentAssignmentCard({ assignment, setAssignment, setActiveTab }: { as
           </p>
           <p className="mt-2 text-sm leading-6 text-green-50">{assignment.submission.feedback}</p>
         </div>
-      ) : null}
+      )}
     </article>
   );
 }
 
-function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignment: DemoAssignment; setAssignment: (assignment: DemoAssignment) => void; setActiveTab: (tab: TabType) => void }) {
-  const today = useMemo(() => 'Solving equations with visual balance models', []);
-
+function TeacherDashboard({
+  assignment,
+  setAssignment,
+  setActiveTab,
+}: {
+  assignment: DemoAssignment;
+  setAssignment: (assignment: DemoAssignment) => void;
+  setActiveTab: (tab: TabType) => void;
+}) {
   const assign = async (questionId: string) => {
     const next = await assignDemoQuestion(questionId);
     setAssignment(next);
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Hero */}
       <section className="relative overflow-hidden rounded-lg border border-white/10 p-6 text-white shadow-[0_24px_90px_rgba(5,7,17,.45)] lg:p-10">
         <HeroBackdrop />
         <div className="relative grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
@@ -464,13 +348,21 @@ function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignm
               <Sparkles className="h-4 w-4" />
               Teacher Dashboard
             </div>
-            <h1 className="mt-5 text-3xl font-black tracking-normal sm:text-4xl lg:text-5xl">Today&apos;s Grade 8 Maths Lesson</h1>
-            <p className="mt-4 max-w-2xl text-lg font-semibold leading-8 text-slate-200">{today}</p>
+            <h1 className="mt-5 text-3xl font-black tracking-normal sm:text-4xl lg:text-5xl">
+              Today&apos;s Grade 8 Maths Lesson
+            </h1>
+            <p className="mt-4 max-w-2xl text-lg font-semibold leading-8 text-slate-200">
+              Solving equations with visual balance models
+            </p>
             <div className="mt-6 flex flex-wrap gap-3">
               {quickActions.map((action) => {
                 const Icon = action.icon;
                 return (
-                  <button key={action.label} onClick={() => setActiveTab(action.tab)} className={`inline-flex items-center gap-2 rounded-md px-4 py-3 font-black transition ${action.style}`}>
+                  <button
+                    key={action.label}
+                    onClick={() => setActiveTab(action.tab)}
+                    className={`inline-flex items-center gap-2 rounded-md px-4 py-3 font-black transition ${action.style}`}
+                  >
                     {action.label} <Icon className="h-4 w-4" />
                   </button>
                 );
@@ -481,64 +373,69 @@ function TeacherDashboard({ assignment, setAssignment, setActiveTab }: { assignm
         </div>
       </section>
 
+      {/* Stats */}
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {progressCards.map((card) => (
           <ProgressCard key={card.label} card={card} />
         ))}
       </section>
 
-      <TeacherAssignmentCard assignment={assignment} onAssign={assign} setActiveTab={setActiveTab} />
+      {/* Subject quick access */}
+      <SubjectQuickPicker setActiveTab={setActiveTab} />
+      <ActiveSubjectLessonCard setActiveTab={setActiveTab} />
 
+      {/* Assignment */}
+      <TeacherAssignmentCard
+        assignment={assignment}
+        onAssign={assign}
+        setActiveTab={setActiveTab}
+      />
+
+      {/* 3D Lesson Library — single viewport, switchable */}
+      <Math3DShowcase initial={assignment.threeDType} />
+
+      {/* Submissions */}
       <TeacherSubmissionsPanel />
-
-      <section className="grid gap-5 xl:grid-cols-2">
-        <CircleLab3D />
-        <AngleLab3D />
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-2">
-        <PercentageBar3D />
-        <ProbabilitySpinner3D />
-      </section>
-
-      <section className="relative overflow-hidden rounded-lg border border-[#49c8ff]/25 bg-gradient-to-r from-[#061126] via-[#0a1736] to-[#061126] p-6 text-white">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_50%,rgba(73,200,255,.25),transparent_45%)]" />
-        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-wide text-[#49c8ff]">AI 3D Lesson Generator</p>
-            <p className="mt-2 max-w-3xl text-base font-semibold leading-7 text-slate-200">
-              Generate cinematic explainers with 3D models, guided examples, quizzes, rewards, and teacher-ready assignment checkpoints.
-            </p>
-          </div>
-          <button onClick={() => setActiveTab('place-value-lesson')} className="inline-flex items-center justify-center gap-2 rounded-md bg-[#ffc43b] px-5 py-3 font-black text-[#061126] transition hover:bg-[#ffe08a]">
-            Open Generator <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-      </section>
     </div>
   );
 }
 
-function StudentDashboard({ assignment, setAssignment, setActiveTab }: { assignment: DemoAssignment; setAssignment: (assignment: DemoAssignment) => void; setActiveTab: (tab: TabType) => void }) {
+function StudentDashboard({
+  assignment,
+  setAssignment,
+  setActiveTab,
+}: {
+  assignment: DemoAssignment;
+  setAssignment: (assignment: DemoAssignment) => void;
+  setActiveTab: (tab: TabType) => void;
+}) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      {/* Hero */}
       <section className="relative overflow-hidden rounded-lg border border-white/10 p-6 text-white shadow-[0_24px_90px_rgba(5,7,17,.45)] lg:p-10">
         <HeroBackdrop />
         <div className="relative grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-md border border-[#49c8ff]/35 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">
-              <School className="h-4 w-4" />
               Student View
             </div>
-            <h1 className="mt-5 text-3xl font-black tracking-normal sm:text-4xl lg:text-5xl">Learn, interact, answer, submit.</h1>
+            <h1 className="mt-5 text-3xl font-black tracking-normal sm:text-4xl lg:text-5xl">
+              Learn, interact, answer, submit.
+            </h1>
             <p className="mt-4 max-w-xl text-lg font-semibold leading-8 text-slate-200">
               Follow the visual model, solve the assigned checkpoint, receive instant feedback, then join the virtual class.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <button onClick={() => setActiveTab('eis-maths')} className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-4 py-3 font-black text-[#061126] transition hover:bg-[#8ddfff]">
+              <button
+                onClick={() => setActiveTab('eis-maths')}
+                className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-4 py-3 font-black text-[#061126] transition hover:bg-[#8ddfff]"
+              >
                 Start 3D Lesson <Play className="h-4 w-4" />
               </button>
-              <button onClick={() => setActiveTab('classroom')} className="inline-flex items-center gap-2 rounded-md border border-white/20 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]">
+              <button
+                onClick={() => setActiveTab('classroom')}
+                className="inline-flex items-center gap-2 rounded-md border border-white/20 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]"
+              >
                 Join Live Class <MonitorPlay className="h-4 w-4" />
               </button>
             </div>
@@ -553,37 +450,42 @@ function StudentDashboard({ assignment, setAssignment, setActiveTab }: { assignm
         onOpenLesson={() => setActiveTab('lesson')}
       />
 
-      <StudentAssignmentCard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />
+      <StudentAssignmentCard
+        assignment={assignment}
+        setAssignment={setAssignment}
+        setActiveTab={setActiveTab}
+      />
 
-      <section className="grid gap-5 xl:grid-cols-2">
-        <CircleLab3D />
-        <AngleLab3D />
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-2">
-        <PercentageBar3D />
-        <ProbabilitySpinner3D />
-      </section>
+      {/* 3D Lesson Library — single viewport, switchable */}
+      <Math3DShowcase initial={assignment.threeDType} />
     </div>
   );
 }
 
-export function DashboardHome({ mode, setMode, setActiveTab }: DashboardHomeProps) {
+export function DashboardHome({ mode, setMode: _setMode, setActiveTab }: DashboardHomeProps) {
   const [assignment, setAssignment] = useDemoAssignmentState();
 
   return (
     <div className="relative min-h-full text-white">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_at_top,rgba(73,200,255,.10),transparent_60%)]" aria-hidden="true" />
-      <div className="relative space-y-6">
-        <ModeBar mode={mode} setMode={setMode} />
-        <SystemStatusStrip />
-        <SubjectQuickPicker setActiveTab={setActiveTab} />
-        <ActiveSubjectLessonCard setActiveTab={setActiveTab} />
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[radial-gradient(ellipse_at_top,rgba(73,200,255,.10),transparent_60%)]"
+        aria-hidden="true"
+      />
+      <div className="relative space-y-5">
+        <TopBar />
 
         {mode === 'teacher' ? (
-          <TeacherDashboard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />
+          <TeacherDashboard
+            assignment={assignment}
+            setAssignment={setAssignment}
+            setActiveTab={setActiveTab}
+          />
         ) : (
-          <StudentDashboard assignment={assignment} setAssignment={setAssignment} setActiveTab={setActiveTab} />
+          <StudentDashboard
+            assignment={assignment}
+            setAssignment={setAssignment}
+            setActiveTab={setActiveTab}
+          />
         )}
       </div>
     </div>

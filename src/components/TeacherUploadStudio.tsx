@@ -5,6 +5,7 @@ import { useDropzone } from 'react-dropzone';
 import {
   Check,
   CheckCircle2,
+  Clapperboard,
   FileText,
   Loader2,
   Save,
@@ -355,6 +356,14 @@ export function TeacherUploadStudio({ setActiveTab }: TeacherUploadStudioProps =
                 Generate lesson
               </>
             )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab?.('cinematic-studio')}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-[#49c8ff]/35 bg-[#49c8ff]/10 px-5 py-3 text-sm font-black text-[#8ddfff] transition hover:border-[#49c8ff] hover:text-white"
+          >
+            <Clapperboard className="h-4 w-4" />
+            Open Cinematic Studio
           </button>
         </div>
 

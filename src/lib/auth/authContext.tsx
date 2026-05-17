@@ -32,18 +32,17 @@ export type AppAuthState = {
 const AuthContext = createContext<AppAuthState | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const authConfigured = isFirebaseConfigured();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(authConfigured);
 
   useEffect(() => {
     if (!authConfigured) {
-      setLoading(false);
       return;
     }
     const auth = getFirebaseAuth();
     if (!auth) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
     const unsub = onAuthStateChanged(auth, (next) => {

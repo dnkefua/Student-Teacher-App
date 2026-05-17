@@ -53,7 +53,6 @@ export function TeacherSubmissionsPanel() {
 
   useEffect(() => {
     if (!isFirebaseConfigured()) {
-      setAssignments(null);
       return;
     }
     const unsub = watchActiveAssignments((next) => {

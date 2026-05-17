@@ -228,6 +228,37 @@ export const platformAnalyticsRegistry: Record<ExternalPlatform, ExternalPlatfor
     normalizer: 'generic',
   },
 
+  eis_learning_studio: {
+    platform: 'eis_learning_studio',
+    displayName: 'EIS Learning Studio',
+    category: 'lms',
+    supportedMethods: ['api', 'demo'],
+    identityFields: {
+      studentName: ['student'],
+    },
+    activityFields: {
+      activityTitle: ['lesson', 'cinematic lesson', 'assignment'],
+      topic: ['topic'],
+      concept: ['concept'],
+      subject: ['subject'],
+    },
+    performanceFields: {
+      score: ['score'],
+      accuracy: ['accuracy'],
+    },
+    engagementFields: {
+      durationSeconds: ['duration'],
+    },
+    questionFields: {
+      questionText: ['checkpoint', 'question'],
+      selectedAnswer: ['answer', 'response'],
+    },
+    defaultEventType: '3d_interaction',
+    defaultSubject: 'Mathematics',
+    defaultGrade: 'Grade 8',
+    normalizer: 'generic',
+  },
+
   manual_csv: {
     platform: 'manual_csv',
     displayName: 'Generic CSV / XLSX',

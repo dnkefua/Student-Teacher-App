@@ -195,7 +195,7 @@ export function LessonLibraryPanel({ setActiveTab }: Props) {
                   No saved lessons yet for this filter.
                 </p>
                 <p className="mt-1 text-[11px] text-slate-500">
-                  Generate one above and click "Save to library" to see it here.
+                  Generate one above and click &quot;Save to library&quot; to see it here.
                 </p>
               </div>
             ) : (
