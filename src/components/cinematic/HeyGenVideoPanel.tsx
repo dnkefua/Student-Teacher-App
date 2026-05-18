@@ -83,7 +83,7 @@ export function HeyGenVideoPanel({
   };
 
   const checkStatus = async () => {
-    if (!providerId || providerId === 'mock-heygen-video') return;
+    if (!providerId) return;
     setBusy(true);
     try {
       const res = await fetch(`/api/heygen/video-status?videoId=${encodeURIComponent(providerId)}`);
@@ -166,7 +166,7 @@ export function HeyGenVideoPanel({
       <div className="mt-3 flex items-start gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] leading-5 text-slate-300">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8ddfff]" />
         <p>
-          HeyGen creates the avatar/video layer only. The interactive 3D, simulation, or workshop lesson runs inside EIS Learning Studio.
+          HeyGen creates the avatar/video layer only. The interactive 3D lesson runs inside EIS Learning Studio.
         </p>
       </div>
 
@@ -179,7 +179,7 @@ export function HeyGenVideoPanel({
             <div>
               <p className="text-sm font-black text-white">
                 {status === 'demo'
-                  ? 'Demo card — no real HeyGen video was generated'
+                  ? 'Demo mode - no real HeyGen video was generated'
                   : status === 'queued' || status === 'processing'
                     ? 'Avatar video is being prepared in HeyGen'
                     : status === 'failed'

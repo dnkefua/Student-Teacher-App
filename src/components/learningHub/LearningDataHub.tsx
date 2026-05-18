@@ -151,7 +151,7 @@ export function LearningDataHub({ mode, setActiveTab }: Props) {
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
               ManageBac remains the system of record; the Learning Data Hub is the AI-native intelligence layer that ingests
-              Kahoot, Blooket, Dr Frost, MyiMaths, NeuroQuest and EIS Maths Studio evidence, links it to your roster, and
+              Kahoot, Blooket, Dr Frost, MyiMaths, NeuroQuest and EIS Learning Studio evidence, links it to your roster, and
               recommends precise next actions.
             </p>
           </div>
@@ -296,7 +296,7 @@ export function LearningDataHub({ mode, setActiveTab }: Props) {
               <p className="text-xs font-black uppercase tracking-wide text-[#8ddfff]">My mastery — quick view</p>
               <p className="mt-2">
                 Open <span className="font-black text-white">My learning graph</span> for the full breakdown. The mastery
-                engine uses your events from Kahoot, Blooket, Dr Frost, MyiMaths, NeuroQuest and EIS Maths Studio to
+                engine uses your events from Kahoot, Blooket, Dr Frost, MyiMaths, NeuroQuest and EIS Learning Studio to
                 compute your overall mastery, engagement, and the concepts that need the most work.
               </p>
               <p className="mt-2 text-[11px] text-slate-400">

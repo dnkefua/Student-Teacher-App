@@ -4,17 +4,23 @@ import React, { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BarChart3,
+  Beaker,
   BrainCircuit,
   Camera,
   Check,
   CheckCircle2,
+  Clapperboard,
   ClipboardCheck,
+  Database,
+  Feather,
   Loader2,
   MonitorPlay,
   Play,
+  School,
   Send,
   Sparkles,
   Trophy,
+  UploadCloud,
   UserCheck,
 } from 'lucide-react';
 import { TabType } from './Sidebar';
@@ -55,6 +61,38 @@ const quickActions = [
   { label: 'Open Lesson Player', tab: 'lesson' as TabType, icon: Play, style: 'bg-[#49c8ff] text-[#061126] hover:bg-[#8ddfff]' },
   { label: 'Generate Lesson with AI', tab: 'place-value-lesson' as TabType, icon: BrainCircuit, style: 'bg-[#ffc43b] text-[#061126] hover:bg-[#ffe08a]' },
   { label: 'Start Live Class', tab: 'classroom' as TabType, icon: MonitorPlay, style: 'border border-white/20 text-white hover:border-[#49c8ff] hover:text-[#8ddfff]' },
+];
+
+const teacherSubjectOptions = [
+  {
+    label: 'Maths',
+    detail: 'Grade 8 Maths lessons, 3D models, assignments',
+    tab: 'eis-maths' as TabType,
+    icon: School,
+    accent: '#49c8ff',
+  },
+  {
+    label: 'Science',
+    detail: 'Year 8 labs, particles, cells, circuits, forces',
+    tab: 'science-studio' as TabType,
+    icon: Beaker,
+    accent: '#8df0c0',
+  },
+  {
+    label: 'English',
+    detail: 'Year 8 writing, annotation, poetry, grammar',
+    tab: 'english-studio' as TabType,
+    icon: Feather,
+    accent: '#ffc43b',
+  },
+];
+
+const teacherAdvancedOptions = [
+  { label: 'Cinematic Studio', tab: 'cinematic-studio' as TabType, icon: Clapperboard },
+  { label: 'Learning Data Hub', tab: 'learning-hub' as TabType, icon: Database },
+  { label: 'Upload Studio', tab: 'upload-studio' as TabType, icon: UploadCloud },
+  { label: 'AI Lesson Generator', tab: 'place-value-lesson' as TabType, icon: BrainCircuit },
+  { label: 'Live Class', tab: 'classroom' as TabType, icon: MonitorPlay },
 ];
 
 function useDemoAssignmentState() {
@@ -334,6 +372,74 @@ function TeacherDashboard({
   setAssignment: (assignment: DemoAssignment) => void;
   setActiveTab: (tab: TabType) => void;
 }) {
+  if (teacherSubjectOptions.length > 0) {
+    return (
+      <div className="mx-auto flex min-h-[calc(100vh-11rem)] max-w-5xl flex-col justify-center gap-8 py-8">
+        <section className="space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-black uppercase tracking-wide text-slate-300">
+            <Sparkles className="h-4 w-4 text-[#ffc43b]" />
+            Teacher Dashboard
+          </div>
+          <div className="space-y-3">
+            <h1 className="max-w-3xl text-3xl font-black tracking-normal text-white sm:text-4xl lg:text-5xl">
+              What are you teaching today?
+            </h1>
+            <p className="max-w-2xl text-base leading-7 text-slate-300">
+              Choose a subject to start. Everything else is tucked away until you need it.
+            </p>
+          </div>
+        </section>
+
+        <section className="grid gap-3 md:grid-cols-3">
+          {teacherSubjectOptions.map((subject) => {
+            const Icon = subject.icon;
+            return (
+              <button
+                key={subject.label}
+                type="button"
+                onClick={() => setActiveTab(subject.tab)}
+                className="group min-h-48 rounded-lg border border-white/10 bg-white/[0.04] p-5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.07] focus:outline-none focus:ring-2 focus:ring-[#49c8ff]/60"
+              >
+                <span
+                  className="grid h-11 w-11 place-items-center rounded-md"
+                  style={{ background: `${subject.accent}22`, color: subject.accent }}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className="mt-8 block text-2xl font-black text-white">{subject.label}</span>
+                <span className="mt-2 block text-sm leading-6 text-slate-400">{subject.detail}</span>
+                <span className="mt-5 inline-flex items-center gap-2 text-sm font-black" style={{ color: subject.accent }}>
+                  Open {subject.label}
+                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                </span>
+              </button>
+            );
+          })}
+        </section>
+
+        <section className="space-y-3 border-t border-white/10 pt-5">
+          <p className="text-xs font-black uppercase tracking-wide text-slate-500">Advanced tools</p>
+          <div className="flex flex-wrap gap-2">
+            {teacherAdvancedOptions.map((tool) => {
+              const Icon = tool.icon;
+              return (
+                <button
+                  key={tool.label}
+                  type="button"
+                  onClick={() => setActiveTab(tool.tab)}
+                  className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-black text-slate-300 transition hover:border-[#49c8ff]/50 hover:text-white"
+                >
+                  <Icon className="h-3.5 w-3.5 text-[#8ddfff]" />
+                  {tool.label}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   const assign = async (questionId: string) => {
     const next = await assignDemoQuestion(questionId);
     setAssignment(next);

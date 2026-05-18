@@ -94,7 +94,7 @@ export function PlatformIntegrationRoadmap() {
 {QUIZIZZ_EXAMPLE}
         </pre>
         <p className="mt-3 text-[11px] leading-5 text-slate-400">
-          The Learning Data Hub already ships entries for {Object.keys(platformAnalyticsRegistry).length} platforms (Kahoot, Blooket, Dr Frost, MyiMaths, ManageBac, NeuroQuest, EIS Maths Studio, Generic CSV, Google Classroom, Microsoft Teams, Quizizz, Edpuzzle, Seneca, Mathspace, Wonde, Custom). Add a new key, set the aliases, save the file — no other code changes needed.
+          The Learning Data Hub already ships entries for {Object.keys(platformAnalyticsRegistry).length} platforms (Kahoot, Blooket, Dr Frost, MyiMaths, ManageBac, NeuroQuest, EIS Learning Studio, Generic CSV, Google Classroom, Microsoft Teams, Quizizz, Edpuzzle, Seneca, Mathspace, Wonde, Custom). Add a new key, set the aliases, save the file - no other code changes needed.
         </p>
       </article>
     </section>

@@ -207,7 +207,7 @@ export const platformAnalyticsRegistry: Record<ExternalPlatform, ExternalPlatfor
 
   eis_maths_studio: {
     platform: 'eis_maths_studio',
-    displayName: 'EIS Maths Studio',
+    displayName: 'EIS Learning Studio',
     category: 'lms',
     supportedMethods: ['api', 'demo'],
     identityFields: {

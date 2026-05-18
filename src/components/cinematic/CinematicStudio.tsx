@@ -147,9 +147,9 @@ export function CinematicStudio({ mode = 'teacher' }: { mode?: LearningMode }) {
               Generate a structured CinematicLessonSpec, preview the app-rendered interactive scene, and optionally create short HeyGen avatar videos around the lesson.
             </p>
             <ul className="mt-3 grid gap-1 text-xs leading-5 text-slate-300 sm:grid-cols-3">
-              <li><span className="font-black text-white">App</span> → renders the interactive 3D / lab / workshop scene.</li>
-              <li><span className="font-black text-white">HeyGen</span> → renders the avatar/video layer only.</li>
-              <li><span className="font-black text-white">Learning Data Hub</span> → records mastery and recommends next steps.</li>
+              <li><span className="font-black text-white">1. AI/spec engine</span> creates the lesson plan.</li>
+              <li><span className="font-black text-white">2. EIS Learning Studio</span> renders the interactive activity.</li>
+              <li><span className="font-black text-white">3. HeyGen</span> creates the avatar/video layer.</li>
             </ul>
           </div>
           <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">

@@ -39,7 +39,7 @@ export function SystemStatusStrip() {
     },
     {
       label: 'TWA / Play Store',
-      detail: 'EIS Maths Studio (private testing)',
+      detail: 'EIS Learning Studio (private testing)',
       ok: true,
       icon: MonitorPlay,
     },

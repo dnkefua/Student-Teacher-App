@@ -1,42 +1,35 @@
 import { NextResponse } from 'next/server';
-import { callStructured } from '@/lib/ai/modelClient';
-import { buildCinematicSpecPrompt, type GenerateCinematicSpecInput } from '@/lib/cinematic/generationPrompt';
-import { compileCinematicLesson } from '@/lib/cinematic/lessonCompiler';
-import { isCinematicSceneType, sceneTypeForSubject, validateCinematicLessonSpec } from '@/lib/cinematic/sceneSchema';
-import type { SubjectId } from '@/lib/cinematic/types';
+import { generateCinematicSpec, type GenerateCinematicSpecInput } from '@/lib/cinematic/generateSpecServer';
+import type { CinematicSceneType, SubjectId } from '@/lib/cinematic/types';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
-function parseInput(raw: unknown): GenerateCinematicSpecInput | null {
-  if (!raw || typeof raw !== 'object') return null;
-  const value = raw as Partial<GenerateCinematicSpecInput>;
-  if (!['mathematics', 'science', 'english'].includes(String(value.subject))) return null;
-  if (typeof value.topic !== 'string' || value.topic.trim().length < 3) return null;
-  const subject = value.subject as SubjectId;
-  const desiredSceneType = isCinematicSceneType(value.desiredSceneType) ? value.desiredSceneType : sceneTypeForSubject(subject);
+function parseInput(raw: unknown): GenerateCinematicSpecInput | { message: string } {
+  if (!raw || typeof raw !== 'object') return { message: 'Topic is required.' };
+  const value = raw as Record<string, unknown>;
+  if (typeof value.topic !== 'string' || value.topic.trim().length < 3) return { message: 'Topic is required.' };
+  if (!['mathematics', 'science', 'english'].includes(String(value.subject))) {
+    return { message: 'Valid subject is required.' };
+  }
+
   return {
-    subject,
+    subject: value.subject as SubjectId,
     grade: 'Grade 8',
     topic: value.topic.trim(),
     curriculumText: typeof value.curriculumText === 'string' ? value.curriculumText : undefined,
-    desiredSceneType,
+    desiredSceneType: typeof value.desiredSceneType === 'string' ? (value.desiredSceneType as CinematicSceneType) : undefined,
     teacherNotes: typeof value.teacherNotes === 'string' ? value.teacherNotes : undefined,
   };
 }
 
 export async function POST(request: Request) {
   const input = parseInput(await request.json().catch(() => null));
-  if (!input) {
-    return NextResponse.json({ message: 'Invalid cinematic generation input.' }, { status: 400 });
+  if ('message' in input) return NextResponse.json({ message: input.message }, { status: 400 });
+
+  try {
+    return NextResponse.json(await generateCinematicSpec(input));
+  } catch {
+    return NextResponse.json({ message: 'Could not generate cinematic lesson.' }, { status: 500 });
   }
-
-  const mock = compileCinematicLesson(input);
-  const response = await callStructured({
-    subject: input.subject,
-    userPrompt: buildCinematicSpecPrompt(input),
-    mock,
-    parse: validateCinematicLessonSpec,
-  });
-
-  return NextResponse.json(response);
 }
