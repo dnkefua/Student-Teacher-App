@@ -40,7 +40,7 @@ export function CinematicNarrationPanel({
           className="mt-4 inline-flex items-center gap-2 rounded-md bg-[#ffc43b] px-3 py-2 text-xs font-black text-[#061126] transition hover:bg-[#ffe08a]"
         >
           <Wand2 className="h-3.5 w-3.5" />
-          Generate HeyGen explainer
+          Generate studio video
         </button>
       ) : (
         <div className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-slate-400">

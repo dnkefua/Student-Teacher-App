@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ArrowLeft, BookOpen, ClipboardCheck, Compass, GraduationCap, Lightbulb, Sparkles, Target } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ArrowLeft, BookOpen, ClipboardCheck, Compass, Film, GraduationCap, Lightbulb, Sparkles, Target } from 'lucide-react';
 import type { TabType } from '@/components/Sidebar';
 import type { SubjectLesson } from '@/lib/subjects/types';
 import { subjectRegistry } from '@/lib/subjects/subjectRegistry';
+import { createSubjectCinematicLearningPack } from '@/lib/cinematic/learningPack';
+import { CinematicLearningPackPanel } from '@/components/cinematic/CinematicLearningPackPanel';
 import { ScienceInteractiveRenderer } from './ScienceInteractiveRenderer';
 
-type Tab = 'explore' | 'practice' | 'assignment';
+type Tab = 'explore' | 'cinematic' | 'practice' | 'assignment';
 
 interface Props {
   lesson: SubjectLesson;
@@ -18,9 +20,10 @@ interface Props {
 export function ScienceLessonPlayer({ lesson, onBack, setActiveTab: _setActiveTab }: Props) {
   void _setActiveTab;
   const theme = subjectRegistry.science.theme;
-  const [tab, setTab] = useState<Tab>('explore');
+  const [tab, setTab] = useState<Tab>('cinematic');
   const [practiceAnswers, setPracticeAnswers] = useState<Record<string, string>>({});
   const [practiceRevealed, setPracticeRevealed] = useState<Record<string, boolean>>({});
+  const cinematicPack = useMemo(() => createSubjectCinematicLearningPack(lesson), [lesson]);
 
   return (
     <div className="space-y-4 text-white">
@@ -75,6 +78,7 @@ export function ScienceLessonPlayer({ lesson, onBack, setActiveTab: _setActiveTa
         {(
           [
             { id: 'explore', label: 'Explore', icon: Lightbulb },
+            { id: 'cinematic', label: 'Cinematic Pack', icon: Film },
             { id: 'practice', label: 'Practice', icon: Target },
             { id: 'assignment', label: 'Assignment', icon: ClipboardCheck },
           ] as const
@@ -139,6 +143,10 @@ export function ScienceLessonPlayer({ lesson, onBack, setActiveTab: _setActiveTa
             <ScienceInteractiveRenderer lesson={lesson} />
           </div>
         </div>
+      )}
+
+      {tab === 'cinematic' && (
+        <CinematicLearningPackPanel pack={cinematicPack} accent={theme.primary} />
       )}
 
       {tab === 'practice' && (
@@ -227,7 +235,19 @@ export function ScienceLessonPlayer({ lesson, onBack, setActiveTab: _setActiveTa
 
       {tab === 'assignment' && (
         <div className="space-y-3">
-          {lesson.assignmentQuestions.map((a, i) => (
+          <div
+            className="rounded-lg border p-4"
+            style={{ borderColor: `${theme.primary}33`, background: `${theme.primary}0F` }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: theme.primary }}>
+              Assignment pack
+            </p>
+            <p className="mt-1 text-sm leading-6 text-slate-200">
+              This subtopic includes {cinematicPack.assignmentQuestions.length} assignable, image/model-based questions.
+              Open the Cinematic Pack tab to generate the studio video and review visual assets.
+            </p>
+          </div>
+          {cinematicPack.assignmentQuestions.map((a, i) => (
             <div key={a.id} className="rounded-lg border border-white/10 bg-white/[.03] p-4">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-bold text-white">
@@ -243,6 +263,10 @@ export function ScienceLessonPlayer({ lesson, onBack, setActiveTab: _setActiveTa
               <p className="mt-2 text-xs leading-5 text-slate-300">
                 <span className="font-black text-white">Rubric · </span>
                 {a.rubric}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-400">
+                <span className="font-black text-white">Expected answer - </span>
+                {a.expectedAnswer}
               </p>
             </div>
           ))}

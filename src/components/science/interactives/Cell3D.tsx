@@ -31,7 +31,15 @@ const ORGANELLES: Organelle[] = [
   { id: 'lysosome', label: 'Lysosome', position: [0, -1.4, -0.3], size: 0.3, color: '#fdba74', function: 'Breaks down waste inside the cell.', animalOnly: true },
 ];
 
-function CellScene({ kind, activeId }: { kind: CellKind; activeId: string | null }) {
+function CellScene({
+  kind,
+  activeId,
+  onSelect,
+}: {
+  kind: CellKind;
+  activeId: string | null;
+  onSelect: (id: string) => void;
+}) {
   const organelles = ORGANELLES.filter((o) => {
     if (kind === 'animal' && o.plantOnly) return false;
     if (kind === 'plant' && o.animalOnly) return false;
@@ -41,19 +49,21 @@ function CellScene({ kind, activeId }: { kind: CellKind; activeId: string | null
   return (
     <>
       {/* Cell membrane / wall */}
-      <mesh>
-        <sphereGeometry args={[3, 36, 36]} />
-        <meshStandardMaterial
-          color={kind === 'plant' ? '#0ea5e9' : '#1f78ff'}
-          transparent
-          opacity={0.08}
-          wireframe
-        />
-      </mesh>
-      {kind === 'plant' && (
-        <mesh>
-          <boxGeometry args={[5.6, 5.6, 5.6]} />
-          <meshStandardMaterial color="#34d399" transparent opacity={0.06} wireframe />
+      {kind === 'plant' ? (
+        <>
+          <mesh>
+            <boxGeometry args={[5.8, 3.8, 3.0]} />
+            <meshStandardMaterial color="#34d399" transparent opacity={0.1} wireframe />
+          </mesh>
+          <mesh>
+            <boxGeometry args={[5.35, 3.35, 2.65]} />
+            <meshStandardMaterial color="#0ea5e9" transparent opacity={0.08} />
+          </mesh>
+        </>
+      ) : (
+        <mesh scale={[1.18, 0.88, 0.78]}>
+          <sphereGeometry args={[3, 36, 36]} />
+          <meshStandardMaterial color="#1f78ff" transparent opacity={0.1} wireframe />
         </mesh>
       )}
 
@@ -61,7 +71,21 @@ function CellScene({ kind, activeId }: { kind: CellKind; activeId: string | null
         const isActive = activeId === o.id;
         return (
           <group key={o.id} position={o.position}>
-            <mesh>
+            <mesh
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelect(o.id);
+              }}
+              scale={
+                o.id === 'vacuole'
+                  ? [1.55, 0.95, 0.55]
+                  : o.label === 'Chloroplast'
+                    ? [1.45, 0.62, 0.38]
+                    : o.label === 'Mitochondrion'
+                      ? [1.35, 0.55, 0.45]
+                      : [1, 1, 1]
+              }
+            >
               <sphereGeometry args={[o.size, 20, 20]} />
               <meshStandardMaterial
                 color={o.color}
@@ -114,7 +138,9 @@ export function Cell3D({ lesson: _lesson }: { lesson: SubjectLesson }) {
             Cell 3D
           </div>
           <p className="mt-2 text-sm font-black text-white">{kind === 'animal' ? 'Animal cell' : 'Plant cell'}</p>
-          <p className="text-[11px] text-slate-400">Click any organelle to inspect it.</p>
+          <p className="text-[11px] text-slate-400">
+            Click any organelle in the 3D model or label strip to inspect it.
+          </p>
         </div>
         <button
           onClick={() => {
@@ -155,7 +181,7 @@ export function Cell3D({ lesson: _lesson }: { lesson: SubjectLesson }) {
           <directionalLight position={[5, 8, 5]} intensity={1.3} />
           <pointLight position={[-4, 3, -3]} color="#49c8ff" intensity={15} />
           <Suspense fallback={null}>
-            <CellScene kind={kind} activeId={activeId} />
+            <CellScene kind={kind} activeId={activeId} onSelect={setActiveId} />
           </Suspense>
           <OrbitControls enablePan={false} autoRotate autoRotateSpeed={0.4} />
         </Canvas>
@@ -193,6 +219,17 @@ export function Cell3D({ lesson: _lesson }: { lesson: SubjectLesson }) {
           <p className="mt-1 text-sm leading-6 text-slate-200">{active.function}</p>
         </div>
       )}
+
+      <div className="mt-3 grid gap-2 text-[11px] leading-5 text-slate-300 sm:grid-cols-2">
+        <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
+          <p className="font-black uppercase tracking-wide text-[#7dd3fc]">Animal cell shape</p>
+          <p className="mt-1">Rounded and flexible, with a cell membrane but no cell wall or chloroplasts.</p>
+        </div>
+        <div className="rounded-md border border-white/10 bg-white/[0.03] p-3">
+          <p className="font-black uppercase tracking-wide text-[#34d399]">Plant cell shape</p>
+          <p className="mt-1">Box-like and rigid, with a cell wall, large central vacuole, and chloroplasts.</p>
+        </div>
+      </div>
     </div>
   );
 }

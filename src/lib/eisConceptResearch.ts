@@ -7,11 +7,27 @@ export type ConceptVisualStrategy = {
   animationCue: string;
 };
 
+/**
+ * A worked solution step. `text` is the teacher's explanation in plain English;
+ * `working` is the numeric or algebraic line that backs it up (rendered in a
+ * monospace box). Pairing the two means the student sees both the WHY and the
+ * mechanical line they should write down.
+ */
+export type WorkedStep = {
+  text: string;
+  working?: string;
+};
+
 export type ConceptExample = {
   label: string;
   prompt: string;
+  /** Legacy single-paragraph method. Still rendered when `steps` is empty. */
   method: string;
   answer: string;
+  /** Multi-step worked solution. Each item is a numbered step the student can advance through. */
+  steps?: WorkedStep[];
+  /** Optional key formula shown above the steps (e.g. "C = π × d"). */
+  formula?: string;
 };
 
 export type ConceptExercise = {
@@ -420,88 +436,732 @@ const visualStrategyCopy: Record<AnimationMode, ConceptVisualStrategy[]> = {
 
 const exampleCopy: Record<AnimationMode, Omit<ConceptExample, 'label'>[]> = {
   'number-line': [
-    { prompt: 'Order -2.5, -1/4, 0.6, and -3 from smallest to largest.', method: 'Place each value on a shared number line, converting -1/4 to -0.25 for comparison.', answer: '-3, -2.5, -1/4, 0.6' },
-    { prompt: 'Round 8,746 to the nearest hundred.', method: 'Find the hundreds digit, then check the tens digit to decide whether to round up.', answer: '8,700' },
-    { prompt: 'A score changes by -6, +14, then -3. What is the final change?', method: 'Start at 0 on the number line and move left, right, then left.', answer: '+5' },
-    { prompt: 'Solve x >= -1 and show the solution set.', method: 'Use a closed circle at -1 and shade to the right because all larger values work.', answer: 'All values greater than or equal to -1' },
-    { prompt: 'Estimate 39.8 x 21 before calculating.', method: 'Round to 40 x 20 to get a benchmark.', answer: 'About 800' },
+    {
+      prompt: 'Order −2.5, −1/4, 0.6, and −3 from smallest to largest.',
+      method: 'Convert every value to the same form, place each on a shared number line, then read left to right.',
+      answer: '−3,  −2.5,  −1/4,  0.6',
+      formula: 'a < b on a number line  ⟺  a is to the LEFT of b',
+      steps: [
+        { text: 'Write every value in decimal so they can be compared on one scale.', working: '−1/4 = −0.25' },
+        { text: 'Plot the four points on a number line from −4 to 1.' },
+        { text: 'The further LEFT a point is, the smaller the value. Negative values are smaller than 0.', working: 'leftmost = smallest' },
+        { text: 'Read the order left → right.', working: '−3 ,  −2.5 ,  −0.25 ,  0.6' },
+      ],
+    },
+    {
+      prompt: 'Round 8,746 to the nearest hundred.',
+      method: 'Identify the digit in the hundreds place, then use the tens digit to decide whether to round up or down.',
+      answer: '8,700',
+      formula: 'If the next digit is 5 or more → round up. Otherwise → round down.',
+      steps: [
+        { text: 'Underline the rounding digit — the hundreds place.', working: '8 , 7̲ 4 6' },
+        { text: 'Look at the digit immediately to its right (the tens digit).', working: 'tens digit = 4' },
+        { text: 'Apply the rule: 4 is less than 5, so the hundreds digit stays the same.' },
+        { text: 'Replace the tens and units with zeros.', working: '→ 8,700' },
+      ],
+    },
+    {
+      prompt: 'A score changes by −6, +14, then −3. What is the final change?',
+      method: 'Treat each change as a hop on the number line and combine the integers.',
+      answer: '+5',
+      formula: 'Net change  =  Σ (each signed change)',
+      steps: [
+        { text: 'Start at 0 on the number line.', working: 'position = 0' },
+        { text: 'Apply the first change: move 6 to the LEFT.', working: '0 − 6 = −6' },
+        { text: 'Apply the second change: move 14 to the RIGHT.', working: '−6 + 14 = +8' },
+        { text: 'Apply the third change: move 3 to the LEFT.', working: '+8 − 3 = +5' },
+      ],
+    },
+    {
+      prompt: 'Solve x ≥ −1 and show the solution set on a number line.',
+      method: 'Mark the boundary, choose the correct circle, then shade in the direction the inequality demands.',
+      answer: 'x ∈ [−1, ∞)   —   closed circle at −1, ray to the right',
+      formula: '≥  or  ≤  → CLOSED circle.    >  or  <  → OPEN circle.',
+      steps: [
+        { text: 'Identify the boundary value.', working: 'boundary = −1' },
+        { text: 'Decide the circle type. Because the inequality is ≥, the boundary itself IS a solution.', working: 'closed (filled) circle' },
+        { text: 'Decide the direction. “x is greater than or equal to” means values to the RIGHT.', working: 'shade right →' },
+        { text: 'Verify with a test value: x = 2.', working: '2 ≥ −1  ✓' },
+      ],
+    },
+    {
+      prompt: 'Estimate 39.8 × 21 before calculating, then check.',
+      method: 'Round each factor to the easiest nearby benchmark, multiply, and compare with the exact value.',
+      answer: 'Estimate ≈ 800   (exact 835.8)',
+      formula: 'Estimate ≈ round(a) × round(b)',
+      steps: [
+        { text: 'Round each factor to the nearest 10.', working: '39.8 → 40,   21 → 20' },
+        { text: 'Multiply the rounded values.', working: '40 × 20 = 800' },
+        { text: 'Decide whether the estimate is HIGH or LOW. We rounded 39.8 UP and 21 DOWN, so the estimate is roughly balanced.' },
+        { text: 'Calculate the exact answer to confirm the estimate is sensible.', working: '39.8 × 21 = 835.8 ≈ 800  ✓' },
+      ],
+    },
   ],
+
   'percentage-bars': [
-    { prompt: 'Write 3/8 as a percentage.', method: 'Convert to a decimal, then multiply by 100.', answer: '37.5%' },
-    { prompt: 'Find 18% of 250 AED.', method: 'Use 0.18 x 250 or find 10%, 5%, 3% and add.', answer: '45 AED' },
-    { prompt: 'A price rises from 80 AED to 92 AED. Find the percentage increase.', method: 'Find the change, divide by the original, then multiply by 100.', answer: '15%' },
-    { prompt: 'After a 20% discount, a bag costs 96 AED. Find the original price.', method: '96 AED is 80% of the original, so divide by 0.8.', answer: '120 AED' },
-    { prompt: 'Compare 7/20 and 32%. Which is larger?', method: 'Convert 7/20 to 35% using an equivalent denominator of 100.', answer: '7/20 is larger' },
+    {
+      prompt: 'Write 3/8 as a percentage.',
+      method: 'Convert the fraction to a decimal by dividing, then multiply by 100.',
+      answer: '37.5 %',
+      formula: 'fraction  →  decimal  →  × 100  =  percentage',
+      steps: [
+        { text: 'A percentage means “out of 100”. Begin by converting the fraction to a decimal.', working: '3 ÷ 8 = 0.375' },
+        { text: 'Multiply by 100 to express the decimal as a percentage.', working: '0.375 × 100 = 37.5' },
+        { text: 'Attach the % sign.', working: '→ 37.5 %' },
+      ],
+    },
+    {
+      prompt: 'Find 18 % of 250 AED.',
+      method: 'Either convert 18 % to its decimal multiplier (0.18) or build it from 10 %, 5 % and 3 %.',
+      answer: '45 AED',
+      formula: 'x % of N  =  (x ÷ 100) × N',
+      steps: [
+        { text: 'Convert the percentage to its decimal multiplier.', working: '18 % = 18 ÷ 100 = 0.18' },
+        { text: 'Multiply the whole amount by the multiplier.', working: '0.18 × 250' },
+        { text: 'Compute the product.', working: '= 45' },
+        { text: 'Add the unit.', working: '→ 45 AED' },
+      ],
+    },
+    {
+      prompt: 'A price rises from 80 AED to 92 AED. Find the percentage increase.',
+      method: 'Find the actual change, divide by the ORIGINAL price (not the new one), then multiply by 100.',
+      answer: '+15 %',
+      formula: '% change  =  (change ÷ original) × 100',
+      steps: [
+        { text: 'Find the change in price (new − original).', working: '92 − 80 = 12 AED' },
+        { text: 'Divide the change by the ORIGINAL price.', working: '12 ÷ 80 = 0.15' },
+        { text: 'Multiply by 100 to get a percentage.', working: '0.15 × 100 = 15' },
+        { text: 'Because the price went up, write the answer as an INCREASE.', working: '→ +15 %' },
+      ],
+    },
+    {
+      prompt: 'After a 20 % discount, a bag costs 96 AED. Find the original price.',
+      method: 'The sale price represents 100 % − 20 % = 80 % of the original. Reverse the multiplier to recover the original.',
+      answer: '120 AED',
+      formula: 'original  =  sale price  ÷  (1 − discount as decimal)',
+      steps: [
+        { text: 'Identify what fraction of the original price the sale price is.', working: '100 % − 20 % = 80 % = 0.8' },
+        { text: 'Write the relationship as an equation.', working: '0.8 × original = 96' },
+        { text: 'Divide both sides by 0.8 to isolate the original.', working: 'original = 96 ÷ 0.8' },
+        { text: 'Compute the quotient.', working: '= 120 AED' },
+        { text: 'Check by reapplying the discount.', working: '120 × 0.8 = 96  ✓' },
+      ],
+    },
+    {
+      prompt: 'Which is larger: 7/20 or 32 %?',
+      method: 'Convert both to the SAME representation before comparing.',
+      answer: '7/20 is larger (35 %)',
+      formula: 'a/b  =  (a × 100 ÷ b)  %',
+      steps: [
+        { text: 'Convert 7/20 to a percentage. Multiply numerator and denominator by 5 to get a denominator of 100.', working: '7/20 = 35/100 = 35 %' },
+        { text: 'Compare the two percentages directly.', working: '35 % vs 32 %' },
+        { text: '35 > 32, so 7/20 is larger.' },
+      ],
+    },
   ],
+
   'ratio-mixer': [
-    { prompt: 'Share 84 AED in the ratio 2:5.', method: 'There are 7 parts, so one part is 12 AED.', answer: '24 AED and 60 AED' },
-    { prompt: 'Simplify 36:48.', method: 'Divide both parts by the greatest common factor, 12.', answer: '3:4' },
-    { prompt: 'A recipe has rice:water = 2:5. How much water is needed for 300 g rice?', method: 'Scale 2 parts to 300 g, so one part is 150 g.', answer: '750 g or ml of water' },
-    { prompt: 'Which is better value: 4 pens for 18 AED or 6 pens for 24 AED?', method: 'Find each unit price.', answer: '6 pens for 24 AED, because each pen is 4 AED' },
-    { prompt: 'A drawing uses scale 1:250. A wall is 6 cm on the plan. Find the real length.', method: 'Multiply the drawing length by 250.', answer: '1500 cm, or 15 m' },
+    {
+      prompt: 'Share 84 AED in the ratio 2 : 5.',
+      method: 'Add the parts to find the total share, divide the total by that, then multiply by each part.',
+      answer: '24 AED and 60 AED',
+      formula: 'one part  =  total  ÷  (sum of parts)',
+      steps: [
+        { text: 'Add the parts of the ratio to find how many equal shares there are.', working: '2 + 5 = 7 parts' },
+        { text: 'Divide the total by the number of parts to find the size of ONE part.', working: '84 ÷ 7 = 12 AED' },
+        { text: 'Multiply each share by the size of one part.', working: '2 × 12 = 24,   5 × 12 = 60' },
+        { text: 'Check by adding the shares.', working: '24 + 60 = 84  ✓' },
+      ],
+    },
+    {
+      prompt: 'Simplify the ratio 36 : 48.',
+      method: 'Divide both sides by the greatest common factor (HCF) of the two numbers.',
+      answer: '3 : 4',
+      formula: 'a : b  =  (a ÷ k) : (b ÷ k)   where k is the HCF',
+      steps: [
+        { text: 'Find the greatest common factor of 36 and 48.', working: 'HCF(36, 48) = 12' },
+        { text: 'Divide each side of the ratio by 12.', working: '36 ÷ 12 = 3,   48 ÷ 12 = 4' },
+        { text: 'Write the simplified ratio.', working: '→ 3 : 4' },
+        { text: 'Check 3 and 4 share no common factor greater than 1.' },
+      ],
+    },
+    {
+      prompt: 'A recipe uses rice : water = 2 : 5. How much water is needed for 300 g of rice?',
+      method: 'Find the size of one rice-part, then multiply by 5 to get the water.',
+      answer: '750 g of water',
+      formula: 'water  =  rice × (5 ÷ 2)',
+      steps: [
+        { text: 'Identify what one rice-part represents.', working: '2 parts ↔ 300 g  ⇒  1 part = 150 g' },
+        { text: 'Water uses 5 parts. Multiply the size of one part by 5.', working: '5 × 150 = 750' },
+        { text: 'Attach the correct unit.', working: '→ 750 g of water' },
+      ],
+    },
+    {
+      prompt: 'Which is better value: 4 pens for 18 AED, or 6 pens for 24 AED?',
+      method: 'Convert each offer to a UNIT rate (price per pen) and compare.',
+      answer: '6 pens for 24 AED (4 AED per pen)',
+      formula: 'unit price  =  total price  ÷  quantity',
+      steps: [
+        { text: 'Find the unit price of the first offer.', working: '18 ÷ 4 = 4.50 AED per pen' },
+        { text: 'Find the unit price of the second offer.', working: '24 ÷ 6 = 4.00 AED per pen' },
+        { text: 'Compare. The smaller unit price is better value.', working: '4.00 < 4.50' },
+        { text: 'Conclude.', working: '→ 6 pens for 24 AED is the better deal' },
+      ],
+    },
+    {
+      prompt: 'A drawing uses scale 1 : 250. A wall is 6 cm on the plan. Find the real length.',
+      method: 'Multiply the drawing length by the scale factor to recover the real-world length.',
+      answer: '15 m',
+      formula: 'real  =  drawing × scale factor',
+      steps: [
+        { text: 'Read the scale: 1 cm on the plan represents 250 cm in real life.' },
+        { text: 'Multiply the drawing length by 250.', working: '6 × 250 = 1500 cm' },
+        { text: 'Convert cm to a sensible unit. 100 cm = 1 m.', working: '1500 cm ÷ 100 = 15 m' },
+      ],
+    },
   ],
+
   'algebra-tiles': [
-    { prompt: 'Find the nth term for 5, 9, 13, 17, ...', method: 'The common difference is 4, so use 4n and adjust to match term 1.', answer: '4n + 1' },
-    { prompt: 'Simplify 6x - 2y + 3x + 7y.', method: 'Collect x terms and y terms separately.', answer: '9x + 5y' },
-    { prompt: 'Expand 3(2a - 5).', method: 'Multiply every term in the bracket by 3.', answer: '6a - 15' },
-    { prompt: 'Factorise 12m + 18.', method: 'Find the greatest common factor and place the remaining terms in brackets.', answer: '6(2m + 3)' },
-    { prompt: 'A club charges 15 AED plus 4 AED per activity. Write the cost for n activities.', method: 'Fixed charge plus variable charge.', answer: '15 + 4n' },
+    {
+      prompt: 'Find the n-th term for the sequence 5, 9, 13, 17, …',
+      method: 'Find the common difference (the gradient of the pattern), then adjust to land on the first term.',
+      answer: 'Tₙ = 4n + 1',
+      formula: 'Tₙ  =  (common difference) × n  +  adjustment',
+      steps: [
+        { text: 'Find the common difference between consecutive terms.', working: '9 − 5 = 4,   13 − 9 = 4   →   d = 4' },
+        { text: 'Start the rule with 4n (the difference times n).', working: 'try Tₙ = 4n' },
+        { text: 'Test n = 1.', working: '4 × 1 = 4  ✗  (should be 5)' },
+        { text: 'Add the correction so that T₁ = 5.', working: '5 − 4 = +1' },
+        { text: 'Write the final rule and verify for n = 2.', working: 'Tₙ = 4n + 1   ;   4(2)+1 = 9  ✓' },
+      ],
+    },
+    {
+      prompt: 'Simplify 6x − 2y + 3x + 7y.',
+      method: 'Collect like terms — x-terms together, y-terms together. Constants would be separate too if present.',
+      answer: '9x + 5y',
+      steps: [
+        { text: 'Group the x-terms and the y-terms.', working: '(6x + 3x) + (−2y + 7y)' },
+        { text: 'Combine the x-terms.', working: '6x + 3x = 9x' },
+        { text: 'Combine the y-terms (signs matter).', working: '−2y + 7y = 5y' },
+        { text: 'Write the simplified expression.', working: '→ 9x + 5y' },
+      ],
+    },
+    {
+      prompt: 'Expand 3(2a − 5).',
+      method: 'Use the distributive law: multiply the outside number by EVERY term inside the bracket.',
+      answer: '6a − 15',
+      formula: 'k(a + b)  =  ka + kb',
+      steps: [
+        { text: 'Multiply the first term inside the bracket by 3.', working: '3 × 2a = 6a' },
+        { text: 'Multiply the second term inside the bracket by 3, keeping the sign.', working: '3 × (−5) = −15' },
+        { text: 'Combine the products.', working: '→ 6a − 15' },
+      ],
+    },
+    {
+      prompt: 'Factorise 12m + 18.',
+      method: 'Find the greatest common factor of every term, then write it outside a bracket.',
+      answer: '6(2m + 3)',
+      formula: 'ka + kb  =  k(a + b)',
+      steps: [
+        { text: 'Find the HCF of 12 and 18.', working: 'HCF(12, 18) = 6' },
+        { text: 'Divide each original term by 6 to find what stays inside the bracket.', working: '12m ÷ 6 = 2m,   18 ÷ 6 = 3' },
+        { text: 'Write the factorised form.', working: '→ 6(2m + 3)' },
+        { text: 'Check by expanding.', working: '6 × 2m + 6 × 3 = 12m + 18  ✓' },
+      ],
+    },
+    {
+      prompt: 'A club charges 15 AED plus 4 AED per activity. Write the cost for n activities.',
+      method: 'Identify the fixed (constant) cost and the variable (per-activity) cost, then add them.',
+      answer: 'C = 4n + 15',
+      formula: 'Cost  =  fixed  +  rate × quantity',
+      steps: [
+        { text: 'Identify the fixed charge that does not depend on n.', working: 'fixed = 15 AED' },
+        { text: 'Identify the rate per activity.', working: 'rate = 4 AED per activity' },
+        { text: 'Write the variable part as rate × n.', working: 'variable = 4n' },
+        { text: 'Add the two parts together.', working: '→ C = 4n + 15' },
+      ],
+    },
   ],
+
   'equation-balance': [
-    { prompt: 'Solve 4x + 9 = 33.', method: 'Subtract 9 from both sides, then divide by 4.', answer: 'x = 6' },
-    { prompt: 'Solve 3(x - 2) = 24.', method: 'Divide by 3 first, then add 2.', answer: 'x = 10' },
-    { prompt: 'Solve 5x - 4 = 2x + 11.', method: 'Move x terms to one side and constants to the other.', answer: 'x = 5' },
-    { prompt: 'Use A = lw when l = 12 and w = 7.', method: 'Substitute each value into the formula.', answer: 'A = 84' },
-    { prompt: 'Solve 2x + 5 < 17.', method: 'Subtract 5 and divide by 2, keeping the inequality direction.', answer: 'x < 6' },
+    {
+      prompt: 'Solve 4x + 9 = 33.',
+      method: 'Undo the operations in REVERSE order. The same operation on both sides keeps the balance.',
+      answer: 'x = 6',
+      formula: 'Reverse BIDMAS: undo +/− first, then ×/÷',
+      steps: [
+        { text: 'Subtract 9 from both sides to remove the constant from the left.', working: '4x + 9 − 9 = 33 − 9   ⇒   4x = 24' },
+        { text: 'Divide both sides by 4 to isolate x.', working: '4x ÷ 4 = 24 ÷ 4   ⇒   x = 6' },
+        { text: 'Check by substituting x = 6 into the original.', working: '4(6) + 9 = 24 + 9 = 33  ✓' },
+      ],
+    },
+    {
+      prompt: 'Solve 3(x − 2) = 24.',
+      method: 'Either divide first or expand the bracket first — either path is valid.',
+      answer: 'x = 10',
+      steps: [
+        { text: 'Divide both sides by 3 to remove the bracket factor.', working: '(x − 2) = 24 ÷ 3 = 8' },
+        { text: 'Add 2 to both sides.', working: 'x = 8 + 2' },
+        { text: 'Simplify.', working: 'x = 10' },
+        { text: 'Check.', working: '3(10 − 2) = 3 × 8 = 24  ✓' },
+      ],
+    },
+    {
+      prompt: 'Solve 5x − 4 = 2x + 11.',
+      method: 'Variables on one side, numbers on the other. Then divide.',
+      answer: 'x = 5',
+      steps: [
+        { text: 'Subtract 2x from both sides to bring x to one side only.', working: '5x − 2x − 4 = 11   ⇒   3x − 4 = 11' },
+        { text: 'Add 4 to both sides to isolate the variable term.', working: '3x = 15' },
+        { text: 'Divide both sides by 3.', working: 'x = 5' },
+        { text: 'Check by substitution.', working: '5(5) − 4 = 21  ;   2(5) + 11 = 21  ✓' },
+      ],
+    },
+    {
+      prompt: 'Use the formula A = l × w to find the area when l = 12 and w = 7.',
+      method: 'Substitute the given values, then evaluate the arithmetic.',
+      answer: 'A = 84',
+      formula: 'A  =  l × w',
+      steps: [
+        { text: 'Substitute the given values into the formula.', working: 'A = 12 × 7' },
+        { text: 'Evaluate the product.', working: 'A = 84' },
+        { text: 'Attach the unit (if asked).', working: 'A = 84 square units' },
+      ],
+    },
+    {
+      prompt: 'Solve the inequality 2x + 5 < 17.',
+      method: 'Treat it like an equation, but keep the inequality direction unless you multiply or divide by a negative.',
+      answer: 'x < 6',
+      formula: 'Whatever you do to one side, do to the other. Flip the sign only when × or ÷ by a negative.',
+      steps: [
+        { text: 'Subtract 5 from both sides.', working: '2x < 12' },
+        { text: 'Divide both sides by 2 (positive, so the sign stays).', working: 'x < 6' },
+        { text: 'Express the solution. Any value less than 6 works.', working: 'x ∈ (−∞, 6)' },
+      ],
+    },
   ],
+
   'coordinate-grid': [
-    { prompt: 'Plot A(-3, 4) and describe its quadrant.', method: 'Move left 3 from the origin, then up 4.', answer: 'Quadrant II' },
-    { prompt: 'Complete y = 2x + 1 for x = -1, 0, 1, 2.', method: 'Substitute each x-value into the rule.', answer: 'y = -1, 1, 3, 5' },
-    { prompt: 'Find the gradient between (1, 3) and (5, 11).', method: 'Gradient is rise over run: (11 - 3) / (5 - 1).', answer: '2' },
-    { prompt: 'A taxi costs 8 AED plus 3 AED per km. Write the graph rule.', method: 'Fixed start is the intercept; per km cost is the gradient.', answer: 'C = 3k + 8' },
-    { prompt: 'Find where y = x + 2 and y = 6 meet by inspection.', method: 'Set x + 2 equal to 6.', answer: '(4, 6)' },
+    {
+      prompt: 'Plot A(−3, 4) on a coordinate grid and state its quadrant.',
+      method: 'Read (x, y) — x is horizontal, y is vertical. Negative x means LEFT of the y-axis; positive y means ABOVE the x-axis.',
+      answer: 'A is in Quadrant II',
+      formula: 'Quadrant signs:  Q1 (+,+)  Q2 (−,+)  Q3 (−,−)  Q4 (+,−)',
+      steps: [
+        { text: 'From the origin, move 3 units to the LEFT (because x = −3).' },
+        { text: 'From there, move 4 units UP (because y = 4).' },
+        { text: 'Mark the point and label it A.' },
+        { text: 'Identify the quadrant from the sign pattern (−, +).', working: '(−, +) → Quadrant II' },
+      ],
+    },
+    {
+      prompt: 'Complete a table of values for y = 2x + 1 when x = −1, 0, 1, 2.',
+      method: 'Substitute each x-value into the rule one at a time.',
+      answer: 'y-values:  −1, 1, 3, 5',
+      steps: [
+        { text: 'Substitute x = −1.', working: 'y = 2(−1) + 1 = −2 + 1 = −1' },
+        { text: 'Substitute x = 0.', working: 'y = 2(0) + 1 = 1' },
+        { text: 'Substitute x = 1.', working: 'y = 2(1) + 1 = 3' },
+        { text: 'Substitute x = 2.', working: 'y = 2(2) + 1 = 5' },
+      ],
+    },
+    {
+      prompt: 'Find the gradient of the line joining (1, 3) and (5, 11).',
+      method: 'Gradient is the change in y divided by the change in x (“rise over run”).',
+      answer: 'm = 2',
+      formula: 'm  =  (y₂ − y₁) ÷ (x₂ − x₁)',
+      steps: [
+        { text: 'Label the points. Let (x₁, y₁) = (1, 3) and (x₂, y₂) = (5, 11).' },
+        { text: 'Calculate the change in y (the rise).', working: '11 − 3 = 8' },
+        { text: 'Calculate the change in x (the run).', working: '5 − 1 = 4' },
+        { text: 'Divide rise by run.', working: 'm = 8 ÷ 4 = 2' },
+      ],
+    },
+    {
+      prompt: 'A taxi charges 8 AED plus 3 AED per km. Write a rule for the cost C after k km.',
+      method: 'Recognise the y-intercept (fixed) and the gradient (per-unit rate).',
+      answer: 'C = 3k + 8',
+      formula: 'y = mx + c    →    m = rate,  c = starting value',
+      steps: [
+        { text: 'Identify the starting value when k = 0 (the y-intercept).', working: 'c = 8' },
+        { text: 'Identify the per-km charge (the gradient).', working: 'm = 3' },
+        { text: 'Combine into y = mx + c form, using C and k.', working: '→ C = 3k + 8' },
+      ],
+    },
+    {
+      prompt: 'Find the point where y = x + 2 meets y = 6.',
+      method: 'Set the two expressions for y equal to each other and solve for x.',
+      answer: '(4, 6)',
+      steps: [
+        { text: 'Set the right-hand sides equal.', working: 'x + 2 = 6' },
+        { text: 'Solve for x.', working: 'x = 6 − 2 = 4' },
+        { text: 'Use y = 6 (given) and write the intersection as an ordered pair.', working: '→ (4, 6)' },
+      ],
+    },
   ],
+
   'angle-lab': [
-    { prompt: 'Two angles on a straight line are 63 degrees and x. Find x.', method: 'Angles on a straight line add to 180 degrees.', answer: '117 degrees' },
-    { prompt: 'A triangle has angles 48 degrees and 67 degrees. Find the third angle.', method: 'Triangle angles add to 180 degrees.', answer: '65 degrees' },
-    { prompt: 'Find each exterior angle of a regular octagon.', method: 'Exterior angles of any polygon sum to 360 degrees.', answer: '45 degrees' },
-    { prompt: 'A bearing is 075 degrees. Describe the direction.', method: 'Measure clockwise from north.', answer: '75 degrees clockwise from north' },
-    { prompt: 'Parallel lines have an alternate angle of 38 degrees. Find the matching alternate angle.', method: 'Alternate angles are equal when lines are parallel.', answer: '38 degrees' },
+    {
+      prompt: 'Two angles on a straight line are 63° and x. Find x.',
+      method: 'Angles on a straight line always add to 180°.',
+      answer: 'x = 117°',
+      formula: 'Angles on a straight line  →  sum = 180°',
+      steps: [
+        { text: 'State the rule.', working: 'a + b = 180°' },
+        { text: 'Substitute the known angle.', working: '63 + x = 180' },
+        { text: 'Subtract 63 from both sides.', working: 'x = 180 − 63' },
+        { text: 'Simplify.', working: 'x = 117°' },
+      ],
+    },
+    {
+      prompt: 'A triangle has two angles of 48° and 67°. Find the third angle.',
+      method: 'The three interior angles of any triangle sum to 180°.',
+      answer: '65°',
+      formula: 'Angle sum of a triangle  =  180°',
+      steps: [
+        { text: 'State the rule.', working: 'a + b + c = 180°' },
+        { text: 'Add the two known angles.', working: '48 + 67 = 115' },
+        { text: 'Subtract from 180.', working: '180 − 115 = 65' },
+        { text: 'Write the answer with units.', working: '→ 65°' },
+      ],
+    },
+    {
+      prompt: 'Find each exterior angle of a regular octagon.',
+      method: 'The exterior angles of ANY convex polygon add to 360°. For a regular polygon, divide equally.',
+      answer: '45°',
+      formula: 'Exterior angle of a regular n-gon  =  360° ÷ n',
+      steps: [
+        { text: 'State the total.', working: 'Σ exterior = 360°' },
+        { text: 'An octagon has n = 8 sides.', working: 'n = 8' },
+        { text: 'Divide.', working: '360 ÷ 8 = 45°' },
+      ],
+    },
+    {
+      prompt: 'A bearing is 075°. Describe the direction.',
+      method: 'A bearing is always written with three digits and measured CLOCKWISE from north.',
+      answer: '75° clockwise from north — roughly east-north-east',
+      formula: 'Bearings: 000° = N,  090° = E,  180° = S,  270° = W',
+      steps: [
+        { text: 'Locate north as 0° on a compass diagram.' },
+        { text: 'Rotate clockwise by 75°.' },
+        { text: 'Identify the cardinal directions on either side.', working: '075° is between N (000°) and E (090°)' },
+      ],
+    },
+    {
+      prompt: 'Two parallel lines are cut by a transversal. One alternate angle is 38°. Find its matching alternate angle.',
+      method: 'Alternate angles formed by a transversal cutting parallel lines are EQUAL.',
+      answer: '38°',
+      formula: 'Parallel lines  →  alternate angles are equal (Z-angles)',
+      steps: [
+        { text: 'Identify the “Z” shape formed by the transversal and the parallel lines.' },
+        { text: 'Apply the alternate-angles rule.', working: 'angle A = angle B' },
+        { text: 'Write the matching angle.', working: '→ 38°' },
+      ],
+    },
   ],
+
   'circle-lab': [
-    { prompt: 'A circle has radius 7 cm. Find the diameter.', method: 'Diameter is twice the radius.', answer: '14 cm' },
-    { prompt: 'Find the circumference when diameter is 12 cm.', method: 'Use C = pi d.', answer: '12 pi cm, about 37.7 cm' },
-    { prompt: 'Find the area when radius is 6 m.', method: 'Use A = pi r squared.', answer: '36 pi m^2, about 113.1 m^2' },
-    { prompt: 'Find the area of a semicircle with radius 5 cm.', method: 'Find full circle area, then halve it.', answer: '12.5 pi cm^2, about 39.3 cm^2' },
-    { prompt: 'Find the arc length of a quadrant with radius 8 cm.', method: 'Take one quarter of the full circumference.', answer: '4 pi cm, about 12.6 cm' },
+    {
+      prompt: 'A circle has radius 7 cm. Find the diameter.',
+      method: 'The diameter is twice the radius.',
+      answer: '14 cm',
+      formula: 'd  =  2r',
+      steps: [
+        { text: 'State the formula.', working: 'd = 2r' },
+        { text: 'Substitute r = 7.', working: 'd = 2 × 7' },
+        { text: 'Compute and add the unit.', working: '→ 14 cm' },
+      ],
+    },
+    {
+      prompt: 'Find the circumference of a circle with diameter 12 cm.',
+      method: 'Use C = π × d directly.',
+      answer: '12π cm  ≈  37.7 cm',
+      formula: 'C  =  π × d',
+      steps: [
+        { text: 'State the formula.', working: 'C = π d' },
+        { text: 'Substitute d = 12.', working: 'C = π × 12' },
+        { text: 'Leave in exact form OR evaluate with π ≈ 3.142.', working: '12π ≈ 12 × 3.142 ≈ 37.7' },
+        { text: 'Write the answer with units.', working: '→ 37.7 cm  (3 s.f.)' },
+      ],
+    },
+    {
+      prompt: 'Find the area of a circle with radius 6 m.',
+      method: 'Use A = π × r². Remember to SQUARE the radius first.',
+      answer: '36π m²  ≈  113.1 m²',
+      formula: 'A  =  π × r²',
+      steps: [
+        { text: 'State the formula.', working: 'A = π r²' },
+        { text: 'Square the radius first (this is the most common error to avoid).', working: 'r² = 6² = 36' },
+        { text: 'Multiply by π.', working: 'A = 36π' },
+        { text: 'Evaluate to 1 d.p.', working: '36 × 3.142 ≈ 113.1' },
+        { text: 'Write with the correct unit (m² because area is two-dimensional).', working: '→ 113.1 m²' },
+      ],
+    },
+    {
+      prompt: 'Find the area of a semicircle with radius 5 cm.',
+      method: 'Find the full-circle area first, then halve it.',
+      answer: '12.5π cm²  ≈  39.3 cm²',
+      formula: 'Semicircle area  =  ½ × π × r²',
+      steps: [
+        { text: 'State the full-circle formula.', working: 'A = π r²' },
+        { text: 'Substitute r = 5 and square.', working: 'A = π × 25 = 25π' },
+        { text: 'Halve the result for a semicircle.', working: '25π ÷ 2 = 12.5π' },
+        { text: 'Evaluate numerically.', working: '12.5 × 3.142 ≈ 39.3' },
+      ],
+    },
+    {
+      prompt: 'Find the arc length of a quadrant (quarter-circle) with radius 8 cm.',
+      method: 'A quadrant is one quarter of the full circumference.',
+      answer: '4π cm  ≈  12.6 cm',
+      formula: 'Arc of a quadrant  =  ¼ × 2π r  =  (π r) ÷ 2',
+      steps: [
+        { text: 'Find the full circumference.', working: 'C = 2π r = 2π × 8 = 16π' },
+        { text: 'Take one quarter (because a quadrant is 90° ÷ 360° = ¼).', working: '16π ÷ 4 = 4π' },
+        { text: 'Evaluate.', working: '4 × 3.142 ≈ 12.6' },
+        { text: 'Add the unit.', working: '→ 12.6 cm' },
+      ],
+    },
   ],
+
   'construction-compass': [
-    { prompt: 'Can sides 4 cm, 6 cm and 9 cm form a triangle?', method: 'Check whether the two shorter sides add to more than the longest side.', answer: 'Yes, because 4 + 6 > 9' },
-    { prompt: 'Construct a triangle with sides 5 cm, 5 cm and 8 cm.', method: 'Draw the base, then use equal compass arcs from both endpoints.', answer: 'An isosceles triangle with base 8 cm' },
-    { prompt: 'What does a perpendicular bisector guarantee?', method: 'Use the equal-distance property from both endpoints.', answer: 'Every point on it is equal distance from the segment endpoints' },
-    { prompt: 'Are two rectangles 6 cm by 4 cm congruent if one is rotated?', method: 'Rotation preserves size and shape.', answer: 'Yes' },
-    { prompt: 'Construct an angle bisector for a 70 degree angle. What is each half?', method: 'A bisector splits an angle into two equal parts.', answer: '35 degrees each' },
+    {
+      prompt: 'Can sides of length 4 cm, 6 cm and 9 cm form a triangle?',
+      method: 'Use the triangle inequality: the sum of the two shorter sides must exceed the longest side.',
+      answer: 'Yes — 4 + 6 = 10 > 9',
+      formula: 'Triangle inequality:   a + b > c   for the longest side c',
+      steps: [
+        { text: 'Identify the longest side.', working: 'longest = 9 cm' },
+        { text: 'Add the two shorter sides.', working: '4 + 6 = 10 cm' },
+        { text: 'Compare with the longest side.', working: '10 > 9  ✓' },
+        { text: 'Conclude.', working: '→ Yes, a triangle can be drawn' },
+      ],
+    },
+    {
+      prompt: 'Describe how to construct a triangle with sides 5 cm, 5 cm and 8 cm.',
+      method: 'Draw the base, then use compass arcs of the two side-lengths from each end.',
+      answer: 'An isosceles triangle with base 8 cm and two equal 5 cm sides',
+      steps: [
+        { text: 'Draw the base AB of length 8 cm with a ruler.' },
+        { text: 'Set the compass to 5 cm. From A, draw an arc above the line.' },
+        { text: 'Keep the compass at 5 cm. From B, draw a second arc that crosses the first.' },
+        { text: 'Label the intersection C and join A→C and B→C with straight lines.' },
+        { text: 'Verify the triangle is isosceles (AC = BC).', working: 'AC = BC = 5  ✓' },
+      ],
+    },
+    {
+      prompt: 'What property does a perpendicular bisector guarantee?',
+      method: 'Every point on the perpendicular bisector of a segment is equidistant from the segment’s two endpoints.',
+      answer: 'Every point on it is the same distance from each endpoint',
+      formula: 'Locus property:  d(P, A) = d(P, B)   for every P on the bisector of AB',
+      steps: [
+        { text: 'Draw segment AB.' },
+        { text: 'Open the compass to more than half of AB. Draw arcs from A and from B above and below the line.' },
+        { text: 'Join the two arc intersections — that is the perpendicular bisector.' },
+        { text: 'Pick any point P on this new line and measure PA and PB.', working: 'PA = PB always' },
+      ],
+    },
+    {
+      prompt: 'Are two rectangles each 6 cm by 4 cm congruent if one is rotated 90°?',
+      method: 'Rigid transformations (translation, rotation, reflection) preserve all side lengths and angles.',
+      answer: 'Yes — congruent',
+      formula: 'Rigid transformation  →  preserves size & shape',
+      steps: [
+        { text: 'List the side lengths of both rectangles.', working: 'both have sides 6 cm and 4 cm' },
+        { text: 'A 90° rotation is a rigid transformation — it preserves both lengths and angles.' },
+        { text: 'Conclude that the two figures are congruent (only orientation differs).' },
+      ],
+    },
+    {
+      prompt: 'Bisect a 70° angle. What is each half-angle?',
+      method: 'An angle bisector divides an angle into two equal parts.',
+      answer: '35° each',
+      formula: 'Each half  =  original ÷ 2',
+      steps: [
+        { text: 'Mark the angle 70° at vertex V.' },
+        { text: 'Draw an arc from V crossing both arms at points P and Q.' },
+        { text: 'From P and Q, draw equal arcs that intersect inside the angle at R.' },
+        { text: 'Join V → R. This ray bisects the angle.' },
+        { text: 'Divide to find each half-angle.', working: '70 ÷ 2 = 35°' },
+      ],
+    },
   ],
+
   'solid-builder': [
-    { prompt: 'Find the area of a parallelogram with base 11 cm and height 6 cm.', method: 'Use base times perpendicular height.', answer: '66 cm^2' },
-    { prompt: 'Find the area of a triangle with base 14 m and height 9 m.', method: 'Use one half times base times height.', answer: '63 m^2' },
-    { prompt: 'Find the surface area of a cuboid 5 cm by 4 cm by 3 cm.', method: 'Add the areas of the three face pairs: 2(lw + lh + wh).', answer: '94 cm^2' },
-    { prompt: 'Find the volume of a prism with cross-section area 18 cm^2 and length 7 cm.', method: 'Multiply cross-section area by length.', answer: '126 cm^3' },
-    { prompt: 'Convert 3.5 litres to cm^3.', method: 'Use 1 litre = 1000 cm^3.', answer: '3500 cm^3' },
+    {
+      prompt: 'Find the area of a parallelogram with base 11 cm and perpendicular height 6 cm.',
+      method: 'Use A = base × perpendicular height — NOT the slant side.',
+      answer: '66 cm²',
+      formula: 'A  =  b × h    (h must be PERPENDICULAR to b)',
+      steps: [
+        { text: 'Identify which dimension is the perpendicular height (not the slant side).', working: 'b = 11,  h = 6' },
+        { text: 'Multiply.', working: 'A = 11 × 6 = 66' },
+        { text: 'Attach the squared unit (area).', working: '→ 66 cm²' },
+      ],
+    },
+    {
+      prompt: 'Find the area of a triangle with base 14 m and perpendicular height 9 m.',
+      method: 'Use the half-base-times-height formula.',
+      answer: '63 m²',
+      formula: 'A  =  ½ × b × h',
+      steps: [
+        { text: 'State the formula.', working: 'A = ½ b h' },
+        { text: 'Substitute.', working: 'A = ½ × 14 × 9' },
+        { text: 'Halve the base first to simplify.', working: '½ × 14 = 7' },
+        { text: 'Multiply.', working: 'A = 7 × 9 = 63 m²' },
+      ],
+    },
+    {
+      prompt: 'Find the surface area of a cuboid 5 cm × 4 cm × 3 cm.',
+      method: 'A cuboid has 3 pairs of identical faces. Find the area of each unique face and double the sum.',
+      answer: '94 cm²',
+      formula: 'SA  =  2(lw + lh + wh)',
+      steps: [
+        { text: 'Calculate the three distinct face areas.', working: 'lw = 5×4 = 20,  lh = 5×3 = 15,  wh = 4×3 = 12' },
+        { text: 'Add the three face areas.', working: '20 + 15 + 12 = 47' },
+        { text: 'Double the sum (each face has a matching pair).', working: '2 × 47 = 94' },
+        { text: 'Attach units.', working: '→ 94 cm²' },
+      ],
+    },
+    {
+      prompt: 'Find the volume of a prism with cross-sectional area 18 cm² and length 7 cm.',
+      method: 'Volume of any prism is cross-section area × length.',
+      answer: '126 cm³',
+      formula: 'V  =  A_cross × ℓ',
+      steps: [
+        { text: 'State the formula.', working: 'V = A × ℓ' },
+        { text: 'Substitute.', working: 'V = 18 × 7' },
+        { text: 'Multiply.', working: 'V = 126' },
+        { text: 'Attach a cubic unit (volume is three-dimensional).', working: '→ 126 cm³' },
+      ],
+    },
+    {
+      prompt: 'Convert 3.5 litres to cm³.',
+      method: 'Use the equivalence 1 litre = 1000 cm³.',
+      answer: '3 500 cm³',
+      formula: '1 L  =  1 000 cm³  =  1 dm³',
+      steps: [
+        { text: 'State the conversion factor.', working: '1 L = 1000 cm³' },
+        { text: 'Multiply both sides by 3.5.', working: '3.5 × 1000 = 3500' },
+        { text: 'Attach the unit.', working: '→ 3 500 cm³' },
+      ],
+    },
   ],
+
   'data-lab': [
-    { prompt: 'Find the mean of 6, 8, 8, 10, 13.', method: 'Add the values and divide by the number of values.', answer: '9' },
-    { prompt: 'Find the median of 4, 11, 3, 9, 7.', method: 'Order the data and choose the middle value.', answer: '7' },
-    { prompt: 'Find the mode of 2, 5, 5, 6, 9, 9, 9.', method: 'Identify the value with greatest frequency.', answer: '9' },
-    { prompt: 'Improve this survey question: "Everyone loves homework, right?"', method: 'Remove leading language and ask one balanced question.', answer: 'How useful do you find homework? Very useful / useful / not useful' },
-    { prompt: 'Class A has mean 74 and range 6. Class B has mean 74 and range 22. Compare.', method: 'Compare centre first, then spread.', answer: 'Same average, but Class A is more consistent' },
+    {
+      prompt: 'Find the mean of 6, 8, 8, 10, 13.',
+      method: 'Add the values, then divide by the number of values.',
+      answer: 'Mean = 9',
+      formula: 'mean  =  (sum of values)  ÷  (how many values)',
+      steps: [
+        { text: 'Sum all values.', working: '6 + 8 + 8 + 10 + 13 = 45' },
+        { text: 'Count the values.', working: 'n = 5' },
+        { text: 'Divide.', working: '45 ÷ 5 = 9' },
+      ],
+    },
+    {
+      prompt: 'Find the median of 4, 11, 3, 9, 7.',
+      method: 'Order the data first, then choose the middle value.',
+      answer: 'Median = 7',
+      formula: 'For n odd:  median is the value at position (n+1)/2',
+      steps: [
+        { text: 'Order the values from smallest to largest.', working: '3, 4, 7, 9, 11' },
+        { text: 'Count the values.', working: 'n = 5  →  middle position = 3' },
+        { text: 'Read off the value at the middle position.', working: '→ 7' },
+      ],
+    },
+    {
+      prompt: 'Find the mode of 2, 5, 5, 6, 9, 9, 9.',
+      method: 'The mode is the value that appears most frequently.',
+      answer: 'Mode = 9',
+      steps: [
+        { text: 'Tally the frequency of each value.', working: '2 ×1,  5 ×2,  6 ×1,  9 ×3' },
+        { text: 'Identify the value with the highest frequency.', working: '9 occurs 3 times' },
+        { text: 'State the mode.', working: '→ 9' },
+      ],
+    },
+    {
+      prompt: 'Improve this survey question: “Everyone loves homework, right?”',
+      method: 'A good survey question is neutral, single-issue, and offers balanced response options.',
+      answer: '“How useful do you find homework?  Very useful / useful / not useful”',
+      steps: [
+        { text: 'Identify the bias. The original assumes the answer (“Everyone loves…”).' },
+        { text: 'Rewrite as a neutral question with no leading language.' },
+        { text: 'Offer balanced response options instead of yes/no.' },
+        { text: 'Check the question asks about ONE idea only.' },
+      ],
+    },
+    {
+      prompt: 'Class A has mean 74 and range 6. Class B has mean 74 and range 22. Compare.',
+      method: 'Compare the centre (mean) first, then the spread (range).',
+      answer: 'Same average, but Class A is far more consistent (smaller spread)',
+      formula: 'centre  →  spread  →  conclusion',
+      steps: [
+        { text: 'Compare the centres.', working: 'mean A = mean B = 74' },
+        { text: 'Compare the spreads.', working: 'range A = 6,   range B = 22' },
+        { text: 'Conclude: same typical value, but Class A has scores clustered tightly together while Class B is more variable.' },
+      ],
+    },
   ],
+
   'probability-spinner': [
-    { prompt: 'Find P(rolling a number greater than 4 on a fair die).', method: 'Count favourable outcomes 5 and 6 out of 6 total outcomes.', answer: '2/6 = 1/3' },
-    { prompt: 'A bag has 4 red, 3 blue and 5 green counters. Find P(blue).', method: 'Use favourable outcomes over total outcomes.', answer: '3/12 = 1/4' },
-    { prompt: 'If P(win) = 0.28, find P(not win).', method: 'Use the complement rule 1 - P(win).', answer: '0.72' },
-    { prompt: 'A spinner lands on gold 16 times in 80 spins. Estimate P(gold).', method: 'Use experimental probability: frequency divided by trials.', answer: '0.2' },
-    { prompt: 'If P(blue) = 0.35, predict blue outcomes in 200 trials.', method: 'Multiply probability by number of trials.', answer: '70 blue outcomes' },
+    {
+      prompt: 'Find P(rolling a number greater than 4) on a fair six-sided die.',
+      method: 'Probability is favourable outcomes divided by total outcomes for a fair sample space.',
+      answer: '1/3',
+      formula: 'P(event)  =  (favourable outcomes)  ÷  (total outcomes)',
+      steps: [
+        { text: 'List the favourable outcomes.', working: '5 and 6  →  2 outcomes' },
+        { text: 'List the total possible outcomes.', working: '{1,2,3,4,5,6}  →  6 outcomes' },
+        { text: 'Form the fraction.', working: 'P = 2/6' },
+        { text: 'Simplify.', working: '= 1/3' },
+      ],
+    },
+    {
+      prompt: 'A bag has 4 red, 3 blue and 5 green counters. Find P(blue).',
+      method: 'Add to find the total, then take favourable over total.',
+      answer: '1/4',
+      steps: [
+        { text: 'Find the total number of counters.', working: '4 + 3 + 5 = 12' },
+        { text: 'Take favourable over total.', working: 'P(blue) = 3/12' },
+        { text: 'Simplify by dividing numerator and denominator by 3.', working: '= 1/4' },
+      ],
+    },
+    {
+      prompt: 'If P(win) = 0.28, find P(not win).',
+      method: 'Use the complement rule — probabilities of complementary events add to 1.',
+      answer: '0.72',
+      formula: 'P(not A)  =  1  −  P(A)',
+      steps: [
+        { text: 'State the complement rule.', working: 'P(A) + P(A′) = 1' },
+        { text: 'Rearrange to isolate P(not win).', working: 'P(not win) = 1 − P(win)' },
+        { text: 'Substitute and subtract.', working: '= 1 − 0.28 = 0.72' },
+      ],
+    },
+    {
+      prompt: 'A spinner lands on gold 16 times in 80 spins. Estimate P(gold).',
+      method: 'Use experimental probability — observed frequency divided by number of trials.',
+      answer: '0.2  (or 1/5, or 20 %)',
+      formula: 'P_experimental  =  (times event happened)  ÷  (total trials)',
+      steps: [
+        { text: 'Identify the observed frequency.', working: 'gold lands 16 times' },
+        { text: 'Identify the total trials.', working: '80 spins' },
+        { text: 'Divide.', working: '16 ÷ 80 = 0.2' },
+        { text: 'Express in any of the equivalent forms.', working: '0.2  =  1/5  =  20 %' },
+      ],
+    },
+    {
+      prompt: 'If P(blue) = 0.35 on a spinner, predict the number of blue outcomes in 200 trials.',
+      method: 'Use expected frequency — multiply probability by the number of trials.',
+      answer: '70 blue outcomes',
+      formula: 'expected count  =  P(event) × N',
+      steps: [
+        { text: 'State the formula.', working: 'expected = P × N' },
+        { text: 'Substitute.', working: 'expected = 0.35 × 200' },
+        { text: 'Compute.', working: '= 70' },
+        { text: 'Note: actual results will vary around this expected value due to randomness.' },
+      ],
+    },
   ],
 };
 
@@ -593,12 +1253,17 @@ const exerciseCopy: Record<AnimationMode, Omit<ConceptExercise, 'label'>[]> = {
 };
 
 export function getConceptResearchPack(lesson: CourseLesson, chapter: CourseChapter): ConceptResearchPack {
+  // The first example is taken from the lesson's authored workedExample so that
+  // textbook-aligned content always appears first. The remaining four come from
+  // the topic-level exampleCopy, which already carries full step-by-step working.
+  const textbookSteps: WorkedStep[] = lesson.workedExample.steps.map((step) => ({ text: step }));
   const examples: ConceptExample[] = [
     {
-      label: 'Textbook-style worked model',
+      label: 'Textbook example',
       prompt: lesson.workedExample.prompt,
       method: lesson.workedExample.steps.join(' '),
       answer: lesson.workedExample.answer,
+      steps: textbookSteps,
     },
     ...exampleCopy[lesson.animation].slice(1).map((example, index) => ({
       ...example,

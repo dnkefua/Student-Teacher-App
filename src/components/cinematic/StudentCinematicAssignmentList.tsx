@@ -31,7 +31,7 @@ function studentSpecFromAssignment(assignment: StudentCinematicAssignment): Cine
       enabled: Boolean(lesson.heygenVideoUrl),
       videoPurpose: 'lesson_intro',
       title: lesson.heygenTitle ?? lesson.title,
-      script: 'Watch the avatar introduction, then complete the interactive lesson and checkpoint your teacher assigned.',
+      script: 'Watch the studio video introduction, then complete the interactive lesson and checkpoint your teacher assigned.',
       avatarStyle: lesson.subject === 'science' ? 'science_lab_teacher' : lesson.subject === 'english' ? 'english_coach' : 'professional_teacher',
       voiceStyle: 'warm_confident',
       aspectRatio: '16:9',

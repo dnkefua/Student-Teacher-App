@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Interactive maths model">
+  <rect width="1200" height="675" fill="#050711"/>
+  <g opacity=".18" stroke="#fff"><path d="M0 100h1200M0 200h1200M0 300h1200M0 400h1200M0 500h1200M0 600h1200"/><path d="M100 0v675M200 0v675M300 0v675M400 0v675M500 0v675M600 0v675M700 0v675M800 0v675M900 0v675M1000 0v675M1100 0v675"/></g>
+  <text x="70" y="78" fill="#d8f6ff" font-family="Arial, sans-serif" font-size="42" font-weight="900">Interactive Maths Model</text>
+  <path d="M125 535H1080M170 565V120" stroke="#ffffffbb" stroke-width="10" stroke-linecap="round"/>
+  <path d="M170 490C310 430 375 280 520 305S760 220 985 155" fill="none" stroke="#49c8ff" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="520" cy="305" r="28" fill="#facc15"/>
+  <path d="M520 305H720V235" stroke="#34d399" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <rect x="735" y="185" width="300" height="116" rx="18" fill="#ffffff12" stroke="#ffffff22"/>
+  <text x="760" y="232" fill="#fff" font-family="Arial, sans-serif" font-size="30" font-weight="900">Visual first</text>
+  <text x="760" y="270" fill="#8ddfff" font-family="Arial, sans-serif" font-size="24" font-weight="800">then symbolic solution</text>
+</svg>

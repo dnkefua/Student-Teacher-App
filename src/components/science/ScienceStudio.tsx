@@ -9,10 +9,12 @@ import {
   Beaker,
   BookOpen,
   Compass,
+  Database,
   Dna,
   Leaf,
   Play,
   Trees,
+  UploadCloud,
   Zap,
 } from 'lucide-react';
 import type { TabType } from '@/components/Sidebar';
@@ -78,10 +80,7 @@ export function ScienceStudio({ mode = 'teacher', setActiveTab }: ScienceStudioP
 
   return (
     <div className="space-y-5 text-white">
-      <header
-        className="rounded-lg border border-white/10 bg-gradient-to-r from-[#062019] via-[#06121e] to-[#050711] p-5"
-        style={{ boxShadow: `0 0 60px ${theme.primary}22 inset` }}
-      >
+      <header className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div
@@ -91,38 +90,28 @@ export function ScienceStudio({ mode = 'teacher', setActiveTab }: ScienceStudioP
               <Beaker className="h-3.5 w-3.5" />
               EIS Science Studio · Year 8
             </div>
-            <h1 className="mt-3 text-2xl font-black sm:text-3xl">
-              Investigate. Simulate. Explain.
+            <h1 className="mt-3 text-2xl font-black sm:text-4xl">
+              What Science unit today?
             </h1>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-300">
-              Grade 8 IB MYP science across biology, chemistry and physics. Every lesson opens a hands-on simulation
-              — spin a 3D cell, manipulate particles between states of matter, build series &amp; parallel circuits,
-              or balance forces on a moving box.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+              Choose a unit, then open the lesson. Simulations and lab tools stay inside the lesson screen.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2 text-right">
             <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
               {year8ScienceUnits.length} units · {year8ScienceLessons.length} lessons
             </span>
-            {isTeacher ? (
-              <button
-                onClick={() => setActiveTab('learning-hub')}
-                className="inline-flex items-center gap-1 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 transition hover:border-white/40 hover:text-white"
-              >
-                Learning Data Hub
-                <ArrowRight className="h-3 w-3" />
-              </button>
-            ) : (
+            {!isTeacher ? (
               <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">
                 Continue your lab
               </span>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
 
       <section>
-        <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-slate-400">Units</h2>
+        <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-slate-400">Choose unit</h2>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {year8ScienceUnits.map((unit) => {
             const Icon = unitIcon[unit.title] ?? BookOpen;
@@ -131,7 +120,7 @@ export function ScienceStudio({ mode = 'teacher', setActiveTab }: ScienceStudioP
               <button
                 key={unit.id}
                 onClick={() => setActiveUnitId(unit.id)}
-                className="rounded-lg border p-3 text-left transition"
+                className="min-h-36 rounded-lg border p-4 text-left transition hover:-translate-y-0.5"
                 style={{
                   borderColor: isActive ? theme.primary : 'rgba(255,255,255,.1)',
                   background: isActive ? `${theme.primary}14` : 'rgba(255,255,255,.03)',
@@ -218,6 +207,28 @@ export function ScienceStudio({ mode = 'teacher', setActiveTab }: ScienceStudioP
           })}
         </div>
       </section>
+
+      {isTeacher ? (
+        <section className="space-y-3 border-t border-white/10 pt-4">
+          <p className="text-xs font-black uppercase tracking-wide text-slate-500">Advanced tools</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveTab('learning-hub')}
+              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-black text-slate-300 transition hover:border-[#49c8ff]/50 hover:text-white"
+            >
+              <Database className="h-3.5 w-3.5 text-[#8ddfff]" />
+              Learning Data Hub
+            </button>
+            <button
+              onClick={() => setActiveTab('upload-studio')}
+              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-black text-slate-300 transition hover:border-[#49c8ff]/50 hover:text-white"
+            >
+              <UploadCloud className="h-3.5 w-3.5 text-[#8ddfff]" />
+              Upload Studio
+            </button>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

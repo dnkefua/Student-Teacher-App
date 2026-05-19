@@ -31,7 +31,7 @@ export function CinematicAssetPanel({ lessonId }: { lessonId: string }) {
       <div className="mt-3 space-y-2">
         {assets.length === 0 ? (
           <p className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-3 text-xs leading-5 text-slate-400">
-            No saved video assets yet. Generate an avatar explainer from the HeyGen panel.
+            No saved video assets yet. Generate a lesson video from the studio video panel.
           </p>
         ) : (
           assets.map((asset) => (

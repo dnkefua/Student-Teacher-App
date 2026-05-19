@@ -144,12 +144,12 @@ export function CinematicStudio({ mode = 'teacher' }: { mode?: LearningMode }) {
             <h1 className="mt-4 text-3xl font-black tracking-normal">Cinematic Studio</h1>
             <p className="mt-1 text-sm font-semibold text-[#8ddfff]">Reusable lesson engine for Maths, Science, and English.</p>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-              Generate a structured CinematicLessonSpec, preview the app-rendered interactive scene, and optionally create short HeyGen avatar videos around the lesson.
+              Generate a structured CinematicLessonSpec, preview the app-rendered interactive scene, and create short studio videos around the lesson.
             </p>
             <ul className="mt-3 grid gap-1 text-xs leading-5 text-slate-300 sm:grid-cols-3">
               <li><span className="font-black text-white">1. AI/spec engine</span> creates the lesson plan.</li>
               <li><span className="font-black text-white">2. EIS Learning Studio</span> renders the interactive activity.</li>
-              <li><span className="font-black text-white">3. HeyGen</span> creates the avatar/video layer.</li>
+              <li><span className="font-black text-white">3. Studio video</span> creates the cinematic lesson clip.</li>
             </ul>
           </div>
           <span className="rounded-md border border-[#49c8ff]/30 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">

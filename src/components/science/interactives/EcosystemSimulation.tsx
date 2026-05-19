@@ -7,6 +7,15 @@ import type { SubjectLesson } from '@/lib/subjects/types';
 type Pop = { plants: number; rabbits: number; foxes: number };
 
 const START: Pop = { plants: 200, rabbits: 60, foxes: 10 };
+const FOOD_WEB = [
+  { label: 'Grass', role: 'Producer', color: '#34d399' },
+  { label: 'Seeds', role: 'Producer', color: '#86efac' },
+  { label: 'Rabbit', role: 'Primary consumer', color: '#fdba74' },
+  { label: 'Mouse', role: 'Primary consumer', color: '#fcd34d' },
+  { label: 'Fox', role: 'Secondary consumer', color: '#fb7185' },
+  { label: 'Eagle', role: 'Top predator', color: '#93c5fd' },
+  { label: 'Fungi', role: 'Decomposer', color: '#c084fc' },
+];
 
 function step(p: Pop, params: { sun: number; hunting: number }): Pop {
   const plantGrowth = 0.18 * params.sun;
@@ -99,6 +108,29 @@ export function EcosystemSimulation({ lesson: _lesson }: { lesson: SubjectLesson
         <Stat label="Plants" value={pop.plants} color="#34d399" />
         <Stat label="Rabbits" value={pop.rabbits} color="#fdba74" />
         <Stat label="Foxes" value={pop.foxes} color="#fb7185" />
+      </div>
+
+      <div className="mt-3 rounded-md border border-white/10 bg-[#050711] p-3">
+        <p className="text-[10px] font-black uppercase tracking-wide text-[#34d399]">Interactive food web</p>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {FOOD_WEB.map((organism) => (
+            <div
+              key={organism.label}
+              className="rounded-md border p-2"
+              style={{ borderColor: `${organism.color}55`, background: `${organism.color}10` }}
+            >
+              <p className="text-xs font-black text-white">{organism.label}</p>
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide" style={{ color: organism.color }}>
+                {organism.role}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 grid gap-2 text-[11px] font-bold text-slate-300 sm:grid-cols-3">
+          <span className="rounded-md bg-white/[0.04] p-2">Grass - Rabbit - Fox</span>
+          <span className="rounded-md bg-white/[0.04] p-2">Seeds - Mouse - Eagle</span>
+          <span className="rounded-md bg-white/[0.04] p-2">Dead matter - Fungi - soil nutrients</span>
+        </div>
       </div>
 
       <svg viewBox="0 0 240 80" className="mt-3 h-32 w-full rounded-md border border-white/10 bg-[#050711]">

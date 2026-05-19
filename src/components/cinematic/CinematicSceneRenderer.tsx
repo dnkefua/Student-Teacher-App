@@ -69,7 +69,7 @@ function PremiumPlaceholder({ spec }: { spec: CinematicLessonSpec }) {
         <Box className="mx-auto h-10 w-10 text-[#8ddfff]" />
         <p className="mt-4 text-sm font-black uppercase tracking-wide text-[#ffc43b]">Interactive cinematic template coming soon for this concept.</p>
         <p className="mt-2 max-w-md text-sm leading-6 text-slate-300">
-          The lesson still runs with storyboard, checkpoints, analytics, assignment, and HeyGen video assets. Scene type: {spec.sceneType}.
+          The lesson still runs with storyboard, checkpoints, analytics, assignment, and studio video assets. Scene type: {spec.sceneType}.
         </p>
       </div>
     </div>

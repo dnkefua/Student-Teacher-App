@@ -6,6 +6,8 @@ import type { TabType } from '@/components/Sidebar';
 import type { LearningMode } from '@/lib/demoAssignments';
 import type { SubjectLesson } from '@/lib/subjects/types';
 import { subjectRegistry } from '@/lib/subjects/subjectRegistry';
+import { createSubjectCinematicLearningPack } from '@/lib/cinematic/learningPack';
+import { CinematicLearningPackPanel } from '@/components/cinematic/CinematicLearningPackPanel';
 import { EnglishInteractiveRenderer } from './EnglishInteractiveRenderer';
 import { MediaAdvertisementLab } from './MediaAdvertisementLab';
 import { NovelStudyLab } from './NovelStudyLab';
@@ -14,7 +16,7 @@ import { DocumentaryFilmLab } from './DocumentaryFilmLab';
 import { DramaStageLab } from './DramaStageLab';
 import { AcademicFlowGrammarPanel } from './AcademicFlowGrammarPanel';
 
-type Tab = 'explore' | 'practice' | 'assignment';
+type Tab = 'explore' | 'cinematic' | 'practice' | 'assignment';
 
 interface Props {
   lesson: SubjectLesson;
@@ -26,7 +28,7 @@ interface Props {
 export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiveTab: _setActiveTab }: Props) {
   void _setActiveTab;
   const theme = subjectRegistry.english.theme;
-  const [tab, setTab] = useState<Tab>('explore');
+  const [tab, setTab] = useState<Tab>('cinematic');
   const [practiceAnswers, setPracticeAnswers] = useState<Record<string, string>>({});
   const [practiceRevealed, setPracticeRevealed] = useState<Record<string, boolean>>({});
   const [assignedIds, setAssignedIds] = useState<string[]>([]);
@@ -115,6 +117,15 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
         },
       ]
     : lesson.assignmentQuestions;
+  const cinematicPack = createSubjectCinematicLearningPack({
+    ...lesson,
+    studentExplanation,
+    animatedSteps,
+    objectives,
+    teacherNotes,
+    practiceQuestions,
+    assignmentQuestions,
+  });
 
   const assignQuestion = (id: string) => {
     setAssigningId(id);
@@ -135,7 +146,7 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           lessonId: lesson.id,
-          title: `${lesson.title} - avatar introduction`,
+          title: `${lesson.title} - studio introduction`,
           script,
           avatarStyle: 'english_coach',
           voiceStyle: 'warm_confident',
@@ -145,12 +156,12 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
         }),
       });
       const data = (await res.json()) as { status?: string; message?: string; videoId?: string };
-      if (!res.ok) throw new Error(data.message ?? 'HeyGen request failed.');
+      if (!res.ok) throw new Error(data.message ?? 'Studio video request failed.');
       setHeygenState('done');
-      setHeygenMessage(data.status === 'demo' ? data.message ?? 'HeyGen demo mode ready.' : `HeyGen video queued: ${data.videoId}`);
+      setHeygenMessage(data.status === 'demo' ? 'Preview render saved. Final playback appears after production rendering is configured.' : `Studio video queued: ${data.videoId}`);
     } catch (err) {
       setHeygenState('error');
-      setHeygenMessage(err instanceof Error ? err.message : 'HeyGen request failed.');
+      setHeygenMessage(err instanceof Error ? err.message.replace(/HeyGen/gi, 'Studio video').replace(/avatar/gi, 'presenter') : 'Studio video request failed.');
     }
   };
 
@@ -207,6 +218,7 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
         {(
           [
             { id: 'explore', label: 'Explore', icon: Lightbulb },
+            { id: 'cinematic', label: 'Cinematic Pack', icon: Video },
             { id: 'practice', label: 'Practice', icon: Target },
             { id: 'assignment', label: 'Assignment', icon: ClipboardCheck },
           ] as const
@@ -275,9 +287,9 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
                 </Card>
               ) : null}
               {isTeacher && isAdvertisingLesson ? (
-                <Card title="HeyGen lesson opener" icon={Video}>
+                <Card title="Studio video opener" icon={Video}>
                   <p className="text-xs leading-5 text-slate-300">
-                    Generate a short avatar introduction that tells students what to notice in the US and UAE adverts.
+                    Generate a short video introduction that tells students what to notice in the US and UAE adverts.
                     The video supports the lesson; the advert analysis stays interactive inside English Studio.
                   </p>
                   <button
@@ -287,7 +299,7 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
                     className="mt-3 inline-flex items-center gap-2 rounded-md border border-[#ffc43b]/50 bg-[#ffc43b]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#ffc43b] transition hover:border-[#ffc43b] hover:bg-[#ffc43b]/15 disabled:cursor-wait disabled:opacity-70"
                   >
                     {heygenState === 'pending' ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-                    Generate avatar intro
+                    Generate studio intro
                   </button>
                   {heygenMessage ? (
                     <p className={`mt-2 text-xs font-semibold ${heygenState === 'error' ? 'text-rose-300' : 'text-emerald-300'}`}>
@@ -305,6 +317,10 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
 
           <AcademicFlowGrammarPanel />
         </div>
+      )}
+
+      {tab === 'cinematic' && (
+        <CinematicLearningPackPanel pack={cinematicPack} accent={theme.primary} isTeacher={isTeacher} />
       )}
 
       {tab === 'practice' && (
@@ -401,7 +417,19 @@ export function EnglishLessonPlayer({ lesson, mode = 'teacher', onBack, setActiv
 
       {tab === 'assignment' && (
         <div className="space-y-3">
-          {assignmentQuestions.map((a, i) => (
+          <div
+            className="rounded-lg border p-4"
+            style={{ borderColor: `${theme.primary}33`, background: `${theme.primary}0F` }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: theme.primary }}>
+              Assignment pack
+            </p>
+            <p className="mt-1 text-sm leading-6 text-slate-200">
+              This subtopic includes {cinematicPack.assignmentQuestions.length} assignable, image/text-based questions
+              with model answers. Open the Cinematic Pack tab to generate the studio video.
+            </p>
+          </div>
+          {cinematicPack.assignmentQuestions.map((a, i) => (
             <div key={a.id} className="rounded-lg border border-white/10 bg-white/[.03] p-4">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm font-bold text-white">

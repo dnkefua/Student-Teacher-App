@@ -6,6 +6,7 @@ import {
   ArrowRight,
   BookOpen,
   Compass,
+  Database,
   Feather,
   Highlighter,
   Library,
@@ -15,6 +16,7 @@ import {
   Quote,
   Sparkles,
   Theater,
+  UploadCloud,
   Wand2,
 } from 'lucide-react';
 import type { TabType } from '@/components/Sidebar';
@@ -87,10 +89,7 @@ export function EnglishStudio({ setActiveTab, mode = 'teacher' }: EnglishStudioP
 
   return (
     <div className="space-y-5 text-white">
-      <header
-        className="rounded-lg border border-white/10 bg-gradient-to-r from-[#1a0a36] via-[#160b2c] to-[#050711] p-5"
-        style={{ boxShadow: `0 0 60px ${theme.primary}22 inset` }}
-      >
+      <header className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div
@@ -104,34 +103,23 @@ export function EnglishStudio({ setActiveTab, mode = 'teacher' }: EnglishStudioP
               <Feather className="h-3.5 w-3.5" />
               EIS English Studio · Year 8
             </div>
-            <h1 className="mt-3 text-2xl font-black sm:text-3xl">
-              Read closely. Write deliberately. Speak with intent.
+            <h1 className="mt-3 text-2xl font-black sm:text-4xl">
+              What English unit today?
             </h1>
-            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-300">
-              Grade 8 English taught through the school&apos;s real Sequence-of-Learning — advertising, the novel, the
-              anthology, documentary film, and Shakespeare. Every lesson opens an interactive studio: annotate texts,
-              plan PETAL paragraphs, highlight poetic devices, build sentences, and revise drafts with AI feedback.
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
+              Choose a unit, then open the lesson. Annotation, writing, speaking, and revision tools stay inside the lesson screen.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2 text-right">
             <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-200">
               {year8EnglishUnits.length} units · {year8EnglishLessons.length} lessons
             </span>
-            {mode === 'teacher' ? (
-              <button
-                onClick={() => setActiveTab('learning-hub')}
-                className="inline-flex items-center gap-1 rounded-md border border-white/15 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-slate-200 transition hover:border-white/40 hover:text-white"
-              >
-                Learning Data Hub
-                <ArrowRight className="h-3 w-3" />
-              </button>
-            ) : null}
           </div>
         </div>
       </header>
 
       <section>
-        <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-slate-400">1. Choose chapter</h2>
+        <h2 className="mb-2 text-xs font-black uppercase tracking-wide text-slate-400">Choose unit</h2>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {year8EnglishUnits.map((unit) => {
             const Icon = unitIcon[unit.title] ?? BookOpen;
@@ -140,7 +128,7 @@ export function EnglishStudio({ setActiveTab, mode = 'teacher' }: EnglishStudioP
               <button
                 key={unit.id}
                 onClick={() => setActiveUnitId(unit.id)}
-                className="rounded-lg border p-3 text-left transition"
+                className="min-h-36 rounded-lg border p-4 text-left transition hover:-translate-y-0.5"
                 style={{
                   borderColor: isActive ? theme.primary : 'rgba(255,255,255,.1)',
                   background: isActive ? `${theme.primary}14` : 'rgba(255,255,255,.03)',
@@ -229,6 +217,28 @@ export function EnglishStudio({ setActiveTab, mode = 'teacher' }: EnglishStudioP
           })}
         </div>
       </section>
+
+      {mode === 'teacher' ? (
+        <section className="space-y-3 border-t border-white/10 pt-4">
+          <p className="text-xs font-black uppercase tracking-wide text-slate-500">Advanced tools</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveTab('learning-hub')}
+              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-black text-slate-300 transition hover:border-[#49c8ff]/50 hover:text-white"
+            >
+              <Database className="h-3.5 w-3.5 text-[#8ddfff]" />
+              Learning Data Hub
+            </button>
+            <button
+              onClick={() => setActiveTab('upload-studio')}
+              className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-black text-slate-300 transition hover:border-[#49c8ff]/50 hover:text-white"
+            >
+              <UploadCloud className="h-3.5 w-3.5 text-[#8ddfff]" />
+              Upload Studio
+            </button>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

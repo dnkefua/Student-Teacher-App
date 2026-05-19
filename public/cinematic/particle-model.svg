@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-label="Particle model">
+  <rect width="1200" height="675" fill="#050711"/>
+  <text x="70" y="78" fill="#d8f6ff" font-family="Arial, sans-serif" font-size="42" font-weight="900">Particle Model</text>
+  <g font-family="Arial, sans-serif" font-weight="900" text-anchor="middle">
+    <rect x="70" y="125" width="320" height="430" rx="24" fill="#ffffff08" stroke="#ffffff22"/>
+    <rect x="440" y="125" width="320" height="430" rx="24" fill="#ffffff08" stroke="#ffffff22"/>
+    <rect x="810" y="125" width="320" height="430" rx="24" fill="#ffffff08" stroke="#ffffff22"/>
+    <text x="230" y="610" font-size="30" fill="#49c8ff">Solid</text>
+    <text x="600" y="610" font-size="30" fill="#38bdf8">Liquid</text>
+    <text x="970" y="610" font-size="30" fill="#facc15">Gas</text>
+  </g>
+  <g fill="#49c8ff">
+    <circle cx="150" cy="215" r="18"/><circle cx="205" cy="215" r="18"/><circle cx="260" cy="215" r="18"/><circle cx="315" cy="215" r="18"/>
+    <circle cx="150" cy="270" r="18"/><circle cx="205" cy="270" r="18"/><circle cx="260" cy="270" r="18"/><circle cx="315" cy="270" r="18"/>
+    <circle cx="150" cy="325" r="18"/><circle cx="205" cy="325" r="18"/><circle cx="260" cy="325" r="18"/><circle cx="315" cy="325" r="18"/>
+    <circle cx="150" cy="380" r="18"/><circle cx="205" cy="380" r="18"/><circle cx="260" cy="380" r="18"/><circle cx="315" cy="380" r="18"/>
+  </g>
+  <g fill="#38bdf8">
+    <circle cx="505" cy="240" r="18"/><circle cx="575" cy="212" r="18"/><circle cx="655" cy="250" r="18"/><circle cx="705" cy="318" r="18"/>
+    <circle cx="515" cy="350" r="18"/><circle cx="598" cy="325" r="18"/><circle cx="672" cy="390" r="18"/><circle cx="555" cy="430" r="18"/>
+    <circle cx="710" cy="465" r="18"/><circle cx="472" cy="470" r="18"/>
+  </g>
+  <g fill="#facc15">
+    <circle cx="880" cy="205" r="16"/><circle cx="1038" cy="180" r="16"/><circle cx="940" cy="300" r="16"/><circle cx="1080" cy="365" r="16"/>
+    <circle cx="860" cy="460" r="16"/><circle cx="990" cy="515" r="16"/><circle cx="1040" cy="270" r="16"/>
+  </g>
+  <g stroke="#facc15" stroke-width="4" stroke-linecap="round" opacity=".5">
+    <path d="M880 205l-35 -30M1038 180l50 -35M940 300l-42 44M1080 365l38 28M860 460l-45 48M990 515l50 32"/>
+  </g>
+</svg>

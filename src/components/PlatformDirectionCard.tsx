@@ -25,7 +25,7 @@ const pillars: Pillar[] = [
   { id: 'english', label: 'English', arrow: 'Annotation & writing workshops', detail: 'PETAL essay planner, poetry devices, grammar builder, text annotation.', icon: Feather, accent: '#ffc43b' },
   { id: 'cinematic', label: 'Cinematic Studio', arrow: 'Reusable lesson engine', detail: 'Generate a CinematicLessonSpec and preview the app-rendered scene.', icon: Clapperboard, accent: '#ff8a3d' },
   { id: 'hub', label: 'Learning Data Hub', arrow: 'Analytics & recommendations', detail: 'Teacher-only mastery, evidence imports and AI-powered next-step nudges.', icon: BarChart3, accent: '#c8a8ff' },
-  { id: 'heygen', label: 'HeyGen', arrow: 'Avatar / video layer', detail: 'Short avatar explainer videos wrapped around the interactive lesson.', icon: Video, accent: '#ff3d72' },
+  { id: 'studio-video', label: 'Studio Video', arrow: 'Cinematic lesson clips', detail: 'Short lesson videos wrapped around the interactive lesson.', icon: Video, accent: '#ff3d72' },
 ];
 
 export function PlatformDirectionCard({ compact = false }: { compact?: boolean }) {

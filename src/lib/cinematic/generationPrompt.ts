@@ -12,7 +12,7 @@ export type GenerateCinematicSpecInput = {
 
 export function buildCinematicSpecPrompt(input: GenerateCinematicSpecInput): string {
   const sceneType = input.desiredSceneType ?? sceneTypeForSubject(input.subject);
-  return `You are an expert IB MYP Year 8 teacher, cinematic learning designer, 3D scene director, and interactive simulation planner. Convert the provided subject, topic, and curriculum material into a safe CinematicLessonSpec JSON. Use predefined sceneType values only. Do not invent unsupported component names. Every lesson must include storyboard steps, narration, interactive scene objects, student checkpoints, assignment questions, HeyGen video script, and analytics metadata.
+  return `You are an expert IB MYP Year 8 teacher, cinematic learning designer, 3D scene director, and interactive simulation planner. Convert the provided subject, topic, and curriculum material into a safe CinematicLessonSpec JSON. Use predefined sceneType values only. Do not invent unsupported component names. Every lesson must include storyboard steps, narration, interactive scene objects, student checkpoints, assignment questions, studio video script, and analytics metadata.
 
 Subject: ${input.subject}
 Grade: ${input.grade ?? 'Grade 8'}
@@ -25,5 +25,5 @@ ${input.curriculumText || 'Use a strong Year 8 EIS/IB MYP treatment with clear v
 Teacher notes:
 ${input.teacherNotes || 'No additional notes.'}
 
-Return one JSON object only. Keep HeyGen scripts short: 30 to 120 seconds. HeyGen is only for avatar video assets; the interactive scene is rendered by the app.`;
+Return one JSON object only. Keep studio video scripts short: 30 to 120 seconds. Video is used for the cinematic lesson clip; the interactive scene is rendered by the app.`;
 }

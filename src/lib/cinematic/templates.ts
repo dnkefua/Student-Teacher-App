@@ -85,7 +85,7 @@ function heygenSpec(subject: SubjectId, title: string, topic: string, sceneType:
   return {
     enabled: true,
     videoPurpose: subject === 'science' ? 'concept_explanation' : subject === 'english' ? 'teacher_walkthrough' : 'lesson_intro',
-    title: `${title} avatar explainer`,
+    title: `${title} studio video explainer`,
     script: `Welcome to ${title}. In this short explainer, focus on one idea: ${sceneConcepts[sceneType]}. Watch the interactive scene inside EIS Learning Studio, notice what changes when you use the controls, and be ready to explain ${topic} using precise evidence from the model.`,
     avatarStyle,
     voiceStyle: subject === 'english' ? 'warm_confident' : 'calm_teacher',

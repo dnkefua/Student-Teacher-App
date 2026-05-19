@@ -88,7 +88,7 @@ export function CinematicLessonPlayer({
       setActiveSubjectLesson(lessonFromCinematicSpec(spec));
       setTeacherNotice('Lesson is now live in the cross-subject teaching store.');
     } else if (action === 'generate_recap_video') {
-      setTeacherNotice('Use the HeyGen panel to generate a short recap video from the lesson script.');
+      setTeacherNotice('Use the studio video panel to generate a short recap video from the lesson script.');
     } else if (action === 'assign_to_class') {
       const assignment = await assignCinematicLessonToClass(spec);
       setTeacherNotice(`Assigned "${assignment.lesson.title}" to the current class. Students receive the lesson view, not the teacher spec.`);
@@ -144,7 +144,7 @@ export function CinematicLessonPlayer({
             step={currentStep}
             masteryConcept={spec.analytics.masteryConcept}
             teacherMode={teacherMode}
-            onGenerateHeyGen={() => setAssetNotice('Use the HeyGen panel to generate and save the avatar explainer.')}
+            onGenerateHeyGen={() => setAssetNotice('Use the studio video panel to generate and save the lesson explainer.')}
           />
         </div>
 

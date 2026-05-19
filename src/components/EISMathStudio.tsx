@@ -32,10 +32,12 @@ import {
 } from 'lucide-react';
 import { TabType } from './Sidebar';
 import { AnimationMode, CourseLesson, eisMypMathCourse } from '@/lib/eisMypMathCourse';
-import { ConceptResearchPack, getConceptResearchPack } from '@/lib/eisConceptResearch';
+import { ConceptResearchPack, WorkedStep, getConceptResearchPack } from '@/lib/eisConceptResearch';
 import { NeuroQuestAssignment, getNeuroQuestGame, saveActiveAssignment } from '@/lib/neuroquest';
 import { CinematicLessonPlayer } from '@/components/CinematicLessonEngine';
 import { generateLessonAssetPackage, inputFromCourseLesson } from '@/lib/lessonEngine';
+import { createMathCinematicLearningPack } from '@/lib/cinematic/learningPack';
+import { CinematicLearningPackPanel } from '@/components/cinematic/CinematicLearningPackPanel';
 
 interface EISMathStudioProps {
   setActiveTab: (tab: TabType) => void;
@@ -650,55 +652,68 @@ function Concept3DModel({ mode, accent }: { mode: AnimationMode; accent: string 
   );
 }
 
-function ExplainerVideoReel({
+/**
+ * Three-frame teaching storyboard. Replaces the previous "playable video reel"
+ * decoration with a clean numbered sequence of the three stages a teacher
+ * walks through when introducing this concept. No fake play button, no
+ * rotating gradients — just substance.
+ */
+function ConceptStoryboard({
   pack,
   mode,
   accent,
   progress,
-  isPlaying,
-  onToggle,
 }: {
   pack: ConceptResearchPack;
   mode: AnimationMode;
   accent: string;
   progress: number;
-  isPlaying: boolean;
-  onToggle: () => void;
 }) {
   const copy = mediaCopy[mode];
   const sceneIndex = Math.min(2, Math.floor(progress / 34));
 
   return (
-    <section className="rounded-lg border border-white/10 bg-black p-4">
-      <div className="aspect-video overflow-hidden rounded-lg border border-white/10 bg-slate-950">
-        <div className="relative h-full w-full">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(56,189,248,.32),transparent_30%),radial-gradient(circle_at_80%_30%,rgba(250,204,21,.22),transparent_28%)]" />
-          <div className="absolute inset-0 opacity-70" style={{ background: `conic-gradient(from ${progress * 3.6}deg at 50% 50%, transparent, ${accent}44, transparent, #facc1544, transparent)` }} />
-          <div className="absolute inset-x-8 top-8 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-white/50">Playable animated explainer</p>
-              <h3 className="mt-1 text-2xl font-black text-white">{copy.video}</h3>
-            </div>
-            <button onClick={onToggle} className="grid h-14 w-14 place-items-center rounded-full bg-white text-slate-950 shadow-xl transition hover:scale-105" aria-label={isPlaying ? 'Pause explainer' : 'Play explainer'}>
-              {isPlaying ? <Pause className="h-7 w-7 fill-current" /> : <Play className="ml-1 h-7 w-7 fill-current" />}
-            </button>
-          </div>
-          <div className="absolute left-1/2 top-[48%] h-28 w-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-white/10 backdrop-blur transition-transform duration-300" style={{ transform: `translate(-50%, -50%) scale(${1 + progress / 220}) rotate(${progress * 2}deg)` }} />
-          <div className="absolute left-1/2 top-[48%] h-14 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl" style={{ background: accent }} />
-          <div className="absolute inset-x-8 bottom-16 grid gap-3 md:grid-cols-3">
-            {copy.frames.map((frame, index) => (
-              <div key={frame} className={`rounded-md border p-3 backdrop-blur transition ${index === sceneIndex ? 'border-cyan-200 bg-white/20' : 'border-white/10 bg-white/10'}`}>
-                <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Scene {index + 1}</p>
-                <p className="mt-1 text-sm font-semibold text-white">{frame}</p>
-              </div>
-            ))}
-          </div>
-          <div className="absolute bottom-6 left-8 right-8 h-2 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full rounded-full transition-all duration-300" style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${accent}, #facc15, #38bdf8)` }} />
-          </div>
+    <section className="rounded-lg border border-white/10 bg-slate-950 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-cyan-200">Teaching storyboard</p>
+          <h3 className="mt-0.5 text-lg font-bold text-white">{pack.topic}</h3>
         </div>
+        <span className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold text-slate-300">
+          Frame {sceneIndex + 1} of {copy.frames.length}
+        </span>
       </div>
-      <p className="mt-3 text-sm leading-6 text-slate-300">{pack.topic} is presented as a short visual sequence that teachers can screen-share while explaining the concept live.</p>
+      <ol className="grid gap-3 md:grid-cols-3">
+        {copy.frames.map((frame, index) => {
+          const isActive = index === sceneIndex;
+          return (
+            <li
+              key={frame}
+              className={`rounded-md border p-3 transition ${isActive ? 'border-cyan-300 bg-white/10' : 'border-white/10 bg-white/5'}`}
+              style={isActive ? { boxShadow: `0 0 0 1px ${accent}` } : undefined}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[10px] font-black text-white"
+                  style={{ background: accent }}
+                >
+                  {index + 1}
+                </span>
+                <p className="text-[10px] font-black uppercase tracking-wide text-cyan-200">
+                  {isActive ? 'Current' : `Frame ${index + 1}`}
+                </p>
+              </div>
+              <p className="mt-2 text-sm font-semibold leading-6 text-white">{frame}</p>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full transition-all duration-300"
+          style={{ width: `${progress}%`, background: accent }}
+        />
+      </div>
     </section>
   );
 }
@@ -855,8 +870,9 @@ function ConceptMediaWall({ lesson, pack, accent }: { lesson: CourseLesson; pack
       </div>
 
       <article className="mt-5 rounded-lg border border-white/10 bg-slate-950 p-4">
-        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Live interactive explainer</p>
-        <h4 className="mt-1 font-bold text-white">{copy.video}</h4>
+        <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Interactive model</p>
+        <h4 className="mt-1 font-bold text-white">{pack.topic}</h4>
+        <p className="mt-1 text-xs text-slate-400">Drag the timeline above to watch the model change in step with the worked solution.</p>
         <div className="mt-4">
           <InteractiveConceptCanvas mode={lesson.animation} accent={accent} progress={progress} />
         </div>
@@ -872,8 +888,8 @@ function ConceptMediaWall({ lesson, pack, accent }: { lesson: CourseLesson; pack
         </article>
 
         <article className="rounded-lg border border-white/10 bg-slate-950 p-4">
-          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">3D animation</p>
-          <h4 className="mt-1 font-bold text-white">{copy.model}</h4>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Spatial view</p>
+          <h4 className="mt-1 font-bold text-white">Visualise the structure in three dimensions</h4>
           <div className="mt-4">
             <Concept3DModel mode={lesson.animation} accent={accent} />
           </div>
@@ -881,7 +897,7 @@ function ConceptMediaWall({ lesson, pack, accent }: { lesson: CourseLesson; pack
       </div>
 
       <div className="mt-4">
-        <ExplainerVideoReel pack={pack} mode={lesson.animation} accent={accent} progress={progress} isPlaying={isPlaying} onToggle={() => setIsPlaying((current) => !current)} />
+        <ConceptStoryboard pack={pack} mode={lesson.animation} accent={accent} progress={progress} />
       </div>
 
       <div className="mt-4">
@@ -1013,6 +1029,141 @@ function ConceptLabWindow({
   );
 }
 
+/**
+ * Interactive step-by-step worked-solution viewer.
+ *
+ * Renders an optional `formula` banner, then walks the student through the
+ * `steps` one at a time. Each step shows a teacher-style explanation and an
+ * optional `working` line in a monospace box (the algebraic / numeric line
+ * the student should write down). A reveal-all toggle skips to the full
+ * solution. The final card shows the answer.
+ *
+ * If `steps` is empty, falls back to rendering the legacy single-paragraph
+ * `method` so existing data still works.
+ */
+function WorkedSolutionSteps({
+  steps,
+  method,
+  answer,
+  formula,
+  accent,
+}: {
+  steps?: WorkedStep[];
+  method: string;
+  answer: string;
+  formula?: string;
+  accent: string;
+}) {
+  const safeSteps = steps && steps.length > 0 ? steps : null;
+  const [index, setIndex] = useState(0);
+  const [showAll, setShowAll] = useState(false);
+
+  // Reset when a different example is selected (steps reference changes)
+  useEffect(() => {
+    setIndex(0);
+    setShowAll(false);
+  }, [safeSteps]);
+
+  if (!safeSteps) {
+    return (
+      <div>
+        <p className="text-sm leading-6 text-gray-700">{method}</p>
+        <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-slate-950 px-3 py-2">
+          <span className="text-[10px] font-black uppercase tracking-wide text-slate-400">Answer</span>
+          <span className="font-mono text-sm font-bold text-amber-200">{answer}</span>
+        </div>
+      </div>
+    );
+  }
+
+  const visibleSteps = showAll ? safeSteps : safeSteps.slice(0, index + 1);
+  const atEnd = index >= safeSteps.length - 1;
+
+  return (
+    <div className="space-y-4">
+      {formula ? (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Key formula</p>
+          <p className="mt-0.5 font-mono text-sm font-bold text-amber-900">{formula}</p>
+        </div>
+      ) : null}
+
+      <ol className="space-y-2.5">
+        {visibleSteps.map((step, i) => (
+          <li
+            key={i}
+            className="flex gap-3 rounded-md border border-gray-200 bg-white p-3 shadow-sm"
+          >
+            <span
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black text-white"
+              style={{ background: accent }}
+            >
+              {i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm leading-6 text-gray-800">{step.text}</p>
+              {step.working ? (
+                <p className="mt-2 rounded bg-slate-950 px-2.5 py-1.5 font-mono text-xs font-semibold text-amber-200 break-words">
+                  {step.working}
+                </p>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ol>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {!showAll && (
+          <>
+            <button
+              onClick={() => setIndex((i) => Math.max(0, i - 1))}
+              disabled={index === 0}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-40"
+            >
+              ← Previous
+            </button>
+            <button
+              onClick={() => setIndex((i) => Math.min(safeSteps.length - 1, i + 1))}
+              disabled={atEnd}
+              className="rounded-md px-3 py-1.5 text-xs font-bold text-white shadow-sm transition disabled:opacity-40"
+              style={{ background: accent }}
+            >
+              Next step →
+            </button>
+            <button
+              onClick={() => setShowAll(true)}
+              className="text-xs font-semibold text-gray-600 underline-offset-2 hover:underline"
+            >
+              Show all steps
+            </button>
+            <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-gray-400">
+              Step {index + 1} of {safeSteps.length}
+            </span>
+          </>
+        )}
+        {showAll && (
+          <button
+            onClick={() => {
+              setShowAll(false);
+              setIndex(0);
+            }}
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-700 transition hover:bg-gray-50"
+          >
+            ← Walk through again
+          </button>
+        )}
+      </div>
+
+      {(showAll || atEnd) && (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Final answer</p>
+          <p className="mt-1 font-mono text-sm font-bold text-emerald-900 break-words">{answer}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /** Compact hero for the currently-selected lesson. Combines inquiry,
  *  objectives, primary CTA and delivery actions into ONE card so the
  *  studio body starts with a clear single anchor instead of three. */
@@ -1041,7 +1192,7 @@ function LessonHeroCard({
           className="inline-flex shrink-0 items-center gap-2 rounded-md px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
           style={{ background: accent }}
         >
-          Open Concept Lab <MonitorPlay className="h-4 w-4" />
+          Open Worked Solution <MonitorPlay className="h-4 w-4" />
         </button>
       </div>
 
@@ -1167,8 +1318,8 @@ function ExpandableCard({
         >
           {index}
         </span>
-        <div className="min-w-0 flex-1">
-          <p className={`font-semibold text-gray-900 transition-all ${isOpen ? 'text-lg leading-7' : 'text-sm leading-5'}`}>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <p className={`break-words font-semibold text-gray-900 transition-all ${isOpen ? 'text-base leading-6 sm:text-lg sm:leading-7' : 'line-clamp-2 text-sm leading-5'}`}>
             {title}
           </p>
           {!isOpen && preview ? (
@@ -1180,8 +1331,8 @@ function ExpandableCard({
         />
       </button>
       {isOpen ? (
-        <div className="border-t border-gray-100 bg-gradient-to-b from-transparent to-gray-50/40 px-6 pb-6 pt-5">
-          <div className="ml-[3.25rem] max-w-4xl">{children}</div>
+        <div className="border-t border-gray-100 bg-gradient-to-b from-transparent to-gray-50/40 px-4 pb-5 pt-4 sm:px-6 sm:pb-6 sm:pt-5">
+          <div className="max-w-4xl break-words sm:ml-[3.25rem]">{children}</div>
         </div>
       ) : null}
     </article>
@@ -1200,6 +1351,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
   const [openProject, setOpenProject] = useState(true);
   const lesson = useMemo(() => activeChapter.lessons.find((item) => item.id === lessonId) ?? activeChapter.lessons[0], [activeChapter, lessonId]);
   const conceptPack = useMemo(() => getConceptResearchPack(lesson, activeChapter), [lesson, activeChapter]);
+  const cinematicPack = useMemo(() => createMathCinematicLearningPack(lesson, activeChapter), [lesson, activeChapter]);
   const generatedLessonPackage = useMemo(
     () => generateLessonAssetPackage(inputFromCourseLesson(lesson, activeChapter.title)),
     [lesson, activeChapter.title],
@@ -1238,7 +1390,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
         `${activeChapter.chapter}: ${activeChapter.title}`,
         `Textbook section: ${lesson.textbookSection}`,
         `Inquiry: ${lesson.inquiry}`,
-        `Use the full-window concept studio with 5 illustration strategies, 5 worked examples and 5 student exercises.`,
+        `Open the worked-solution player to walk through each step with the matching diagram, then attempt the 5 student exercises.`,
         `Evidence: ${conceptPack.exercises[0].prompt} ${conceptPack.exercises[1].prompt} Extension: ${lesson.exercises.extension}`,
       ].join('\n'),
       createdAt: new Date().toISOString(),
@@ -1252,9 +1404,9 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
       <section className="rounded-lg border border-[#49c8ff]/25 bg-gradient-to-r from-[#0a1736] via-[#061126] to-[#050711] p-4 text-white">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">EIS Maths Studio · Upgraded experience available</p>
+            <p className="text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">EIS Maths Studio · Grade 8 IB MYP</p>
             <p className="mt-1 text-sm font-semibold leading-6 text-slate-200">
-              The new <span className="font-black text-white">Lesson Player</span> pairs an animated explainer with the matching 3D scene and Firestore-persisted progress. The <span className="font-black text-white">Upload Studio</span> generates full lessons from your own materials via Gemma 4.
+              Every lesson includes a <span className="font-black text-white">step-by-step worked solution</span>, key formula and practice exercises with success checks. Use the <span className="font-black text-white">Lesson Player</span> for delivery or the <span className="font-black text-white">Upload Studio</span> to generate new lessons from your own materials.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1368,7 +1520,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
             {isChapterPanelOpen ? (
             <div className="border-t border-gray-100 p-5">
               <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <p className="text-sm leading-6 text-gray-600">Choose a subtopic to open the full-window cinematic lesson. Keep this panel collapsed during teaching for a cleaner workspace.</p>
+                <p className="text-sm leading-6 text-gray-600">Choose a subtopic to open the full-window worked-solution player. Keep this panel collapsed during teaching for a cleaner workspace.</p>
                 <a href={game.href} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white transition hover:bg-slate-800">
                   NeuroQuest Practice <Play className="h-4 w-4" />
                 </a>
@@ -1423,6 +1575,8 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
             onTeachLive={() => saveLessonAssignment('classroom')}
           />
 
+          <CinematicLearningPackPanel pack={cinematicPack} accent={accent} />
+
           {/* Worked Examples — controlled single-select. Opened card spans full row. */}
           <ExpandableSection
             title="Worked Examples"
@@ -1445,11 +1599,13 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
                     isOpen={isOpen}
                     onToggle={() => setOpenExample(isOpen ? null : key)}
                   >
-                    <p className="text-base leading-7 text-gray-700">{example.method}</p>
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5">
-                      <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Answer</span>
-                      <span className="font-mono text-base font-bold text-amber-200">{example.answer}</span>
-                    </div>
+                    <WorkedSolutionSteps
+                      steps={example.steps}
+                      method={example.method}
+                      answer={example.answer}
+                      formula={example.formula}
+                      accent={accent}
+                    />
                   </ExpandableCard>
                 );
               })}
@@ -1525,7 +1681,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
           <div className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/90 px-5 py-4 backdrop-blur">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Generated cinematic lesson</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Worked solution · step-by-step</p>
                 <h2 className="text-xl font-black text-white">{lesson.title}</h2>
               </div>
               <button onClick={() => setIsLessonWindowOpen(false)} className="inline-flex items-center gap-2 rounded-md border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-white/50">
