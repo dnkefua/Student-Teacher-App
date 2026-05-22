@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" font-family="Inter, system-ui, sans-serif">
+  <style>
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .label { font-size: 12px; font-weight: 700; fill: #1e293b; }
+    .role { font-size: 11px; font-weight: 800; fill: #fff; text-anchor: middle; }
+    .sub { font-size: 10px; fill: #f1f5f9; text-anchor: middle; }
+    .arrow { stroke: #7c3aed; stroke-width: 2.5; fill: none; }
+  </style>
+  <rect width="800" height="480" fill="#faf5ff"/>
+  <text x="400" y="32" class="title">The Role of Decomposers</text>
+  <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">Decomposers close the loop — they recycle nutrients from dead matter back into the soil.</text>
+
+  <!-- center -->
+  <g transform="translate(400 240)">
+    <rect x="-70" y="-50" width="140" height="100" rx="14" fill="#7c3aed" stroke="#4c1d95" stroke-width="2"/>
+    <text x="0" y="-25" class="role">Decomposers</text>
+    <text x="0" y="0" font-size="24" text-anchor="middle">🍄</text>
+    <text x="0" y="25" class="sub">bacteria · fungi · worms</text>
+  </g>
+
+  <!-- dead matter -->
+  <g transform="translate(170 130)">
+    <rect x="-60" y="-30" width="120" height="60" rx="10" fill="#a16207" stroke="#451a03" stroke-width="2"/>
+    <text x="0" y="-8" class="role">Dead matter</text>
+    <text x="0" y="14" class="sub">leaves · bones · waste</text>
+  </g>
+
+  <!-- nutrients -->
+  <g transform="translate(620 130)">
+    <rect x="-60" y="-30" width="120" height="60" rx="10" fill="#16a34a" stroke="#14532d" stroke-width="2"/>
+    <text x="0" y="-8" class="role">Nutrients</text>
+    <text x="0" y="14" class="sub">in the soil</text>
+  </g>
+
+  <!-- producers (closes loop) -->
+  <g transform="translate(400 400)">
+    <rect x="-60" y="-30" width="120" height="60" rx="10" fill="#16a34a" stroke="#14532d" stroke-width="2"/>
+    <text x="0" y="-8" class="role">Producers</text>
+    <text x="0" y="14" class="sub">plants &amp; algae</text>
+  </g>
+
+  <!-- arrows -->
+  <path d="M 230 165 Q 300 200 340 220" class="arrow"/>
+  <polygon points="345,222 336,222 338,213" fill="#7c3aed"/>
+  <text x="240" y="200" class="label" fill="#6d28d9">break down →</text>
+
+  <path d="M 470 215 Q 530 175 565 150" class="arrow"/>
+  <polygon points="565,150 556,150 559,159" fill="#7c3aed"/>
+  <text x="540" y="200" class="label" fill="#6d28d9">→ release nutrients</text>
+
+  <path d="M 615 165 Q 540 280 460 360" stroke="#16a34a" stroke-width="2.5" fill="none"/>
+  <polygon points="460,360 467,353 459,350" fill="#16a34a"/>
+  <text x="600" y="280" class="label" fill="#14532d">→ absorbed by roots</text>
+
+  <path d="M 340 395 Q 200 300 175 175" stroke="#a16207" stroke-width="2.5" fill="none"/>
+  <polygon points="175,175 178,184 169,178" fill="#a16207"/>
+  <text x="245" y="305" class="label" fill="#7c2d12">eventually die →</text>
+
+  <!-- info -->
+  <rect x="50" y="430" width="700" height="40" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="400" y="455" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">Without decomposers, dead matter would pile up and nutrients would never return to the soil.</text>
+</svg>

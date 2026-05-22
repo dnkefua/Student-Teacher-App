@@ -5,9 +5,19 @@ export type TabType = 'overview' | 'learn' | 'lesson' | 'practice' | 'assessment
 export interface ConceptDef {
   title: string;
   description: string;
+  /** Long-form teaching paragraphs shown below the description. */
+  paragraphs?: string[];
+  /** Bullet-point key ideas a student should walk away knowing. */
+  keyIdeas?: string[];
   media?: { type: 'image' | 'video'; url: string; caption: string }[];
   vocabulary: { term: string; definition: string; example?: string }[];
   formulas?: { name: string; equation: string; explanation: string; stepByStep?: string[] }[];
+  /**
+   * Optional interactive lab to render INSIDE this concept. The LearnView
+   * dispatches the id to a registered React component, so labs can be
+   * authored once and surfaced anywhere a curriculum entry references them.
+   */
+  interactiveLab?: 'mcdonalds-ads';
 }
 
 export interface Example {

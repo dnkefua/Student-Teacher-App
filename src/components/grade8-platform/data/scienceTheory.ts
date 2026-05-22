@@ -15,12 +15,24 @@ const img_em_spectrum_png = '/grade8-platform/svg/em-spectrum.svg';
 const img_transverse_wave = '/grade8-platform/svg/transverse-wave.svg';
 const img_longitudinal_wave = '/grade8-platform/svg/longitudinal-wave.svg';
 const img_photosynthesis_png = '/grade8-platform/svg/photosynthesis.svg';
+const img_food_chain = '/grade8-platform/svg/food-chain.svg';
+const img_decomposers = '/grade8-platform/svg/decomposers.svg';
 
 export const scienceTheoryData: Record<string, ConceptDef[]> = {
   unit1: [
     {
       title: "Cellular Organization",
-      description: "Cells are the fundamental building blocks of all living organisms. In multicellular organisms, cells specialize to perform specific functions and organize into tissues, organs, and organ systems. Different types of cells have different structures. For example, plant cells typically contain chloroplasts for photosynthesis and a rigid cell wall for structural support, which are completely absent in animal cells.",
+      description: "Cells are the fundamental building blocks of all living organisms. In multicellular organisms, cells specialize to perform specific functions and organize into tissues, organs, and organ systems.",
+      paragraphs: [
+        "Every cell is a tiny self-contained factory. It is bounded by a cell membrane that controls what gets in and out, and contains organelles — miniature 'machines' that each do one job. The nucleus is the control centre (it stores DNA), the mitochondria release energy from food, and ribosomes build proteins.",
+        "Plant cells include three extra features that animal cells do NOT have: a rigid cell wall for structural support, a large central vacuole that stores water and keeps the cell turgid, and chloroplasts where photosynthesis happens. These differences explain why a plant can stand upright and feed itself, while an animal needs a skeleton and has to eat.",
+        "Cells of the same type group into tissues (e.g. muscle tissue), tissues form organs (e.g. the heart), and organs form systems (e.g. the circulatory system). This hierarchy is what makes complex multicellular life possible.",
+      ],
+      keyIdeas: [
+        "Cells → tissues → organs → organ systems → organism.",
+        "Plant cells differ from animal cells in 3 ways: cell wall, large vacuole, chloroplasts.",
+        "Mitochondria release energy from food; chloroplasts capture energy from light.",
+      ],
       media: [
         {
           type: "image",
@@ -47,7 +59,17 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
     },
     {
       title: "The Digestive System",
-      description: "The digestive system breaks down food into simple nutrients such as carbohydrates, fats, and proteins so they can be absorbed into the bloodstream. It relies on a combination of mechanical force and chemical catalysts.",
+      description: "The digestive system breaks down food into simple nutrients so they can be absorbed into the bloodstream.",
+      paragraphs: [
+        "Digestion happens in two ways. Mechanical digestion is the physical breakdown of large pieces of food into smaller pieces — teeth chewing, the stomach churning, the intestines mixing. Mechanical digestion does not change the chemicals; it just increases their surface area.",
+        "Chemical digestion is where enzymes (biological catalysts) break complex molecules into small absorbable nutrients. Salivary amylase begins breaking starches into sugars in the mouth, pepsin breaks proteins in the stomach, and lipase breaks fats in the small intestine.",
+        "The small intestine is where most absorption happens. Its walls are folded into tiny finger-like projections called villi that hugely increase the surface area for nutrients to cross into the bloodstream. The large intestine then reabsorbs water from what remains.",
+      ],
+      keyIdeas: [
+        "Two types of digestion: mechanical (physical) and chemical (with enzymes).",
+        "Order of organs: mouth → esophagus → stomach → small intestine → large intestine.",
+        "Villi in the small intestine maximise surface area for absorption.",
+      ],
       media: [
         {
           type: "image",
@@ -63,7 +85,17 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
     },
     {
       title: "The Circulatory & Respiratory Systems",
-      description: "These two systems work intimately together. The respiratory system pulls oxygen from the air into the bloodstream and expels carbon dioxide. The circulatory system serves as the transport network, pumping this oxygenated blood throughout the entire body.",
+      description: "These two systems work intimately together. The respiratory system gets oxygen into the bloodstream and removes carbon dioxide; the circulatory system transports that blood around the entire body.",
+      paragraphs: [
+        "The respiratory pathway is: nose → trachea → bronchi → bronchioles → alveoli. Alveoli are millions of tiny air sacs inside the lungs surrounded by capillaries. Their thin walls and huge combined surface area make gas exchange fast and efficient — oxygen diffuses INTO the blood, carbon dioxide diffuses OUT.",
+        "The heart is a double pump. The right side sends deoxygenated blood to the lungs (pulmonary circulation), and the left side sends oxygenated blood to the body (systemic circulation). Because human blood passes through the heart twice in one full circuit, we call this a 'double circulatory loop' — it keeps the two blood types from mixing.",
+        "Three vessel types do different jobs. Arteries carry blood AWAY from the heart under high pressure (thick walls). Veins return blood to the heart at low pressure (thinner walls, with valves). Capillaries are one-cell-thick — that is where gas and nutrient exchange happens.",
+      ],
+      keyIdeas: [
+        "Alveoli + capillaries are where O₂ enters the blood and CO₂ leaves.",
+        "Right heart → lungs; left heart → body. Two pumps in one organ.",
+        "Arteries: high pressure, away from heart. Veins: low pressure, back to heart. Capillaries: exchange site.",
+      ],
       media: [
         {
           type: "image",
@@ -106,7 +138,17 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
     },
     {
       title: "Homeostasis",
-      description: "Homeostasis is the necessary process of maintaining a relatively stable internal environment despite external changes or internal disruptions. It relies heavily on negative feedback loops.",
+      description: "Homeostasis is how the body keeps a stable internal environment despite outside changes. It relies on negative feedback loops.",
+      paragraphs: [
+        "A negative feedback loop has five parts: a STIMULUS (a change from the set point), a RECEPTOR that detects it, a CONTROL CENTRE (usually in the brain) that decides what to do, an EFFECTOR that carries out the response, and a RESPONSE that pushes the body back towards the set point.",
+        "Thermoregulation is the classic example. If you get too hot, thermoreceptors in your skin detect the change, the hypothalamus signals the sweat glands to release sweat, blood vessels widen (vasodilation) to release heat, and your body temperature drops back to about 37 °C. If you get too cold, the same loop operates in reverse: shivering and vasoconstriction trap heat.",
+        "Blood glucose works the same way. When sugar in the blood rises after a meal, the pancreas releases insulin, which tells cells to absorb sugar and the liver to store it. When sugar falls too low, the pancreas releases glucagon, which tells the liver to release stored sugar back into the blood.",
+      ],
+      keyIdeas: [
+        "Five parts of any feedback loop: stimulus → receptor → control → effector → response.",
+        "Negative feedback always opposes the change to restore the set point.",
+        "Examples: temperature ≈ 37 °C, blood glucose, water balance, blood pH.",
+      ],
       media: [
         {
           type: "image",
@@ -167,33 +209,95 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
   ],
   unit3: [
     {
-      title: "Ecology: Energy Flow and Interdependence",
-      description: "An ecosystem consists of all the living organisms (biotic factors) and physical environment (abiotic factors) interacting together. Energy from the sun flows linearly through these systems, dramatically decreasing at each trophic stage.",
+      title: "Food Chains — Who Eats Whom",
+      description: "A food chain shows how energy moves through an ecosystem, one organism eating another in a straight line.",
+      paragraphs: [
+        "Every food chain starts with a PRODUCER — a plant or alga that makes its own food by capturing sunlight (photosynthesis). Producers are the only step that gets energy directly from the sun; everything else gets it second-hand by eating.",
+        "Then come the CONSUMERS in order of who eats whom. Primary consumers (herbivores) eat producers. Secondary consumers (carnivores or omnivores) eat primary consumers. Tertiary consumers eat secondary consumers. The last link in the chain — with no predators of its own — is an APEX predator.",
+        "The arrows in a food chain ALWAYS point in the direction energy flows. 'Grass → grasshopper' means the grasshopper eats the grass. Many students get this backwards — read each arrow as 'is eaten by'.",
+      ],
+      keyIdeas: [
+        "Producer → primary → secondary → tertiary → apex.",
+        "Producers capture solar energy; consumers get it second-hand.",
+        "Arrows point in the direction of energy flow (eaten → eater).",
+      ],
+      media: [
+        {
+          type: "image",
+          url: img_food_chain,
+          caption: "A simple grassland food chain. Read each arrow as 'eaten by'."
+        }
+      ],
+      vocabulary: [
+        { term: "Producer", definition: "An organism that makes its own food, usually by photosynthesis.", example: "Grass, trees, algae." },
+        { term: "Consumer", definition: "An organism that gets energy by eating others.", example: "A rabbit (primary) or a fox (secondary)." },
+        { term: "Trophic Level", definition: "A specific feeding level within a food chain or web.", example: "Plants are Trophic Level 1 (Producers)." },
+      ],
+    },
+    {
+      title: "Food Webs and the Energy Pyramid",
+      description: "Real ecosystems contain many interlocking food chains. A food web is the full network. The pyramid shows how energy shrinks dramatically at every level.",
+      paragraphs: [
+        "Animals rarely eat just one thing. A fox might eat rabbits AND mice AND birds, and rabbits are eaten by foxes AND owls AND hawks. When you connect all these overlapping chains, you get a food WEB — a network instead of a single line.",
+        "Only about 10 % of the energy at one trophic level is passed on to the next. The other 90 % is lost as heat from movement, growth, and life processes, or stays locked in undigested parts. That is why ecosystems can only support a few apex predators — there simply is not enough energy left at the top.",
+        "Drawing an ENERGY PYRAMID makes this loss obvious: producers form a wide base, primary consumers a smaller layer, secondary smaller still, and apex predators a tiny tip.",
+      ],
+      keyIdeas: [
+        "A food web = many overlapping food chains.",
+        "Only ~10 % of energy passes from one level to the next.",
+        "Fewer organisms can be supported at higher trophic levels.",
+      ],
       media: [
         {
           type: "image",
           url: img_foodweb_jpg,
-          caption: "Ecological pyramid displaying the severe energy loss between producers, primary consumers, and apex predators."
+          caption: "Energy pyramid showing the 10 % rule and dramatic energy loss between trophic levels."
         }
       ],
       vocabulary: [
-        { term: "Trophic Level", definition: "A specific feeding level within a food chain or web.", example: "Plants are Trophic Level 1 (Producers)." },
-        { term: "Mutualism", definition: "A symbiotic biological relationship where both species benefit.", example: "Clownfish residing inside a sea anemone." },
-        { term: "Carrying Capacity", definition: "The maximum population size an environment can sustain indefinitely.", example: "Limited by food, water, or physical space." }
+        { term: "Food Web", definition: "A network of overlapping food chains in an ecosystem." },
+        { term: "10 % Rule", definition: "About 90 % of energy is lost between trophic levels; only ~10 % passes on." },
+        { term: "Apex Predator", definition: "A predator with no natural predators of its own.", example: "Lion, shark, eagle." },
       ],
       formulas: [
         {
           name: "The 10% Energy Rule",
-          equation: "Energy Received = Energy Available at Previous Level × 0.10",
-          explanation: "Estimates the energy transfer efficiency between trophic levels.",
+          equation: "Energy Received = Energy at Previous Level × 0.10",
+          explanation: "Estimates how much energy a trophic level passes up to the next.",
           stepByStep: [
-            "Step 1: Identify the total energy present at the lower trophic level (e.g., producers having 10,000 kJ).",
-            "Step 2: Multiply by 0.10 (or 10%) to account for the energy lost to heat and bodily processes.",
-            "Step 3: The result is the energy available to the next predator level up."
-          ]
+            "Step 1: Identify the total energy at the lower trophic level (e.g. producers = 10 000 kJ).",
+            "Step 2: Multiply by 0.10 to account for the 90 % lost as heat and life processes.",
+            "Step 3: The result is the energy available at the next level up (e.g. 1 000 kJ).",
+          ],
+        },
+      ],
+    },
+    {
+      title: "Decomposers — Recycling the Ecosystem",
+      description: "Decomposers break down dead organisms and waste, returning nutrients to the soil so producers can use them again.",
+      paragraphs: [
+        "Bacteria, fungi (mushrooms, moulds) and detritivores like earthworms are nature's recyclers. When a plant or animal dies, decomposers digest it externally, extracting energy for themselves and releasing nitrogen, phosphorus and other nutrients back into the soil.",
+        "Without decomposers, dead matter would pile up indefinitely and the nutrients trapped inside it would never return to plants. The whole food chain would grind to a halt because the producers at the base would have nothing to grow with.",
+        "Decomposers also act on every trophic level — not just the top. A dead grasshopper, a dead frog and a dead snake are all broken down by the same recyclers, closing the loop of the ecosystem.",
+      ],
+      keyIdeas: [
+        "Decomposers convert dead matter back into raw nutrients.",
+        "Without them, producers would run out of soil nutrients.",
+        "Bacteria + fungi + detritivores (worms, beetles) are the main decomposer groups.",
+      ],
+      media: [
+        {
+          type: "image",
+          url: img_decomposers,
+          caption: "Decomposers close the loop — dead matter is broken down and nutrients return to the soil for producers."
         }
-      ]
-    }
+      ],
+      vocabulary: [
+        { term: "Decomposer", definition: "An organism (bacterium, fungus, detritivore) that breaks down dead matter." },
+        { term: "Detritivore", definition: "An animal that eats decomposing organic matter.", example: "Earthworms, woodlice." },
+        { term: "Nutrient Cycle", definition: "The continuous movement of nutrients from soil → producers → consumers → decomposers → soil." },
+      ],
+    },
   ],
   unit4: [
     {

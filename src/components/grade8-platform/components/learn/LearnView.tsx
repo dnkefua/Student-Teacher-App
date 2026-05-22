@@ -1,23 +1,45 @@
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { UnitId, SubjectId, ConceptDef } from '../../types';
 import { scienceTheoryData } from '../../data/scienceTheory';
-import { BookOpen, Calculator, Stethoscope as Microscope, Type, Focus, CheckCircle2, ChevronRight, Zap, Maximize2 } from 'lucide-react';
+import { englishTheoryData } from '../../data/englishTheory';
+import { BookOpen, Calculator, Type, Focus, CheckCircle2, Zap, Maximize2, Lightbulb } from 'lucide-react';
 import ImageModal from '../ImageModal';
+
+// Lazy-load the interactive McDonald's persuasive-devices lab so the bundle
+// only pulls it in when the student lands on a concept that requires it.
+const MediaAdvertisementLab = dynamic(
+  () => import('@/components/english/MediaAdvertisementLab').then((m) => m.MediaAdvertisementLab),
+  { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading advertising lab…</div> },
+);
+
+/**
+ * Registry of available interactive labs. The data only stores a short id;
+ * the LearnView dispatches that id to the right React component here.
+ */
+const INTERACTIVE_LABS: Record<NonNullable<ConceptDef['interactiveLab']>, React.ComponentType> = {
+  'mcdonalds-ads': MediaAdvertisementLab,
+};
 
 export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {
   const [modalImage, setModalImage] = useState<{url: string, caption?: string} | null>(null);
 
-  if (subject !== 'science') {
+  // Pick the theory data set for the active subject. Maths still has no
+  // dedicated "Learn" concepts in this platform — it surfaces via Lessons.
+  const concepts: ConceptDef[] | undefined =
+    subject === 'science' ? scienceTheoryData[unit] :
+    subject === 'english' ? englishTheoryData[unit] :
+    undefined;
+
+  if (!subject || subject === 'math') {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500 min-h-[50vh]">
-        <BookOpen className="w-16 h-16 mb-4 opacity-50 text-emerald-500" />
-        <h3 className="text-xl font-bold text-slate-800 mb-2">Core Concepts Not Integrated Yet</h3>
-        <p>The "Learn" concepts module for this subject is currently under development.</p>
+        <BookOpen className="w-16 h-16 mb-4 opacity-50 text-blue-500" />
+        <h3 className="text-xl font-bold text-slate-800 mb-2">Use the Lessons tab for Maths</h3>
+        <p>Maths content lives in the Lessons tab with worked examples and step-by-step working.</p>
       </div>
     );
   }
-
-  const concepts = scienceTheoryData[unit];
 
   if (!concepts || concepts.length === 0) {
     return (
@@ -59,7 +81,39 @@ export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId
           <div className="p-8 space-y-8">
             <div className="prose prose-slate max-w-none text-lg text-slate-700 leading-relaxed font-medium">
               <p>{concept.description}</p>
+              {concept.paragraphs?.map((para, pi) => (
+                <p key={pi} className="mt-3 text-base leading-7 font-normal">
+                  {para}
+                </p>
+              ))}
             </div>
+
+            {concept.keyIdeas && concept.keyIdeas.length > 0 && (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-amber-800">
+                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                  Key Ideas
+                </h3>
+                <ul className="space-y-2">
+                  {concept.keyIdeas.map((idea, ki) => (
+                    <li key={ki} className="flex gap-2 text-sm leading-6 text-amber-900">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                      <span>{idea}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {concept.interactiveLab && INTERACTIVE_LABS[concept.interactiveLab] && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 overflow-hidden">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-500">
+                  <Focus className="h-4 w-4 text-purple-500" />
+                  Interactive Lab
+                </h3>
+                {React.createElement(INTERACTIVE_LABS[concept.interactiveLab])}
+              </div>
+            )}
 
             {/* Media/Diagrams Section */}
             {concept.media && concept.media.length > 0 && (
