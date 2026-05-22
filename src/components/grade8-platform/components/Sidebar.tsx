@@ -1,0 +1,455 @@
+import React, { useState, useEffect } from 'react';
+import { TabType, UnitId, SubjectId } from '../types';
+import { BookOpen, Target, PenTool, CheckSquare, GraduationCap, ChevronDown, Menu, BookText, Calculator, FlaskConical } from 'lucide-react';
+
+interface SidebarProps {
+  currentSubject: SubjectId;
+  setSubject: (subject: SubjectId) => void;
+  currentUnit: UnitId;
+  setUnit: (unit: UnitId) => void;
+  currentTab: TabType;
+  setTab: (tab: TabType) => void;
+  isMobileOpen: boolean;
+  setIsMobileOpen: (isOpen: boolean) => void;
+}
+
+export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, currentTab, setTab, isMobileOpen, setIsMobileOpen }: SidebarProps) {
+  const [globalProgress, setGlobalProgress] = useState(0);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const calculateProgress = () => {
+      let totalQuestions = 5;
+      if (currentSubject === 'math') totalQuestions = 68;
+      if (currentSubject === 'science') totalQuestions = 30; // 6 units * 5 Qs
+      
+      let completed = 0;
+      ['unit1', 'unit2', 'unit3', 'unit4', 'unit5', 'unit6'].forEach(unit => {
+        const str = localStorage.getItem(`practice_completed_${currentSubject}_${unit}`);
+        if(str) {
+          const arr = JSON.parse(str);
+          completed += arr.length;
+        }
+      });
+      setGlobalProgress(Math.round((completed / totalQuestions) * 100));
+    };
+
+    calculateProgress();
+    const interval = setInterval(calculateProgress, 2000);
+    return () => clearInterval(interval);
+  }, [currentSubject]);
+
+  // Rest of the getNavItems logic...
+
+  const getNavItems = () => {
+    if (currentSubject === 'english') {
+      return [
+        { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
+        { id: 'lesson' as TabType, label: currentUnit === 'unit1' ? '1.2 Core Topics & Exercises' : currentUnit === 'unit2' ? '2.2 Core Topics & Exercises' : currentUnit === 'unit3' ? '3.2 Core Topics & Exercises' : currentUnit === 'unit4' ? '4.2 Core Topics & Exercises' : '5.2 Core Topics & Exercises', icon: <BookOpen className="w-5 h-5" /> },
+        { id: 'practice' as TabType, label: 'Practice & Analysis', icon: <PenTool className="w-5 h-5" /> },
+        { id: 'assessment' as TabType, label: 'Assessment Framework', icon: <CheckSquare className="w-5 h-5" /> },
+        { id: 'assets' as TabType, label: 'Learning Assets', icon: <BookText className="w-5 h-5" /> },
+      ];
+    }
+
+    if (currentSubject === 'science') {
+      const getLessonTitle = () => {
+        switch (currentUnit) {
+          case 'unit1': return '1.2 Step-by-Step Problems';
+          case 'unit2': return '2.2 Step-by-Step Problems';
+          case 'unit3': return '3.2 Step-by-Step Problems';
+          case 'unit4': return '4.2 Step-by-Step Problems';
+          case 'unit5': return '5.2 Step-by-Step Problems';
+          case 'unit6': return '6.2 Step-by-Step Problems';
+          default: return 'Core Topics & Exercises';
+        }
+      };
+
+      return [
+        { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
+        { id: 'learn' as TabType, label: 'Core Concepts', icon: <BookOpen className="w-5 h-5" /> },
+        { id: 'lesson' as TabType, label: getLessonTitle(), icon: <Calculator className="w-5 h-5" /> },
+        { id: 'practice' as TabType, label: 'Practice & Analysis', icon: <PenTool className="w-5 h-5" /> },
+        { id: 'assessment' as TabType, label: 'Assessment Framework', icon: <CheckSquare className="w-5 h-5" /> },
+        { id: 'assets' as TabType, label: 'Learning Assets', icon: <BookText className="w-5 h-5" /> },
+      ];
+    }
+
+    switch (currentUnit) {
+      case 'unit1':
+        return [
+          { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '1.1 Proportions & %', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'practice' as TabType, label: 'Practice (10 Qs)', icon: <PenTool className="w-5 h-5" /> },
+          { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
+          { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
+        ];
+      case 'unit2':
+        return [
+          { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '2.1 & 2.2 Models', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'practice' as TabType, label: 'Practice (18 Qs)', icon: <PenTool className="w-5 h-5" /> },
+          { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
+          { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
+        ];
+      case 'unit3':
+        return [
+          { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '3.1 & 3.2 Spatial', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'practice' as TabType, label: 'Practice (20 Qs)', icon: <PenTool className="w-5 h-5" /> },
+          { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
+          { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
+        ];
+      case 'unit4':
+        return [
+          { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '4.1 & 4.2 Data', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'practice' as TabType, label: 'Practice (20 Qs)', icon: <PenTool className="w-5 h-5" /> },
+          { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
+          { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const navItems = getNavItems();
+  
+  const getThemeColor = () => {
+    switch (currentUnit) {
+      case 'unit1': return 'cyan';
+      case 'unit2': return 'violet';
+      case 'unit3': return 'emerald';
+      case 'unit4': return 'amber';
+      case 'unit5': return 'indigo';
+      case 'unit6': return 'lime';
+      default: return 'cyan';
+    }
+  };
+  
+  const theme = getThemeColor();
+
+  return (
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+      
+      <div className={`
+        fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0
+        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        w-60 md:w-60 bg-slate-900 border-r border-slate-800 text-slate-100 flex flex-col h-full shrink-0
+      `}>
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between gap-2.5 h-16 shrink-0">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <div className="p-1.5 rounded bg-slate-800 text-cyan-400">
+              {currentSubject === 'math' ? <Calculator className="w-4 h-4 text-cyan-400" /> : currentSubject === 'science' ? <FlaskConical className="w-4 h-4 text-emerald-400" /> : <BookText className="w-4 h-4 text-amber-400" />}
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-bold text-sm tracking-wide capitalize text-white">{currentSubject === 'math' ? 'Maths' : currentSubject === 'science' ? 'Science' : 'English'}</h1>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest font-black">Workspace navigator</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setIsMobileOpen(false)} 
+            className="md:hidden p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        </div>
+      
+      <div className="p-4 flex-1 overflow-y-auto">
+        <div className="mb-6 space-y-2">
+          {currentSubject === 'english' && (
+            <>
+               <button 
+                onClick={() => { setUnit('unit1'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border ${
+                currentUnit === 'unit1' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-amber-400 mb-0.5">UNIT 1</div>
+                  <div className="font-semibold text-sm">Advertising & Persuasion</div>
+                </div>
+                {currentUnit === 'unit1' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit2'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit2' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-rose-400 mb-0.5">UNIT 2</div>
+                  <div className="font-semibold text-sm">The Novel</div>
+                </div>
+                {currentUnit === 'unit2' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit3'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit3' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-fuchsia-400 mb-0.5">UNIT 3</div>
+                  <div className="font-semibold text-sm">Voices in Verse</div>
+                </div>
+                {currentUnit === 'unit3' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit4'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit4' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-amber-400 mb-0.5">UNIT 4</div>
+                  <div className="font-semibold text-sm">Language & Film</div>
+                </div>
+                {currentUnit === 'unit4' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit5'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit5' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-indigo-400 mb-0.5">UNIT 5</div>
+                  <div className="font-semibold text-sm">Shakespeare</div>
+                </div>
+                {currentUnit === 'unit5' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+            </>
+          )}
+
+          {currentSubject === 'science' && (
+            <>
+               <button 
+                onClick={() => { setUnit('unit1'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border ${
+                currentUnit === 'unit1' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-emerald-400 mb-0.5">UNIT 1</div>
+                  <div className="font-semibold text-sm">Who are we?</div>
+                </div>
+                {currentUnit === 'unit1' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit2'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit2' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-teal-400 mb-0.5">UNIT 2</div>
+                  <div className="font-semibold text-sm">How do we map matter?</div>
+                </div>
+                {currentUnit === 'unit2' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit3'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit3' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-green-400 mb-0.5">UNIT 3</div>
+                  <div className="font-semibold text-sm">Ecology</div>
+                </div>
+                {currentUnit === 'unit3' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit4'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit4' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-cyan-400 mb-0.5">UNIT 4</div>
+                  <div className="font-semibold text-sm">Energy & Future</div>
+                </div>
+                {currentUnit === 'unit4' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit5'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit5' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-blue-400 mb-0.5">UNIT 5</div>
+                  <div className="font-semibold text-sm">What does a wave tell us</div>
+                </div>
+                {currentUnit === 'unit5' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+              
+              <button 
+                onClick={() => { setUnit('unit6'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border mt-2 ${
+                currentUnit === 'unit6' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-lime-400 mb-0.5">UNIT 6</div>
+                  <div className="font-semibold text-sm">Photosynthesis</div>
+                </div>
+                {currentUnit === 'unit6' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+            </>
+          )}
+
+          {currentSubject === 'math' && (
+            <>
+              <button 
+                onClick={() => { setUnit('unit1'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border ${
+                currentUnit === 'unit1' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-cyan-400 mb-0.5">UNIT 1</div>
+                  <div className="font-semibold text-sm">Numerical & Abstract</div>
+                </div>
+                {currentUnit === 'unit1' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+              
+              <button 
+                onClick={() => { setUnit('unit2'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border ${
+                currentUnit === 'unit2' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-violet-400 mb-0.5">UNIT 2</div>
+                  <div className="font-semibold text-sm">Thinking with Models</div>
+                </div>
+                {currentUnit === 'unit2' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit3'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border ${
+                currentUnit === 'unit3' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-emerald-400 mb-0.5">UNIT 3</div>
+                  <div className="font-semibold text-sm">Spatial Reasoning</div>
+                </div>
+                {currentUnit === 'unit3' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+
+              <button 
+                onClick={() => { setUnit('unit4'); setTab('overview'); }}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border ${
+                currentUnit === 'unit4' 
+                  ? 'bg-slate-800/80 border-slate-700 text-white' 
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}>
+                <div className="text-left">
+                  <div className="text-xs font-bold text-amber-400 mb-0.5">UNIT 4</div>
+                  <div className="font-semibold text-sm">Reasoning with Data</div>
+                </div>
+                {currentUnit === 'unit4' && <ChevronDown className="w-4 h-4 text-slate-500" />}
+              </button>
+            </>
+          )}
+
+          {isCollapsed && (
+             <div className="flex flex-col gap-4 items-center mt-4">
+                <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 shrink-0" title={`Current Subject: ${currentSubject}`}>
+                   {currentSubject === 'math' ? <Calculator className="w-5 h-5" /> : <BookText className="w-5 h-5" /> }
+                </div>
+                <div className="w-8 h-8 rounded-full border-2 border-slate-700 flex items-center justify-center text-xs font-bold">
+                  {currentUnit.replace('unit', 'U')}
+                </div>
+             </div>
+          )}
+        </div>
+
+        {true && (
+          <>
+            <h2 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">
+              {currentUnit === 'unit1' && 'Unit 1 Navigation'}
+              {currentUnit === 'unit2' && 'Unit 2 Navigation'}
+              {currentUnit === 'unit3' && 'Unit 3 Navigation'}
+              {currentUnit === 'unit4' && 'Unit 4 Navigation'}
+              {currentUnit === 'unit5' && 'Unit 5 Navigation'}
+            </h2>
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
+                    currentTab === item.id 
+                      ? currentSubject === 'english'
+                        ? currentUnit === 'unit1' ? 'bg-amber-500/10 text-amber-400'
+                          : currentUnit === 'unit2' ? 'bg-rose-500/10 text-rose-400'
+                          : currentUnit === 'unit3' ? 'bg-fuchsia-500/10 text-fuchsia-400'
+                          : currentUnit === 'unit4' ? 'bg-amber-500/10 text-amber-400'
+                          : 'bg-indigo-500/10 text-indigo-400'
+                        : currentUnit === 'unit1' ? 'bg-cyan-500/10 text-cyan-400' 
+                        : currentUnit === 'unit2' ? 'bg-violet-500/10 text-violet-400'
+                        : currentUnit === 'unit3' ? 'bg-emerald-500/10 text-emerald-400'
+                        : 'bg-amber-500/10 text-amber-400'
+                      : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                  }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </>
+        )}
+      </div>
+      
+      {true && (
+        <div className="p-4 border-t border-slate-800 shrink-0">
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <p className="text-xs text-slate-300 font-medium">Practice Progress</p>
+            <div className="mt-2 w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div className="h-full bg-indigo-500 rounded-full transition-all duration-500" style={{ width: `${globalProgress}%` }}></div>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-2 text-right">
+              {globalProgress}% Complete
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+    </>
+  );
+}

@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Inter, system-ui, sans-serif">
+  <style>
+    .label { font-size: 13px; font-weight: 600; fill: #1e293b; }
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .leader { stroke: #475569; stroke-width: 1.2; fill: none; }
+    .dot { fill: #475569; }
+    .heading { font-size: 11px; font-weight: 700; fill: #ef4444; letter-spacing: 1px; text-transform: uppercase; }
+  </style>
+  <rect width="800" height="500" fill="#f8fafc"/>
+  <text x="400" y="32" class="title">Animal Cell  vs  Plant Cell</text>
+
+  <!-- ANIMAL CELL (left) -->
+  <text x="200" y="62" class="heading" text-anchor="middle">Animal Cell</text>
+  <ellipse cx="200" cy="270" rx="155" ry="135" fill="#fde68a" stroke="#b45309" stroke-width="2.5"/>
+  <!-- nucleus -->
+  <circle cx="200" cy="260" r="38" fill="#a78bfa" stroke="#6d28d9" stroke-width="2"/>
+  <circle cx="208" cy="252" r="10" fill="#6d28d9"/>
+  <!-- mitochondria -->
+  <ellipse cx="135" cy="200" rx="22" ry="11" fill="#f87171" stroke="#b91c1c" stroke-width="1.5" transform="rotate(-25 135 200)"/>
+  <ellipse cx="265" cy="330" rx="22" ry="11" fill="#f87171" stroke="#b91c1c" stroke-width="1.5" transform="rotate(20 265 330)"/>
+  <!-- vesicles -->
+  <circle cx="150" cy="320" r="8" fill="#34d399"/>
+  <circle cx="240" cy="200" r="6" fill="#34d399"/>
+  <!-- ribosomes (dots on ER) -->
+  <path d="M 180 215 Q 200 200 230 230 Q 215 250 195 245" stroke="#0ea5e9" stroke-width="2.5" fill="none"/>
+  <circle cx="186" cy="215" r="2" class="dot"/>
+  <circle cx="207" cy="207" r="2" class="dot"/>
+  <circle cx="225" cy="230" r="2" class="dot"/>
+  <!-- labels with leaders -->
+  <text x="60" y="160" class="label" text-anchor="end">Cell membrane</text>
+  <path class="leader" d="M 62 158 L 100 175"/>
+  <circle cx="100" cy="175" r="2.5" class="dot"/>
+
+  <text x="60" y="270" class="label" text-anchor="end">Nucleus</text>
+  <path class="leader" d="M 62 268 L 165 262"/>
+
+  <text x="60" y="205" class="label" text-anchor="end">Mitochondrion</text>
+  <path class="leader" d="M 62 203 L 120 200"/>
+
+  <text x="60" y="335" class="label" text-anchor="end">Cytoplasm</text>
+  <path class="leader" d="M 62 333 L 165 340"/>
+
+  <text x="350" y="232" class="label" text-anchor="start">Endoplasmic</text>
+  <text x="350" y="248" class="label" text-anchor="start">reticulum</text>
+  <path class="leader" d="M 348 240 L 230 230"/>
+
+  <!-- PLANT CELL (right) -->
+  <text x="600" y="62" class="heading" text-anchor="middle">Plant Cell</text>
+  <rect x="455" y="140" width="290" height="260" rx="14" fill="#86efac" stroke="#15803d" stroke-width="4"/>
+  <rect x="465" y="150" width="270" height="240" rx="8" fill="#bbf7d0" stroke="#16a34a" stroke-width="1.5"/>
+  <!-- vacuole (large central) -->
+  <rect x="500" y="195" width="200" height="150" rx="12" fill="#fde047" stroke="#a16207" stroke-width="2"/>
+  <!-- nucleus -->
+  <circle cx="540" cy="240" r="28" fill="#a78bfa" stroke="#6d28d9" stroke-width="2"/>
+  <!-- chloroplasts -->
+  <ellipse cx="490" cy="365" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
+  <ellipse cx="540" cy="375" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
+  <ellipse cx="690" cy="175" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
+  <ellipse cx="660" cy="380" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
+  <!-- mitochondria -->
+  <ellipse cx="610" cy="170" rx="18" ry="9" fill="#f87171" stroke="#b91c1c" stroke-width="1.5"/>
+
+  <!-- plant labels -->
+  <text x="760" y="135" class="label" text-anchor="end">Cell wall (rigid)</text>
+  <path class="leader" d="M 758 138 L 745 145"/>
+
+  <text x="760" y="170" class="label" text-anchor="end">Cell membrane</text>
+  <path class="leader" d="M 758 173 L 735 158"/>
+
+  <text x="760" y="270" class="label" text-anchor="end">Large central vacuole</text>
+  <path class="leader" d="M 758 273 L 700 270"/>
+
+  <text x="760" y="380" class="label" text-anchor="end">Chloroplast</text>
+  <path class="leader" d="M 758 378 L 678 380"/>
+
+  <text x="425" y="245" class="label" text-anchor="end">Nucleus</text>
+  <path class="leader" d="M 427 243 L 512 240"/>
+
+  <!-- KEY DIFFERENCES box -->
+  <rect x="40" y="430" width="720" height="55" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="60" y="452" font-size="12" font-weight="800" fill="#0f172a">KEY DIFFERENCES:</text>
+  <text x="60" y="472" font-size="12" fill="#334155">Plant cells have a rigid <tspan font-weight="700">cell wall</tspan>, large <tspan font-weight="700">central vacuole</tspan>, and <tspan font-weight="700">chloroplasts</tspan> (for photosynthesis). Animal cells do not.</text>
+</svg>

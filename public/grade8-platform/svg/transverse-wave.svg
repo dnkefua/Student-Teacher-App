@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" font-family="Inter, system-ui, sans-serif">
+  <style>
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .label { font-size: 12px; font-weight: 700; }
+  </style>
+  <rect width="800" height="360" fill="#f0fdfa"/>
+  <text x="400" y="32" class="title">Transverse Wave — Wavelength, Amplitude, Crest, Trough</text>
+  <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">Particles oscillate perpendicular to the direction of energy transfer</text>
+
+  <!-- baseline -->
+  <line x1="60" y1="200" x2="740" y2="200" stroke="#94a3b8" stroke-dasharray="4 4"/>
+  <text x="60" y="220" font-size="10" fill="#475569">equilibrium / undisturbed position</text>
+
+  <!-- wave (two full wavelengths) -->
+  <path d="M 80 200 Q 130 80 180 200 T 280 200 T 380 200 T 480 200 T 580 200 T 680 200"
+    fill="none" stroke="#0ea5e9" stroke-width="3"/>
+
+  <!-- direction arrow -->
+  <path d="M 690 200 L 720 200" stroke="#0f172a" stroke-width="2"/>
+  <polygon points="720,200 712,196 712,204" fill="#0f172a"/>
+  <text x="710" y="190" font-size="11" font-weight="700" fill="#0f172a" text-anchor="end">direction of wave →</text>
+
+  <!-- wavelength bracket -->
+  <line x1="130" y1="100" x2="330" y2="100" stroke="#dc2626" stroke-width="1.5"/>
+  <line x1="130" y1="92" x2="130" y2="108" stroke="#dc2626"/>
+  <line x1="330" y1="92" x2="330" y2="108" stroke="#dc2626"/>
+  <text x="230" y="86" class="label" fill="#dc2626" text-anchor="middle">wavelength (λ)</text>
+
+  <!-- amplitude -->
+  <line x1="130" y1="200" x2="130" y2="80" stroke="#16a34a" stroke-width="1.5"/>
+  <line x1="125" y1="80" x2="135" y2="80" stroke="#16a34a"/>
+  <text x="142" y="140" class="label" fill="#16a34a">amplitude (A)</text>
+
+  <!-- crest -->
+  <text x="130" y="68" font-size="11" font-weight="700" fill="#0c4a6e" text-anchor="middle">crest</text>
+  <line x1="130" y1="72" x2="130" y2="78" stroke="#0c4a6e"/>
+
+  <!-- trough -->
+  <text x="230" y="335" font-size="11" font-weight="700" fill="#0c4a6e" text-anchor="middle">trough</text>
+  <line x1="230" y1="320" x2="230" y2="328" stroke="#0c4a6e"/>
+
+  <!-- formula box -->
+  <rect x="60" y="270" width="680" height="50" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="80" y="290" font-size="11" font-weight="800" fill="#0f172a">WAVE EQUATION:</text>
+  <text x="80" y="308" font-size="11" fill="#334155">speed (m/s) = frequency (Hz) × wavelength (m)  →  v = f × λ</text>
+</svg>

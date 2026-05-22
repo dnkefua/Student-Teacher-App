@@ -261,6 +261,109 @@ function clampProgress(value: number) {
   return Math.max(0, Math.min(100, value));
 }
 
+type MathExamPack = {
+  id: string;
+  type: 'Exam' | 'GL Exam';
+  title: string;
+  duration: string;
+  marks: number;
+  focus: string;
+  questions: string[];
+};
+
+function createMathExamPacks(lesson: CourseLesson): MathExamPack[] {
+  const fluency = lesson.exercises.fluency;
+  const reasoning = lesson.exercises.reasoning;
+  const extension = lesson.exercises.extension;
+
+  return [
+    {
+      id: `${lesson.id}-exam-1`,
+      type: 'Exam',
+      title: 'Exam 1 - Concept Check',
+      duration: '20 minutes',
+      marks: 20,
+      focus: 'Core knowledge, vocabulary, and method accuracy.',
+      questions: [
+        lesson.workedExample.prompt,
+        fluency[0] ?? `Answer a fluency question on ${lesson.title}.`,
+        fluency[1] ?? `Show a second method for ${lesson.title}.`,
+        `Explain the key idea behind ${lesson.title} in two sentences.`,
+      ],
+    },
+    {
+      id: `${lesson.id}-exam-2`,
+      type: 'Exam',
+      title: 'Exam 2 - Skills and Methods',
+      duration: '30 minutes',
+      marks: 30,
+      focus: 'Fluency, multi-step working, and clear mathematical communication.',
+      questions: [
+        fluency[2] ?? lesson.workedExample.prompt,
+        reasoning[0] ?? `Solve a reasoning problem on ${lesson.title}.`,
+        `Create and solve a similar problem for ${lesson.title}.`,
+        `Check your answer using estimation, substitution, or a diagram.`,
+      ],
+    },
+    {
+      id: `${lesson.id}-exam-3`,
+      type: 'Exam',
+      title: 'Exam 3 - Challenge Paper',
+      duration: '40 minutes',
+      marks: 40,
+      focus: 'Reasoning, unfamiliar contexts, and extension challenge work.',
+      questions: [
+        reasoning[1] ?? reasoning[0] ?? `Explain a misconception in ${lesson.title}.`,
+        extension,
+        `Write a model solution for ${lesson.workedExample.prompt}`,
+        `Design one exam question that tests ${lesson.objectives[0]?.toLowerCase() ?? lesson.title.toLowerCase()}.`,
+      ],
+    },
+    {
+      id: `${lesson.id}-gl-1`,
+      type: 'GL Exam',
+      title: 'GL Exam 1 - Fast Fluency',
+      duration: '18 minutes',
+      marks: 25,
+      focus: 'Timed arithmetic, number sense, and short-answer accuracy.',
+      questions: [
+        `Multiple choice: ${fluency[0] ?? lesson.workedExample.prompt}`,
+        `Short answer: ${fluency[1] ?? lesson.workedExample.prompt}`,
+        `Select the best estimate for: ${lesson.workedExample.prompt}`,
+        `Spot the error in a worked solution for ${lesson.title}.`,
+      ],
+    },
+    {
+      id: `${lesson.id}-gl-2`,
+      type: 'GL Exam',
+      title: 'GL Exam 2 - Reasoning and Logic',
+      duration: '22 minutes',
+      marks: 30,
+      focus: 'Pattern recognition, logical steps, and explanation under time pressure.',
+      questions: [
+        `Choose the statement that must be true: ${reasoning[0] ?? lesson.inquiry}`,
+        `Complete the missing step in the solution to: ${lesson.workedExample.prompt}`,
+        `Which diagram would best represent ${lesson.title}? Explain briefly.`,
+        `Reasoning: ${reasoning[1] ?? extension}`,
+      ],
+    },
+    {
+      id: `${lesson.id}-gl-3`,
+      type: 'GL Exam',
+      title: 'GL Exam 3 - Mixed Application',
+      duration: '30 minutes',
+      marks: 35,
+      focus: 'Mixed GL-style problem solving with diagrams, tables, and applied contexts.',
+      questions: [
+        `Data interpretation: create a table or diagram for ${lesson.title}.`,
+        `Applied question: ${extension}`,
+        `Non-calculator reasoning: solve a simpler related case first, then generalise.`,
+        `Final check: explain why your answer is reasonable.`,
+      ],
+    },
+  ];
+}
+
 function InteractiveConceptCanvas({ mode, accent, progress }: { mode: AnimationMode; accent: string; progress: number }) {
   const t = progress / 100;
   const percent = Math.round(progress);
@@ -1058,12 +1161,6 @@ function WorkedSolutionSteps({
   const [index, setIndex] = useState(0);
   const [showAll, setShowAll] = useState(false);
 
-  // Reset when a different example is selected (steps reference changes)
-  useEffect(() => {
-    setIndex(0);
-    setShowAll(false);
-  }, [safeSteps]);
-
   if (!safeSteps) {
     return (
       <div>
@@ -1233,6 +1330,56 @@ function LessonHeroCard({
   );
 }
 
+function MathExamPanel({ lesson, accent }: { lesson: CourseLesson; accent: string }) {
+  const packs = createMathExamPacks(lesson);
+
+  return (
+    <section className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Exams</p>
+          <h3 className="mt-1 text-lg font-black text-gray-900">3 Exams + 3 GL Exams</h3>
+        </div>
+        <span className="rounded-md border px-2.5 py-1 text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${accent}55`, color: accent }}>
+          {lesson.title}
+        </span>
+      </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        {packs.map((pack) => (
+          <details key={pack.id} className="group rounded-lg border border-gray-200 bg-gray-50 p-3 open:bg-white open:shadow-sm">
+            <summary className="cursor-pointer list-none">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: pack.type === 'GL Exam' ? '#7c3aed' : accent }}>
+                    {pack.type}
+                  </p>
+                  <h4 className="mt-1 font-black text-gray-950">{pack.title}</h4>
+                  <p className="mt-1 text-xs leading-5 text-gray-600">{pack.focus}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-xs font-black text-gray-900">{pack.marks} marks</p>
+                  <p className="mt-1 text-[11px] font-semibold text-gray-500">{pack.duration}</p>
+                </div>
+              </div>
+            </summary>
+            <ol className="mt-3 space-y-2 border-t border-gray-200 pt-3">
+              {pack.questions.map((question, index) => (
+                <li key={`${pack.id}-${index}`} className="flex gap-2 rounded-md bg-white p-2 text-xs leading-5 text-gray-700">
+                  <span className="font-black" style={{ color: pack.type === 'GL Exam' ? '#7c3aed' : accent }}>
+                    {index + 1}.
+                  </span>
+                  <span>{question}</span>
+                </li>
+              ))}
+            </ol>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /** Section wrapper with a header (title + count) and a children slot. */
 function ExpandableSection({
   title,
@@ -1344,8 +1491,8 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
   const activeChapter = useMemo(() => eisMypMathCourse.find((chapter) => chapter.id === chapterId) ?? eisMypMathCourse[0], [chapterId]);
   const [lessonId, setLessonId] = useState(activeChapter.lessons[0].id);
   const [isLessonWindowOpen, setIsLessonWindowOpen] = useState(false);
-  const [isCourseMapOpen, setIsCourseMapOpen] = useState(false);
-  const [isChapterPanelOpen, setIsChapterPanelOpen] = useState(false);
+  const [isCourseMapOpen, setIsCourseMapOpen] = useState(true);
+  const [isChapterPanelOpen, setIsChapterPanelOpen] = useState(true);
   const [openExample, setOpenExample] = useState<string | null>(null);
   const [openExercise, setOpenExercise] = useState<string | null>('extension');
   const [openProject, setOpenProject] = useState(true);
@@ -1400,56 +1547,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
   };
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-lg border border-[#49c8ff]/25 bg-gradient-to-r from-[#0a1736] via-[#061126] to-[#050711] p-4 text-white">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wide text-[#8ddfff]">EIS Maths Studio · Grade 8 IB MYP</p>
-            <p className="mt-1 text-sm font-semibold leading-6 text-slate-200">
-              Every lesson includes a <span className="font-black text-white">step-by-step worked solution</span>, key formula and practice exercises with success checks. Use the <span className="font-black text-white">Lesson Player</span> for delivery or the <span className="font-black text-white">Upload Studio</span> to generate new lessons from your own materials.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setActiveTab?.('lesson')}
-              className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-3 py-2 text-xs font-black text-[#061126] transition hover:bg-[#8ddfff]"
-            >
-              Open Lesson Player <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => setActiveTab?.('upload-studio')}
-              className="inline-flex items-center gap-2 rounded-md border border-[#ffc43b]/40 px-3 py-2 text-xs font-black text-[#ffe08a] transition hover:bg-[#ffc43b]/10"
-            >
-              Open Upload Studio <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="overflow-hidden rounded-lg border border-slate-200 bg-slate-950 text-white shadow-sm">
-        <div className="grid gap-8 p-6 lg:grid-cols-[0.92fr_1.08fr] lg:p-8">
-          <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-xs font-bold uppercase tracking-wide text-amber-100">
-              <Sparkles className="h-4 w-4" />
-              Pearson IB MYP Year 2 · EIS Grade 8
-            </div>
-            <h1 className="text-3xl font-bold tracking-normal sm:text-4xl">Complete Grade 8 Maths Course</h1>
-            <p className="mt-4 max-w-2xl leading-7 text-slate-300">
-              Full textbook-aligned course structure with {eisMypMathCourse.length} chapters, {lessonCount} lessons, original exercises, worked examples, animated explanations, NeuroQuest practice and online teaching handoffs.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button onClick={() => saveLessonAssignment('lesson-planner')} className="inline-flex items-center gap-2 rounded-md bg-white px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-100">
-                Build Teacher Lesson <BookOpen className="h-4 w-4" />
-              </button>
-              <button onClick={() => saveLessonAssignment('classroom')} className="inline-flex items-center gap-2 rounded-md border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:border-cyan-300 hover:text-cyan-100">
-                Teach With Camera <Video className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <AnimatedConcept lesson={lesson} accent={accent} />
-        </div>
-      </section>
-
+    <div className="space-y-6">
       <section className="grid gap-5 xl:grid-cols-[320px_1fr]">
         <div className="self-start rounded-lg border border-gray-200 bg-white shadow-sm">
           <button
@@ -1458,7 +1556,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
             aria-expanded={isCourseMapOpen}
           >
             <div>
-              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Course navigator</p>
+              <p className="text-xs font-bold uppercase tracking-wide text-gray-500">Choose chapter</p>
               <h2 className="mt-1 text-lg font-semibold text-gray-900">Full Course Chapters</h2>
               <p className="mt-1 text-sm text-gray-500">{eisMypMathCourse.length} chapters · {lessonCount} lessons</p>
             </div>
@@ -1510,7 +1608,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
                   {activeChapter.chapter} · {activeChapter.textbookStart}
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">{activeChapter.title}</h2>
-                <p className="mt-2 max-w-3xl text-sm text-gray-600">{isChapterPanelOpen ? activeChapter.statementOfInquiry : `${activeChapter.lessons.length} lessons · selected lesson: ${lesson.title}`}</p>
+                <p className="pt-2 text-sm text-gray-600">{activeChapter.lessons.length} lessons · selected subtopic: {lesson.title}</p>
               </div>
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gray-100 text-gray-700">
                 <ChevronDown className={`h-4 w-4 transition-transform ${isChapterPanelOpen ? 'rotate-180' : ''}`} />
@@ -1520,7 +1618,7 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
             {isChapterPanelOpen ? (
             <div className="border-t border-gray-100 p-5">
               <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <p className="text-sm leading-6 text-gray-600">Choose a subtopic to open the full-window worked-solution player. Keep this panel collapsed during teaching for a cleaner workspace.</p>
+                <p className="text-sm font-semibold leading-6 text-gray-700">Choose a subtopic.</p>
                 <a href={game.href} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2 font-medium text-white transition hover:bg-slate-800">
                   NeuroQuest Practice <Play className="h-4 w-4" />
                 </a>
@@ -1574,6 +1672,8 @@ export function EISMathStudio({ setActiveTab }: EISMathStudioProps) {
             onBuildPlan={() => saveLessonAssignment('lesson-planner')}
             onTeachLive={() => saveLessonAssignment('classroom')}
           />
+
+          <MathExamPanel lesson={lesson} accent={accent} />
 
           <CinematicLearningPackPanel pack={cinematicPack} accent={accent} />
 

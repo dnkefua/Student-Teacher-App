@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Inter, system-ui, sans-serif">
+  <style>
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .node-text { font-size: 12px; font-weight: 700; fill: #ffffff; text-anchor: middle; }
+    .step-text { font-size: 11px; font-weight: 700; fill: #1e293b; text-anchor: middle; }
+    .arrow { stroke: #1e293b; stroke-width: 2; fill: none; }
+  </style>
+  <rect width="800" height="500" fill="#f0f9ff"/>
+  <text x="400" y="32" class="title">Homeostasis — Negative Feedback Loop (Thermoregulation)</text>
+  <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">The body detects a change and triggers an opposite response to return to a set point</text>
+
+  <!-- SET POINT center -->
+  <circle cx="400" cy="260" r="55" fill="#fbbf24" stroke="#92400e" stroke-width="3"/>
+  <text x="400" y="252" font-size="12" font-weight="800" fill="#7c2d12" text-anchor="middle">SET POINT</text>
+  <text x="400" y="270" font-size="11" fill="#7c2d12" text-anchor="middle">37 °C body</text>
+  <text x="400" y="284" font-size="11" fill="#7c2d12" text-anchor="middle">temperature</text>
+
+  <!-- TOO HOT branch (left) -->
+  <rect x="60" y="100" width="180" height="50" rx="10" fill="#ef4444"/>
+  <text x="150" y="125" class="node-text">1. STIMULUS</text>
+  <text x="150" y="142" class="node-text" font-size="11">Body temperature ↑ (too hot)</text>
+
+  <rect x="60" y="190" width="180" height="50" rx="10" fill="#f97316"/>
+  <text x="150" y="215" class="node-text">2. RECEPTOR</text>
+  <text x="150" y="232" class="node-text" font-size="11">Thermoreceptors in skin</text>
+
+  <rect x="60" y="280" width="180" height="50" rx="10" fill="#7c3aed"/>
+  <text x="150" y="305" class="node-text">3. CONTROL</text>
+  <text x="150" y="322" class="node-text" font-size="11">Hypothalamus (brain)</text>
+
+  <rect x="60" y="370" width="180" height="50" rx="10" fill="#0284c7"/>
+  <text x="150" y="395" class="node-text">4. EFFECTOR</text>
+  <text x="150" y="412" class="node-text" font-size="11">Sweat glands open + vessels dilate</text>
+
+  <!-- arrows on left -->
+  <path d="M 150 150 L 150 188" class="arrow"/><polygon points="150,190 144,182 156,182" fill="#1e293b"/>
+  <path d="M 150 240 L 150 278" class="arrow"/><polygon points="150,280 144,272 156,272" fill="#1e293b"/>
+  <path d="M 150 330 L 150 368" class="arrow"/><polygon points="150,370 144,362 156,362" fill="#1e293b"/>
+
+  <!-- effector to set point (response curves right) -->
+  <path d="M 240 395 Q 320 395 350 290" class="arrow" stroke-width="2.5"/>
+  <polygon points="350,290 344,300 354,302" fill="#1e293b"/>
+  <text x="290" y="385" class="step-text">5. Response: cool down → returns to set point</text>
+
+  <!-- TOO COLD branch (right) -->
+  <rect x="560" y="100" width="180" height="50" rx="10" fill="#1d4ed8"/>
+  <text x="650" y="125" class="node-text">1. STIMULUS</text>
+  <text x="650" y="142" class="node-text" font-size="11">Body temperature ↓ (too cold)</text>
+
+  <rect x="560" y="190" width="180" height="50" rx="10" fill="#0891b2"/>
+  <text x="650" y="215" class="node-text">2. RECEPTOR</text>
+  <text x="650" y="232" class="node-text" font-size="11">Thermoreceptors in skin</text>
+
+  <rect x="560" y="280" width="180" height="50" rx="10" fill="#7c3aed"/>
+  <text x="650" y="305" class="node-text">3. CONTROL</text>
+  <text x="650" y="322" class="node-text" font-size="11">Hypothalamus (brain)</text>
+
+  <rect x="560" y="370" width="180" height="50" rx="10" fill="#0284c7"/>
+  <text x="650" y="395" class="node-text">4. EFFECTOR</text>
+  <text x="650" y="412" class="node-text" font-size="11">Shiver + vessels constrict</text>
+
+  <!-- arrows on right -->
+  <path d="M 650 150 L 650 188" class="arrow"/><polygon points="650,190 644,182 656,182" fill="#1e293b"/>
+  <path d="M 650 240 L 650 278" class="arrow"/><polygon points="650,280 644,272 656,272" fill="#1e293b"/>
+  <path d="M 650 330 L 650 368" class="arrow"/><polygon points="650,370 644,362 656,362" fill="#1e293b"/>
+
+  <!-- effector to set point (response curves left) -->
+  <path d="M 560 395 Q 480 395 450 290" class="arrow" stroke-width="2.5"/>
+  <polygon points="450,290 446,302 456,300" fill="#1e293b"/>
+  <text x="510" y="385" class="step-text">5. Response: warm up → returns to set point</text>
+
+  <!-- KEY box -->
+  <rect x="50" y="450" width="700" height="40" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="400" y="475" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">Negative feedback always works AGAINST the change to restore the set point.</text>
+</svg>

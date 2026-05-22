@@ -10,6 +10,7 @@ export default defineConfig([
       'neuroquest-academy-integration/**',
       'tmpnetroquest-academy/**',
       'public/play/**',
+      'src/components/grade8-platform/**',
     ],
   },
   {

@@ -71,6 +71,10 @@ const NeuroQuestHub = dynamic(
   () => import('@/components/NeuroQuestHub').then((m) => ({ default: m.NeuroQuestHub })),
   { loading: SkeletonLoading },
 );
+const SubjectStudioShell = dynamic(
+  () => import('@/components/SubjectStudioShell').then((m) => ({ default: m.SubjectStudioShell })),
+  { loading: SkeletonLoading },
+);
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 // Learning Hub is teacher-only because it contains class analytics, external
@@ -120,8 +124,10 @@ function ClientPageInner() {
   const isLearningHub = effectiveActiveTab === 'learning-hub';
   const isEnglish = effectiveActiveTab === 'english-studio';
   const isScience = effectiveActiveTab === 'science-studio';
+  const isMaths = effectiveActiveTab === 'eis-maths';
   const isCinematic = effectiveActiveTab === 'cinematic-studio';
-  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isEnglish || isScience || isCinematic;
+  const isSubjectStudio = isMaths || isEnglish || isScience;
+  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isCinematic;
 
   return (
     <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
@@ -156,13 +162,25 @@ function ClientPageInner() {
 
         {/* Main Content Area */}
         <main className={`flex-1 overflow-y-auto p-4 md:p-8 ${useDarkSurface ? 'bg-[#050711]' : ''}`}>
-          <div className="max-w-6xl mx-auto h-full">
+          <div className={`${isSubjectStudio ? 'max-w-none' : 'max-w-6xl'} mx-auto h-full`}>
             {effectiveActiveTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'learning-hub' && mode === 'teacher' && <LearningDataHub mode={mode} setActiveTab={selectTab} />}
-            {effectiveActiveTab === 'eis-maths' && <EISMathStudio setActiveTab={selectTab} />}
-            {effectiveActiveTab === 'english-studio' && <EnglishStudio mode={mode} setActiveTab={selectTab} />}
-            {effectiveActiveTab === 'science-studio' && <ScienceStudio mode={mode} setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'eis-maths' && (
+              <SubjectStudioShell subject="math" label="Grade 8 Maths">
+                <EISMathStudio setActiveTab={selectTab} />
+              </SubjectStudioShell>
+            )}
+            {effectiveActiveTab === 'english-studio' && (
+              <SubjectStudioShell subject="english" label="Year 8 English">
+                <EnglishStudio mode={mode} setActiveTab={selectTab} />
+              </SubjectStudioShell>
+            )}
+            {effectiveActiveTab === 'science-studio' && (
+              <SubjectStudioShell subject="science" label="Year 8 Science">
+                <ScienceStudio mode={mode} setActiveTab={selectTab} />
+              </SubjectStudioShell>
+            )}
             {effectiveActiveTab === 'place-value-lesson' && mode === 'teacher' && <LessonGenerator setActiveTab={selectTab} />}
             {effectiveActiveTab === 'cinematic-studio' && mode === 'teacher' && <CinematicStudio mode={mode} />}
             {effectiveActiveTab === 'upload-studio' && mode === 'teacher' && <TeacherUploadStudio setActiveTab={selectTab} />}

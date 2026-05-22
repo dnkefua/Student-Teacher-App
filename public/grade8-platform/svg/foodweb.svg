@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" font-family="Inter, system-ui, sans-serif">
+  <style>
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .layer { font-size: 13px; font-weight: 800; fill: #ffffff; text-anchor: middle; }
+    .sub { font-size: 11px; fill: #f1f5f9; text-anchor: middle; }
+    .pct { font-size: 11px; font-weight: 700; fill: #1e293b; }
+    .arrow { stroke: #b45309; stroke-width: 2.5; fill: none; }
+  </style>
+  <rect width="800" height="540" fill="#ecfccb"/>
+  <text x="400" y="32" class="title">Ecological Pyramid — Energy Flow Through a Food Chain</text>
+  <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">Only about 10% of energy passes to the next level. The rest is lost as heat, movement and waste.</text>
+
+  <!-- Level 4: Apex predators -->
+  <polygon points="340,90 460,90 440,150 360,150" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/>
+  <text x="400" y="115" class="layer">Apex predators</text>
+  <text x="400" y="135" class="sub">e.g. hawk, shark</text>
+
+  <!-- Level 3: Secondary consumers -->
+  <polygon points="320,150 480,150 460,210 340,210" fill="#f97316" stroke="#7c2d12" stroke-width="2"/>
+  <text x="400" y="175" class="layer">Secondary consumers</text>
+  <text x="400" y="195" class="sub">carnivores: snake, fox</text>
+
+  <!-- Level 2: Primary consumers -->
+  <polygon points="290,210 510,210 480,280 320,280" fill="#fbbf24" stroke="#78350f" stroke-width="2"/>
+  <text x="400" y="240" class="layer">Primary consumers</text>
+  <text x="400" y="260" class="sub">herbivores: rabbit, grasshopper</text>
+
+  <!-- Level 1: Producers -->
+  <polygon points="240,280 560,280 510,370 290,370" fill="#16a34a" stroke="#14532d" stroke-width="2"/>
+  <text x="400" y="315" class="layer">Producers</text>
+  <text x="400" y="335" class="sub">plants, algae</text>
+  <text x="400" y="355" class="sub">capture light from the sun → photosynthesis</text>
+
+  <!-- Energy left labels -->
+  <text x="240" y="115" class="pct" text-anchor="end">0.1 % energy ▲</text>
+  <text x="240" y="180" class="pct" text-anchor="end">1 % energy ▲</text>
+  <text x="240" y="245" class="pct" text-anchor="end">10 % energy ▲</text>
+  <text x="240" y="315" class="pct" text-anchor="end">100 % energy</text>
+
+  <!-- Sun -->
+  <g transform="translate(140 410)">
+    <circle r="32" fill="#fde047" stroke="#a16207" stroke-width="2"/>
+    <text y="6" font-size="12" font-weight="800" fill="#7c2d12" text-anchor="middle">SUN</text>
+    <g stroke="#a16207" stroke-width="2">
+      <line x1="-45" y1="0" x2="-32" y2="0"/>
+      <line x1="32" y1="0" x2="45" y2="0"/>
+      <line x1="0" y1="-45" x2="0" y2="-32"/>
+      <line x1="0" y1="32" x2="0" y2="45"/>
+      <line x1="-32" y1="-32" x2="-23" y2="-23"/>
+      <line x1="23" y1="-23" x2="32" y2="-32"/>
+      <line x1="-32" y1="32" x2="-23" y2="23"/>
+      <line x1="23" y1="23" x2="32" y2="32"/>
+    </g>
+  </g>
+  <path d="M 180 400 Q 240 380 290 360" class="arrow"/>
+  <polygon points="290,360 282,358 284,348" fill="#b45309"/>
+  <text x="200" y="382" font-size="11" font-weight="700" fill="#7c2d12">Light energy →</text>
+
+  <!-- Heat loss arrows -->
+  <g stroke="#dc2626" stroke-width="2" fill="none">
+    <path d="M 540 215 Q 580 200 600 175"/>
+    <path d="M 510 285 Q 555 270 580 245"/>
+    <path d="M 480 150 Q 520 135 540 110"/>
+  </g>
+  <text x="610" y="170" font-size="11" font-weight="700" fill="#7f1d1d">heat lost</text>
+  <text x="585" y="240" font-size="11" font-weight="700" fill="#7f1d1d">heat lost</text>
+  <text x="545" y="105" font-size="11" font-weight="700" fill="#7f1d1d">heat lost</text>
+
+  <!-- Decomposers note -->
+  <rect x="120" y="465" width="560" height="60" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="140" y="487" font-size="12" font-weight="800" fill="#0f172a">DECOMPOSERS (bacteria, fungi):</text>
+  <text x="140" y="504" font-size="11" fill="#334155">Break down dead organisms at every level and recycle nutrients back into the soil.</text>
+  <text x="140" y="520" font-size="11" fill="#334155">Without decomposers, energy and nutrients would be locked in dead matter.</text>
+</svg>

@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="Inter, system-ui, sans-serif">
+  <style>
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .label { font-size: 13px; font-weight: 700; fill: #1e293b; }
+    .leader { stroke: #475569; stroke-width: 1.2; fill: none; }
+    .small { font-size: 10px; font-weight: 700; fill: #ffffff; text-anchor: middle; }
+  </style>
+  <rect width="800" height="500" fill="#f5f3ff"/>
+  <text x="400" y="32" class="title">Bohr Model of the Atom (Oxygen, ⁸O)</text>
+  <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">Protons (+) and neutrons in the nucleus; electrons orbit in fixed shells</text>
+
+  <g transform="translate(400 270)">
+    <!-- electron shells -->
+    <circle r="80" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 6"/>
+    <circle r="140" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 6"/>
+
+    <!-- nucleus cluster -->
+    <g>
+      <circle cx="-12" cy="-12" r="14" fill="#ef4444" stroke="#7f1d1d" stroke-width="1.5"/>
+      <text x="-12" y="-9" class="small">p⁺</text>
+      <circle cx="12" cy="-12" r="14" fill="#ef4444" stroke="#7f1d1d" stroke-width="1.5"/>
+      <text x="12" y="-9" class="small">p⁺</text>
+      <circle cx="-15" cy="14" r="14" fill="#64748b" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="-15" y="17" class="small">n</text>
+      <circle cx="15" cy="14" r="14" fill="#64748b" stroke="#1e293b" stroke-width="1.5"/>
+      <text x="15" y="17" class="small">n</text>
+      <circle cx="0" cy="0" r="14" fill="#ef4444" stroke="#7f1d1d" stroke-width="1.5"/>
+      <text x="0" y="3" class="small">p⁺</text>
+    </g>
+
+    <!-- inner-shell electrons (2) -->
+    <circle cx="-80" cy="0" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="-80" y="3" class="small">e⁻</text>
+    <circle cx="80" cy="0" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="80" y="3" class="small">e⁻</text>
+
+    <!-- outer-shell electrons (6) -->
+    <circle cx="0" cy="-140" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="0" y="-137" class="small">e⁻</text>
+    <circle cx="121" cy="-70" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="121" y="-67" class="small">e⁻</text>
+    <circle cx="121" cy="70" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="121" y="73" class="small">e⁻</text>
+    <circle cx="0" cy="140" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="0" y="143" class="small">e⁻</text>
+    <circle cx="-121" cy="70" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="-121" y="73" class="small">e⁻</text>
+    <circle cx="-121" cy="-70" r="8" fill="#0ea5e9" stroke="#0c4a6e" stroke-width="1.5"/>
+    <text x="-121" y="-67" class="small">e⁻</text>
+  </g>
+
+  <!-- LABELS -->
+  <text x="700" y="160" class="label" text-anchor="end">Nucleus (protons + neutrons)</text>
+  <path class="leader" d="M 590 158 L 415 270"/>
+
+  <text x="700" y="220" class="label" text-anchor="end">First shell — max 2 electrons</text>
+  <path class="leader" d="M 590 218 L 487 270"/>
+
+  <text x="700" y="280" class="label" text-anchor="end">Second shell — max 8 electrons</text>
+  <path class="leader" d="M 590 278 L 542 270"/>
+
+  <!-- LEGEND -->
+  <rect x="40" y="430" width="720" height="50" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <g transform="translate(60 455)">
+    <circle r="9" fill="#ef4444" stroke="#7f1d1d"/>
+    <text x="18" y="4" font-size="12" font-weight="700" fill="#0f172a">Proton (+1)</text>
+    <g transform="translate(150 0)">
+      <circle r="9" fill="#64748b" stroke="#1e293b"/>
+      <text x="18" y="4" font-size="12" font-weight="700" fill="#0f172a">Neutron (0)</text>
+    </g>
+    <g transform="translate(300 0)">
+      <circle r="9" fill="#0ea5e9" stroke="#0c4a6e"/>
+      <text x="18" y="4" font-size="12" font-weight="700" fill="#0f172a">Electron (−1)</text>
+    </g>
+    <g transform="translate(460 0)">
+      <text x="0" y="4" font-size="12" font-weight="700" fill="#0f172a">Electron configuration of O: 2, 6</text>
+    </g>
+  </g>
+</svg>

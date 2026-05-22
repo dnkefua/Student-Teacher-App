@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 540" font-family="Inter, system-ui, sans-serif">
+  <style>
+    .label { font-size: 13px; font-weight: 600; fill: #1e293b; }
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .leader { stroke: #475569; stroke-width: 1.2; fill: none; }
+    .oxy { fill: #ef4444; }
+    .deoxy { fill: #1d4ed8; }
+    .vessel-oxy { stroke: #ef4444; }
+    .vessel-deoxy { stroke: #1d4ed8; }
+    .small { font-size: 11px; font-weight: 600; fill: #ffffff; text-anchor: middle; }
+  </style>
+  <rect width="800" height="540" fill="#fdf2f8"/>
+  <text x="400" y="32" class="title">The Human Circulatory System</text>
+  <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">Pulmonary circuit (heart ↔ lungs) and Systemic circuit (heart ↔ body)</text>
+
+  <!-- LUNGS -->
+  <ellipse cx="270" cy="180" rx="55" ry="80" fill="#fbcfe8" stroke="#be185d" stroke-width="2"/>
+  <ellipse cx="530" cy="180" rx="55" ry="80" fill="#fbcfe8" stroke="#be185d" stroke-width="2"/>
+  <text x="270" y="184" class="small" fill="#831843">LEFT</text>
+  <text x="270" y="200" class="small" fill="#831843">LUNG</text>
+  <text x="530" y="184" class="small" fill="#831843">RIGHT</text>
+  <text x="530" y="200" class="small" fill="#831843">LUNG</text>
+
+  <!-- HEART -->
+  <g transform="translate(400 320)">
+    <path d="M 0 -60 C -20 -90 -70 -85 -70 -45 C -70 -10 -40 25 0 60 C 40 25 70 -10 70 -45 C 70 -85 20 -90 0 -60 Z"
+      fill="#dc2626" stroke="#7f1d1d" stroke-width="2.5"/>
+    <!-- chambers divider -->
+    <line x1="0" y1="-65" x2="0" y2="60" stroke="#7f1d1d" stroke-width="1.5"/>
+    <line x1="-65" y1="-15" x2="65" y2="-15" stroke="#7f1d1d" stroke-width="1.5"/>
+    <text x="-35" y="-32" class="small">RA</text>
+    <text x="35" y="-32" class="small">LA</text>
+    <text x="-35" y="25" class="small">RV</text>
+    <text x="35" y="25" class="small">LV</text>
+  </g>
+
+  <!-- VESSELS: HEART -> LUNGS (deoxy, blue, leaves right ventricle) -->
+  <path d="M 380 280 Q 360 250 320 235" class="vessel-deoxy" stroke-width="8" fill="none"/>
+  <polygon points="320,235 312,228 312,242" class="deoxy"/>
+
+  <!-- VESSELS: LUNGS -> HEART (oxy, red, enters left atrium) -->
+  <path d="M 480 235 Q 440 250 420 285" class="vessel-oxy" stroke-width="8" fill="none"/>
+  <polygon points="420,285 412,278 428,278" class="oxy"/>
+
+  <!-- HEART -> BODY (aorta, oxy red, down to body) -->
+  <path d="M 420 380 Q 420 440 420 490" class="vessel-oxy" stroke-width="9" fill="none"/>
+  <polygon points="420,490 412,482 428,482" class="oxy"/>
+
+  <!-- BODY -> HEART (vena cava, deoxy blue) -->
+  <path d="M 380 380 Q 380 440 380 490" class="vessel-deoxy" stroke-width="9" fill="none"/>
+  <polygon points="380,378 372,388 388,388" class="deoxy"/>
+
+  <!-- BODY rect -->
+  <rect x="340" y="490" width="120" height="30" rx="8" fill="#e0e7ff" stroke="#3730a3" stroke-width="1.5"/>
+  <text x="400" y="510" font-size="13" font-weight="700" fill="#1e1b4b" text-anchor="middle">BODY (tissues)</text>
+
+  <!-- LUNG capillary mini lines -->
+  <g stroke="#be185d" stroke-width="0.7" fill="none">
+    <path d="M 250 200 L 290 200"/>
+    <path d="M 250 215 L 290 215"/>
+    <path d="M 250 230 L 290 230"/>
+    <path d="M 510 200 L 550 200"/>
+    <path d="M 510 215 L 550 215"/>
+    <path d="M 510 230 L 550 230"/>
+  </g>
+
+  <!-- LEGEND -->
+  <rect x="600" y="80" width="180" height="100" rx="8" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="690" y="100" font-size="12" font-weight="800" fill="#0f172a" text-anchor="middle">LEGEND</text>
+  <rect x="615" y="110" width="20" height="10" fill="#ef4444"/>
+  <text x="642" y="119" class="label">Oxygenated blood</text>
+  <rect x="615" y="130" width="20" height="10" fill="#1d4ed8"/>
+  <text x="642" y="139" class="label">Deoxygenated blood</text>
+  <text x="615" y="160" font-size="11" fill="#334155">RA/RV right atrium &amp; ventricle</text>
+  <text x="615" y="174" font-size="11" fill="#334155">LA/LV left atrium &amp; ventricle</text>
+
+  <!-- LABELS -->
+  <text x="80" y="180" class="label">Pulmonary arteries</text>
+  <text x="80" y="196" class="label">(carry deoxy. blood to lungs)</text>
+  <path class="leader" d="M 215 188 L 340 250"/>
+
+  <text x="80" y="320" class="label">Heart pumps blood</text>
+  <text x="80" y="336" class="label">through two circuits</text>
+  <path class="leader" d="M 200 326 L 330 320"/>
+
+  <text x="80" y="500" class="label">Aorta &amp; vena cava</text>
+  <text x="80" y="516" class="label">connect heart to body</text>
+  <path class="leader" d="M 200 506 L 340 500"/>
+</svg>

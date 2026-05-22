@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 520" font-family="Inter, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0c4a6e"/>
+      <stop offset="1" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .title { font-size: 18px; font-weight: 800; fill: #0f172a; text-anchor: middle; }
+    .label { font-size: 12px; font-weight: 700; fill: #1e293b; }
+    .arrow-in { stroke: #fde047; stroke-width: 4; fill: none; }
+    .arrow-out { stroke: #f97316; stroke-width: 3; fill: none; }
+    .arrow-trap { stroke: #dc2626; stroke-width: 3; fill: none; }
+  </style>
+  <rect width="800" height="520" fill="#eff6ff"/>
+  <text x="400" y="32" class="title">The Greenhouse Effect</text>
+  <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">Short-wave solar radiation enters easily; long-wave infrared is partly trapped by greenhouse gases</text>
+
+  <!-- Sky -->
+  <rect x="40" y="80" width="720" height="280" fill="url(#skyGrad)"/>
+
+  <!-- Greenhouse gas layer -->
+  <rect x="40" y="170" width="720" height="50" fill="#94a3b8" opacity="0.4" stroke="#475569" stroke-dasharray="6 4"/>
+  <text x="755" y="195" font-size="11" font-weight="700" fill="#0f172a" text-anchor="end">Greenhouse gas layer  (CO₂, CH₄, H₂O vapour)</text>
+
+  <!-- Sun -->
+  <g transform="translate(125 130)">
+    <circle r="36" fill="#fde047" stroke="#a16207" stroke-width="2"/>
+    <text y="6" font-size="14" font-weight="800" fill="#7c2d12" text-anchor="middle">SUN</text>
+  </g>
+
+  <!-- EARTH SURFACE -->
+  <rect x="40" y="360" width="720" height="120" fill="#65a30d"/>
+  <text x="400" y="430" font-size="14" font-weight="800" fill="#fff" text-anchor="middle">EARTH SURFACE</text>
+
+  <!-- Incoming short-wave (yellow arrows) -->
+  <g>
+    <path d="M 165 165 L 280 360" class="arrow-in"/>
+    <polygon points="280,360 270,353 275,348" fill="#fde047"/>
+    <path d="M 200 165 L 380 360" class="arrow-in"/>
+    <polygon points="380,360 370,353 375,348" fill="#fde047"/>
+    <path d="M 235 165 L 480 360" class="arrow-in"/>
+    <polygon points="480,360 470,353 475,348" fill="#fde047"/>
+  </g>
+  <text x="220" y="240" font-size="12" font-weight="800" fill="#fde047">SHORT-WAVE</text>
+  <text x="220" y="256" font-size="12" font-weight="800" fill="#fde047">solar radiation IN</text>
+
+  <!-- Re-emitted long-wave (orange arrows) -->
+  <g>
+    <path d="M 320 360 L 480 220" class="arrow-out"/>
+    <polygon points="480,220 472,222 472,232" fill="#f97316"/>
+    <path d="M 420 360 L 560 220" class="arrow-out"/>
+    <polygon points="560,220 552,222 552,232" fill="#f97316"/>
+  </g>
+  <text x="450" y="295" font-size="12" font-weight="800" fill="#f97316">LONG-WAVE</text>
+  <text x="450" y="311" font-size="12" font-weight="800" fill="#f97316">infrared radiation OUT</text>
+
+  <!-- Trapped (red bouncing back) -->
+  <g>
+    <path d="M 500 218 Q 540 100 580 220" class="arrow-trap"/>
+    <polygon points="580,220 572,212 588,212" fill="#dc2626"/>
+    <path d="M 580 220 Q 620 320 660 360" class="arrow-trap"/>
+    <polygon points="660,360 652,350 668,352" fill="#dc2626"/>
+  </g>
+  <text x="610" y="130" font-size="12" font-weight="800" fill="#dc2626">Some IR is TRAPPED</text>
+  <text x="610" y="146" font-size="12" font-weight="800" fill="#dc2626">→ Earth warms up</text>
+
+  <!-- Some escapes to space -->
+  <path d="M 600 218 L 700 110" stroke="#fb923c" stroke-width="2" stroke-dasharray="6 4" fill="none"/>
+  <text x="710" y="100" font-size="11" font-weight="700" fill="#7c2d12">Some escapes to space</text>
+
+  <!-- KEY box -->
+  <rect x="40" y="485" width="720" height="30" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="400" y="505" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">More greenhouse gases → more IR trapped → planet warms further (the enhanced greenhouse effect)</text>
+</svg>
