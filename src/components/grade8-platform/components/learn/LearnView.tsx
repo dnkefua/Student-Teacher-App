@@ -5,6 +5,7 @@ import { scienceTheoryData } from '../../data/scienceTheory';
 import { englishTheoryData } from '../../data/englishTheory';
 import { BookOpen, Calculator, Type, Focus, CheckCircle2, Zap, Maximize2, Lightbulb } from 'lucide-react';
 import ImageModal from '../ImageModal';
+import { ReadAloud } from './ReadAloud';
 
 // Lazy-load each interactive lab so the bundle only pulls them in when the
 // student lands on a concept that uses one.
@@ -82,8 +83,18 @@ export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId
       {concepts.map((concept, index) => (
         <section key={index} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
           
-          <div className="bg-slate-900 px-8 py-6 text-white border-b border-slate-800">
+          <div className="bg-slate-900 px-8 py-6 text-white border-b border-slate-800 flex items-start justify-between gap-3">
             <h2 className="text-2xl font-bold font-sans tracking-tight">{concept.title}</h2>
+            {/* Concatenate description + paragraphs + key ideas so the
+                listener hears the whole concept in one pass. */}
+            <ReadAloud
+              text={[
+                concept.title,
+                concept.description,
+                ...(concept.paragraphs ?? []),
+                ...(concept.keyIdeas ? ['Key ideas:', ...concept.keyIdeas] : []),
+              ].join('. ')}
+            />
           </div>
 
           <div className="p-8 space-y-8">

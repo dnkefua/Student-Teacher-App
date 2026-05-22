@@ -188,8 +188,20 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
       interactiveLab: "states-of-matter",
     },
     {
-      title: "The Atom and Physical Chemical Changes",
-      description: "All matter is composed of incredibly small particles called atoms. Atoms consist of a dense, positively charged nucleus surrounded by a cloud of negatively charged electrons. When atoms rearrange themselves during reactions, chemical changes occur, but mass is always perfectly conserved.",
+      title: "The Atom and Physical vs Chemical Changes",
+      description: "All matter is built from atoms — tiny particles with a dense positive nucleus and electrons surrounding it. Knowing how atoms combine and rearrange explains every chemical reaction.",
+      paragraphs: [
+        "An atom has three sub-particles: protons (positive, in the nucleus), neutrons (neutral, in the nucleus) and electrons (negative, orbiting in shells). The number of protons defines which element you are looking at — change that and you change the element. Atoms gain, lose or share electrons to form chemical bonds.",
+        "Pure substances come in two flavours. ELEMENTS are made of one kind of atom (oxygen, gold, iron). COMPOUNDS are two or more elements chemically bonded in a fixed ratio (water H₂O, table salt NaCl). MIXTURES are physically blended substances that can be separated — salt water, air, a salad.",
+        "Physical changes alter the FORM of a substance but not its identity — melting ice, dissolving sugar, breaking glass. The chemical formula stays the same. Chemical changes create NEW substances with different properties — burning wood, rusting iron, baking a cake. Look for signs: bubbles, colour change, temperature change, light or a precipitate.",
+        "In every reaction, mass is CONSERVED. The number of each kind of atom going in equals the number coming out — they have just been rearranged. This is why we balance chemical equations.",
+      ],
+      keyIdeas: [
+        "Atom = nucleus (protons + neutrons) + electron shells.",
+        "Element → one type of atom.  Compound → atoms chemically bonded.  Mixture → physically combined.",
+        "Physical change: same substance, new form.  Chemical change: new substance.",
+        "Mass is conserved in every reaction — atoms are only rearranged.",
+      ],
       media: [
         {
           type: "image",
@@ -331,8 +343,20 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
   ],
   unit4: [
     {
-      title: "Energy & Future: Global Consequences",
-      description: "Humanity requires massive amounts of energy. The methods we use to generate this energy—especially burning fossil fuels—have direct consequences on the composition of our atmosphere, leading to phenomena such as the enhanced greenhouse effect.",
+      title: "Energy & The Future: Global Consequences",
+      description: "Humanity runs on energy. The way we generate it — especially by burning fossil fuels — is changing the composition of our atmosphere and the climate.",
+      paragraphs: [
+        "Energy is the ability to do work or cause change. It exists in many forms: chemical (in fuels and batteries), kinetic (in moving objects), thermal (heat), light, electrical, nuclear, gravitational potential, elastic potential. Energy is never created or destroyed — only TRANSFERRED from one form to another. This is the law of conservation of energy.",
+        "Fossil fuels (coal, oil, natural gas) are stores of ancient solar energy locked in dead plant matter over millions of years. Burning them releases that energy as heat — but it also releases carbon dioxide that was buried for millions of years, back into the atmosphere in just a few decades.",
+        "Carbon dioxide and methane are GREENHOUSE GASES. They let visible sunlight through to the Earth's surface, but they absorb the longer-wave infrared radiation that the Earth tries to re-emit back into space. The trapped radiation warms the lower atmosphere — the enhanced greenhouse effect.",
+        "Renewable sources — solar, wind, hydro, geothermal — do not emit greenhouse gases when generating electricity. They are the only path to keeping global warming inside the limits the science recommends. Nuclear power is low-carbon but creates radioactive waste that has to be safely stored for thousands of years.",
+      ],
+      keyIdeas: [
+        "Energy is conserved — only transferred, never destroyed.",
+        "Burning fossil fuels releases CO₂, the main greenhouse gas.",
+        "Greenhouse gases trap infrared radiation → enhanced greenhouse effect → warming.",
+        "Renewables (solar, wind, hydro) are the low-carbon alternative.",
+      ],
       media: [
         {
           type: "image",
@@ -372,7 +396,19 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
   unit5: [
     {
       title: "Waves and the Electromagnetic Spectrum",
-      description: "Waves are the mathematical mechanism by which energy travels through space and media without permanently moving the actual matter.",
+      description: "A wave is a way of moving energy from one place to another without permanently moving the material. The electromagnetic family of waves can even travel through the vacuum of space.",
+      paragraphs: [
+        "Every wave has the same four properties: AMPLITUDE (the size of the disturbance — louder sound, brighter light), WAVELENGTH (the distance from one crest to the next), FREQUENCY (the number of waves passing per second, measured in hertz) and SPEED. They are linked by one equation: speed = frequency × wavelength.",
+        "Mechanical waves need a medium (air, water, a string) and come in two types. TRANSVERSE waves have particles oscillating at right angles to the direction of travel — water ripples, light, a wave on a rope. LONGITUDINAL waves have particles oscillating in the same direction the wave travels — sound, an earthquake P-wave.",
+        "Electromagnetic waves are all transverse and all travel at the speed of light (≈ 3 × 10⁸ m/s) in a vacuum. The electromagnetic spectrum is the family of these waves arranged by wavelength, from the longest (radio waves) to the shortest (gamma rays). Visible light is a tiny slice in the middle.",
+        "Higher frequency means higher energy per wave. That is why UV burns your skin, X-rays can damage cells, and gamma rays are dangerous: their photons carry enough energy to break chemical bonds.",
+      ],
+      keyIdeas: [
+        "Wave equation: speed = frequency × wavelength  (v = f × λ).",
+        "Transverse wave: oscillation ⊥ direction (light).  Longitudinal: oscillation ‖ direction (sound).",
+        "All EM waves travel at 3 × 10⁸ m/s in a vacuum.",
+        "Shorter wavelength = higher frequency = higher energy.",
+      ],
       media: [
         {
           type: "image",
@@ -420,8 +456,20 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
   ],
   unit6: [
     {
-      title: "Photosynthesis",
-      description: "Photosynthesis is the fundamental biochemical process by which plants harness kinetic solar energy into stable chemical energy (glucose), supporting virtually all life on Earth.",
+      title: "Photosynthesis — How Plants Capture Light",
+      description: "Photosynthesis is how green plants and algae convert light energy into chemical energy stored in glucose. It is the foundation of almost every food chain on Earth.",
+      paragraphs: [
+        "The overall reaction is straightforward: six molecules of carbon dioxide and six molecules of water, in the presence of light, produce one molecule of glucose and six molecules of oxygen. In symbols: 6 CO₂ + 6 H₂O ──light──> C₆H₁₂O₆ + 6 O₂.",
+        "Photosynthesis happens inside the CHLOROPLASTS — green organelles found mainly in leaf cells. Chloroplasts contain CHLOROPHYLL, the pigment that gives leaves their green colour and that actually absorbs the red and blue parts of sunlight. Green light reflects, which is why we see leaves as green.",
+        "Plants need four inputs: light (energy source), carbon dioxide (in through the leaves via tiny openings called stomata), water (up from the roots) and chlorophyll (the catalyst). Outputs are oxygen (released through the stomata) and glucose (used immediately for energy or stored as starch).",
+        "The RATE of photosynthesis is controlled by three limiting factors: light intensity, carbon dioxide concentration, and temperature. Plants in a Dubai greenhouse, for instance, can be more productive in winter when temperatures are ideal — but only if light and CO₂ are also sufficient.",
+      ],
+      keyIdeas: [
+        "Equation: 6 CO₂ + 6 H₂O  →  C₆H₁₂O₆ + 6 O₂  (with light).",
+        "Happens in chloroplasts.  Chlorophyll absorbs light energy.",
+        "Inputs: light, CO₂, H₂O, chlorophyll.  Outputs: glucose + O₂.",
+        "Limiting factors: light intensity, CO₂, temperature.",
+      ],
       media: [
         {
           type: "image",
