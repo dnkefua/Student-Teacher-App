@@ -27,18 +27,9 @@ const LearningDataHub = dynamic(
   () => import('@/components/learningHub/LearningDataHub').then((m) => ({ default: m.LearningDataHub })),
   { loading: SkeletonLoading },
 );
-const EISMathStudio = dynamic(
-  () => import('@/components/EISMathStudio').then((m) => ({ default: m.EISMathStudio })),
-  { loading: SkeletonLoading },
-);
-const EnglishStudio = dynamic(
-  () => import('@/components/english/EnglishStudio').then((m) => ({ default: m.EnglishStudio })),
-  { loading: SkeletonLoading },
-);
-const ScienceStudio = dynamic(
-  () => import('@/components/science/ScienceStudio').then((m) => ({ default: m.ScienceStudio })),
-  { loading: SkeletonLoading },
-);
+// Maths/English/Science legacy studios were retired once parity was reached
+// with the new grade8-platform. The SubjectStudioShell renders that
+// platform directly — no more dynamic imports of the old studios.
 const LessonGenerator = dynamic(
   () => import('@/components/CinematicLessonEngine').then((m) => ({ default: m.LessonGenerator })),
   { loading: SkeletonLoading },
