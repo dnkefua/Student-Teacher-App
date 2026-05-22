@@ -16,6 +16,8 @@ const img_transverse_wave = '/grade8-platform/svg/transverse-wave.svg';
 const img_longitudinal_wave = '/grade8-platform/svg/longitudinal-wave.svg';
 const img_photosynthesis_png = '/grade8-platform/svg/photosynthesis.svg';
 const img_food_chain = '/grade8-platform/svg/food-chain.svg';
+const img_food_web = '/grade8-platform/svg/food-web.svg';
+const img_energy_pyramid = '/grade8-platform/svg/foodweb.svg'; // legacy filename kept; this is the pyramid
 const img_decomposers = '/grade8-platform/svg/decomposers.svg';
 
 export const scienceTheoryData: Record<string, ConceptDef[]> = {
@@ -258,22 +260,28 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
     },
     {
       title: "Food Webs and the Energy Pyramid",
-      description: "Real ecosystems contain many interlocking food chains. A food web is the full network. The pyramid shows how energy shrinks dramatically at every level.",
+      description: "Real ecosystems contain many interlocking food chains. The food web shows the full network of who eats whom; the energy pyramid shows how energy shrinks dramatically at every level.",
       paragraphs: [
-        "Animals rarely eat just one thing. A fox might eat rabbits AND mice AND birds, and rabbits are eaten by foxes AND owls AND hawks. When you connect all these overlapping chains, you get a food WEB — a network instead of a single line.",
+        "Animals rarely eat just one thing. A fox might eat rabbits AND mice AND birds, and rabbits are eaten by foxes AND owls AND hawks. When you connect all these overlapping chains, you get a food WEB — a network instead of a single line. The food-web diagram below shows producers on the left and energy flowing through the network towards the apex predator on the right.",
         "Only about 10 % of the energy at one trophic level is passed on to the next. The other 90 % is lost as heat from movement, growth, and life processes, or stays locked in undigested parts. That is why ecosystems can only support a few apex predators — there simply is not enough energy left at the top.",
-        "Drawing an ENERGY PYRAMID makes this loss obvious: producers form a wide base, primary consumers a smaller layer, secondary smaller still, and apex predators a tiny tip.",
+        "Drawing an ENERGY PYRAMID makes the loss obvious: producers form a wide base, primary consumers a smaller layer, secondary smaller still, and apex predators a tiny tip.",
       ],
       keyIdeas: [
         "A food web = many overlapping food chains.",
         "Only ~10 % of energy passes from one level to the next.",
         "Fewer organisms can be supported at higher trophic levels.",
+        "Decomposers receive dead matter from every level and recycle nutrients.",
       ],
       media: [
         {
           type: "image",
-          url: img_foodweb_jpg,
-          caption: "Energy pyramid showing the 10 % rule and dramatic energy loss between trophic levels."
+          url: img_food_web,
+          caption: "A food WEB: many overlapping food chains. Arrows point from the eaten organism to the one that eats it."
+        },
+        {
+          type: "image",
+          url: img_energy_pyramid,
+          caption: "Energy pyramid showing the 10 % rule. Producers form the base; only a fraction of energy reaches the apex."
         }
       ],
       vocabulary: [
