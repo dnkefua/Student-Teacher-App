@@ -13,6 +13,123 @@ interface SidebarProps {
   setIsMobileOpen: (isOpen: boolean) => void;
 }
 
+// ── Inline unit navigation ────────────────────────────────────────────
+// Each unit button reveals its module list (Overview, Core Concepts, etc.)
+// directly underneath when active, so the student no longer has to scroll
+// past every other chapter to reach the navigation for the unit they just
+// selected.
+type UnitMeta = {
+  id: UnitId;
+  label: string;
+  /** Tailwind text color class used for the small "UNIT N" badge label. */
+  accentText: string;
+  /** Tailwind classes used to highlight the active nav-item under this unit. */
+  activeTabBg: string;
+  activeTabText: string;
+};
+
+const ENGLISH_UNITS: UnitMeta[] = [
+  { id: 'unit1', label: 'Advertising & Persuasion', accentText: 'text-amber-400',   activeTabBg: 'bg-amber-500/10',   activeTabText: 'text-amber-400'   },
+  { id: 'unit2', label: 'The Novel',                accentText: 'text-rose-400',    activeTabBg: 'bg-rose-500/10',    activeTabText: 'text-rose-400'    },
+  { id: 'unit3', label: 'Voices in Verse',          accentText: 'text-fuchsia-400', activeTabBg: 'bg-fuchsia-500/10', activeTabText: 'text-fuchsia-400' },
+  { id: 'unit4', label: 'Language & Film',          accentText: 'text-amber-400',   activeTabBg: 'bg-amber-500/10',   activeTabText: 'text-amber-400'   },
+  { id: 'unit5', label: 'Shakespeare',              accentText: 'text-indigo-400',  activeTabBg: 'bg-indigo-500/10',  activeTabText: 'text-indigo-400'  },
+];
+
+const SCIENCE_UNITS: UnitMeta[] = [
+  { id: 'unit1', label: 'Who are we?',                accentText: 'text-emerald-400', activeTabBg: 'bg-emerald-500/10', activeTabText: 'text-emerald-400' },
+  { id: 'unit2', label: 'How do we map matter?',      accentText: 'text-teal-400',    activeTabBg: 'bg-teal-500/10',    activeTabText: 'text-teal-400'    },
+  { id: 'unit3', label: 'Ecology',                    accentText: 'text-green-400',   activeTabBg: 'bg-green-500/10',   activeTabText: 'text-green-400'   },
+  { id: 'unit4', label: 'Energy & Future',            accentText: 'text-cyan-400',    activeTabBg: 'bg-cyan-500/10',    activeTabText: 'text-cyan-400'    },
+  { id: 'unit5', label: 'What does a wave tell us',   accentText: 'text-blue-400',    activeTabBg: 'bg-blue-500/10',    activeTabText: 'text-blue-400'    },
+  { id: 'unit6', label: 'Photosynthesis',             accentText: 'text-lime-400',    activeTabBg: 'bg-lime-500/10',    activeTabText: 'text-lime-400'    },
+];
+
+const MATH_UNITS: UnitMeta[] = [
+  { id: 'unit1', label: 'Numerical & Abstract',  accentText: 'text-cyan-400',    activeTabBg: 'bg-cyan-500/10',    activeTabText: 'text-cyan-400'    },
+  { id: 'unit2', label: 'Thinking with Models',  accentText: 'text-violet-400',  activeTabBg: 'bg-violet-500/10',  activeTabText: 'text-violet-400'  },
+  { id: 'unit3', label: 'Spatial Reasoning',     accentText: 'text-emerald-400', activeTabBg: 'bg-emerald-500/10', activeTabText: 'text-emerald-400' },
+  { id: 'unit4', label: 'Reasoning with Data',   accentText: 'text-amber-400',   activeTabBg: 'bg-amber-500/10',   activeTabText: 'text-amber-400'   },
+];
+
+function unitsFor(subject: SubjectId): UnitMeta[] {
+  if (subject === 'english') return ENGLISH_UNITS;
+  if (subject === 'science') return SCIENCE_UNITS;
+  return MATH_UNITS;
+}
+
+function UnitListWithInlineNav({
+  subject,
+  currentUnit,
+  currentTab,
+  setUnit,
+  setTab,
+  navItems,
+}: {
+  subject: SubjectId;
+  currentUnit: UnitId;
+  currentTab: TabType;
+  setUnit: (u: UnitId) => void;
+  setTab: (t: TabType) => void;
+  navItems: { id: TabType; label: string; icon: React.ReactNode }[];
+}) {
+  const units = unitsFor(subject);
+  return (
+    <div className="space-y-2">
+      {units.map((u, idx) => {
+        const isActive = currentUnit === u.id;
+        return (
+          <div key={u.id}>
+            <button
+              onClick={() => {
+                setUnit(u.id);
+                setTab('overview');
+              }}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 border ${
+                isActive
+                  ? 'bg-slate-800/80 border-slate-700 text-white'
+                  : 'bg-transparent border-transparent text-slate-400 hover:bg-slate-800/50'
+              }`}
+            >
+              <div className="text-left">
+                <div className={`text-xs font-bold mb-0.5 ${u.accentText}`}>
+                  UNIT {idx + 1}
+                </div>
+                <div className="font-semibold text-sm">{u.label}</div>
+              </div>
+              <ChevronDown
+                className={`w-4 h-4 text-slate-500 transition-transform ${isActive ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {isActive && (
+              <nav className="mt-1 mb-2 ml-3 pl-3 border-l-2 border-slate-700/40 space-y-0.5">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1 mt-1">
+                  Modules
+                </p>
+                {navItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setTab(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm font-medium ${
+                      currentTab === item.id
+                        ? `${u.activeTabBg} ${u.activeTabText}`
+                        : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                    }`}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, currentTab, setTab, isMobileOpen, setIsMobileOpen }: SidebarProps) {
   const [globalProgress, setGlobalProgress] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -168,7 +285,19 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
         </div>
       
       <div className="p-4 flex-1 overflow-y-auto">
-        <div className="mb-6 space-y-2">
+        <UnitListWithInlineNav
+          subject={currentSubject}
+          currentUnit={currentUnit}
+          currentTab={currentTab}
+          setUnit={setUnit}
+          setTab={setTab}
+          navItems={navItems}
+        />
+        {/* Legacy unit-button + footer-nav markup retired in favour of
+            UnitListWithInlineNav above. Kept hidden as a safety net for
+            now; will be deleted in a follow-up commit once the new
+            layout is confirmed in production. */}
+        <div className="hidden" aria-hidden="true">
           {currentSubject === 'english' && (
             <>
                <button 
@@ -403,44 +532,8 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
           )}
         </div>
 
-        {true && (
-          <>
-            <h2 className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">
-              {currentUnit === 'unit1' && 'Unit 1 Navigation'}
-              {currentUnit === 'unit2' && 'Unit 2 Navigation'}
-              {currentUnit === 'unit3' && 'Unit 3 Navigation'}
-              {currentUnit === 'unit4' && 'Unit 4 Navigation'}
-              {currentUnit === 'unit5' && 'Unit 5 Navigation'}
-            </h2>
-            <nav className="space-y-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-sm font-medium ${
-                    currentTab === item.id 
-                      ? currentSubject === 'english'
-                        ? currentUnit === 'unit1' ? 'bg-amber-500/10 text-amber-400'
-                          : currentUnit === 'unit2' ? 'bg-rose-500/10 text-rose-400'
-                          : currentUnit === 'unit3' ? 'bg-fuchsia-500/10 text-fuchsia-400'
-                          : currentUnit === 'unit4' ? 'bg-amber-500/10 text-amber-400'
-                          : 'bg-indigo-500/10 text-indigo-400'
-                        : currentUnit === 'unit1' ? 'bg-cyan-500/10 text-cyan-400' 
-                        : currentUnit === 'unit2' ? 'bg-violet-500/10 text-violet-400'
-                        : currentUnit === 'unit3' ? 'bg-emerald-500/10 text-emerald-400'
-                        : 'bg-amber-500/10 text-amber-400'
-                      : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-                  }`}
-                >
-                  {item.icon}
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </>
-        )}
       </div>
-      
+
       {true && (
         <div className="p-4 border-t border-slate-800 shrink-0">
           <div className="bg-slate-800/50 rounded-xl p-4">
