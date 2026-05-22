@@ -17,7 +17,7 @@ export interface ConceptDef {
    * dispatches the id to a registered React component, so labs can be
    * authored once and surfaced anywhere a curriculum entry references them.
    */
-  interactiveLab?: 'mcdonalds-ads';
+  interactiveLab?: 'mcdonalds-ads' | 'states-of-matter';
 }
 
 export interface Example {

@@ -6,11 +6,18 @@ import { englishTheoryData } from '../../data/englishTheory';
 import { BookOpen, Calculator, Type, Focus, CheckCircle2, Zap, Maximize2, Lightbulb } from 'lucide-react';
 import ImageModal from '../ImageModal';
 
-// Lazy-load the interactive McDonald's persuasive-devices lab so the bundle
-// only pulls it in when the student lands on a concept that requires it.
+// Lazy-load each interactive lab so the bundle only pulls them in when the
+// student lands on a concept that uses one.
 const MediaAdvertisementLab = dynamic(
   () => import('@/components/english/MediaAdvertisementLab').then((m) => m.MediaAdvertisementLab),
   { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading advertising lab…</div> },
+);
+
+// 3D States of Matter (R3F particle model) — never SSR because the Canvas
+// needs a real browser context.
+const ParticleModel3D = dynamic(
+  () => import('@/components/grade8-platform/components/labs/ParticleModel3D').then((m) => m.ParticleModel3D),
+  { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading 3D particle lab…</div> },
 );
 
 /**
@@ -19,6 +26,7 @@ const MediaAdvertisementLab = dynamic(
  */
 const INTERACTIVE_LABS: Record<NonNullable<ConceptDef['interactiveLab']>, React.ComponentType> = {
   'mcdonalds-ads': MediaAdvertisementLab,
+  'states-of-matter': ParticleModel3D,
 };
 
 export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {

@@ -164,6 +164,28 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
   ],
   unit2: [
     {
+      title: "States of Matter — The Particle Model",
+      description: "Every substance is made of tiny particles. How energetic those particles are — and how strongly they hold onto each other — decides whether you see a solid, a liquid or a gas.",
+      paragraphs: [
+        "The particle model says that all matter is made of tiny particles (atoms or molecules) that are always in motion. The amount of energy they have and the strength of the forces holding them together are what give each state its distinctive behaviour.",
+        "In a SOLID, particles vibrate in fixed positions in a regular lattice. The attraction between particles is strong, so the substance keeps a definite shape and volume. Heat enough energy in and the particles break free from their lattice — the solid MELTS.",
+        "In a LIQUID, particles stay in contact but can slide past each other. The substance has a definite volume but takes the shape of its container. Add more energy and the particles overcome their forces of attraction entirely — the liquid BOILS / EVAPORATES into a gas.",
+        "In a GAS, particles fly freely with large empty spaces between them. The attraction is very weak, so a gas expands to fill any container — no fixed shape and no fixed volume. Remove energy and the reverse happens: gas → liquid → solid (condensation and freezing).",
+      ],
+      keyIdeas: [
+        "Solid → liquid → gas — particles gain energy and move further apart.",
+        "Adding heat = melting → boiling.  Removing heat = condensing → freezing.",
+        "Mass is conserved — same particles, just rearranged.",
+      ],
+      vocabulary: [
+        { term: "Particle", definition: "A tiny piece of matter — an atom, ion or molecule.", example: "Water (H₂O) is a particle made of three atoms." },
+        { term: "Melting Point", definition: "The temperature at which a solid becomes a liquid.", example: "Ice melts at 0 °C." },
+        { term: "Boiling Point", definition: "The temperature at which a liquid becomes a gas.", example: "Water boils at 100 °C at standard pressure." },
+        { term: "Diffusion", definition: "The spreading out of particles from high to low concentration. Faster in gases, slower in liquids." },
+      ],
+      interactiveLab: "states-of-matter",
+    },
+    {
       title: "The Atom and Physical Chemical Changes",
       description: "All matter is composed of incredibly small particles called atoms. Atoms consist of a dense, positively charged nucleus surrounded by a cloud of negatively charged electrons. When atoms rearrange themselves during reactions, chemical changes occur, but mass is always perfectly conserved.",
       media: [
