@@ -1,6 +1,6 @@
 export type SubjectId = 'math' | 'english' | 'science';
 export type UnitId = 'unit1' | 'unit2' | 'unit3' | 'unit4' | 'unit5' | 'unit6';
-export type TabType = 'overview' | 'learn' | 'lesson' | 'practice' | 'assessment' | 'assets' | 'exam';
+export type TabType = 'overview' | 'learn' | 'lesson' | 'practice' | 'assessment' | 'assets' | 'exam' | 'assignments';
 
 export interface ConceptDef {
   title: string;

@@ -8,9 +8,12 @@ type Props = {
   subject: SubjectId;
   label: string;
   children: React.ReactNode;
+  /** Forwarded to the Grade8PlatformApp so the Assignments tab knows
+   *  whether to render the teacher creator or the student worker. */
+  mode?: 'teacher' | 'student';
 };
 
-export function SubjectStudioShell({ subject, label, children }: Props) {
+export function SubjectStudioShell({ subject, label, children, mode = 'teacher' }: Props) {
   const [view, setView] = useState<'main' | 'development'>('main');
 
   return (
@@ -44,7 +47,7 @@ export function SubjectStudioShell({ subject, label, children }: Props) {
 
       {view === 'main' ? (
         <div className="h-[calc(100vh-150px)] min-h-[680px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <Grade8PlatformApp key={subject} initialSubject={subject} />
+          <Grade8PlatformApp key={subject} initialSubject={subject} mode={mode} />
         </div>
       ) : (
         <div className="rounded-lg border border-amber-300/50 bg-amber-50 p-3">

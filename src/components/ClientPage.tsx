@@ -167,17 +167,17 @@ function ClientPageInner() {
             {effectiveActiveTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'learning-hub' && mode === 'teacher' && <LearningDataHub mode={mode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'eis-maths' && (
-              <SubjectStudioShell subject="math" label="Grade 8 Maths">
+              <SubjectStudioShell subject="math" label="Grade 8 Maths" mode={mode}>
                 <EISMathStudio setActiveTab={selectTab} />
               </SubjectStudioShell>
             )}
             {effectiveActiveTab === 'english-studio' && (
-              <SubjectStudioShell subject="english" label="Year 8 English">
+              <SubjectStudioShell subject="english" label="Year 8 English" mode={mode}>
                 <EnglishStudio mode={mode} setActiveTab={selectTab} />
               </SubjectStudioShell>
             )}
             {effectiveActiveTab === 'science-studio' && (
-              <SubjectStudioShell subject="science" label="Year 8 Science">
+              <SubjectStudioShell subject="science" label="Year 8 Science" mode={mode}>
                 <ScienceStudio mode={mode} setActiveTab={selectTab} />
               </SubjectStudioShell>
             )}

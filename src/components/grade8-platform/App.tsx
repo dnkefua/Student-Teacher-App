@@ -14,11 +14,22 @@ import { PracticeView } from './components/practice/PracticeView';
 import { AssessmentView } from './components/assessment/AssessmentView';
 import { AssetsView } from './components/assets/AssetsView';
 import { GLExamView } from './components/exam/GLExamView';
+import { AssignmentManager } from './components/assignments/AssignmentManager';
 import { FloatingTools } from './components/FloatingTools';
 import { TabType, UnitId, SubjectId } from './types';
 import { Menu } from 'lucide-react';
 
-export default function App({ initialSubject = 'math' }: { initialSubject?: SubjectId }) {
+export default function App({
+  initialSubject = 'math',
+  mode = 'teacher',
+  studentId,
+}: {
+  initialSubject?: SubjectId;
+  /** Drives the Assignments tab: teachers create, students complete. */
+  mode?: 'teacher' | 'student';
+  /** Stable id for the student so their submissions persist across reloads. */
+  studentId?: string;
+}) {
   const [currentSubject, setCurrentSubject] = useState<SubjectId>(initialSubject);
   const [currentUnit, setCurrentUnit] = useState<UnitId>('unit1');
   const [currentTab, setCurrentTab] = useState<TabType>('overview');
@@ -57,6 +68,9 @@ export default function App({ initialSubject = 'math' }: { initialSubject?: Subj
           {currentTab === 'assessment' && <AssessmentView unit={currentUnit} subject={currentSubject} />}
           {currentTab === 'assets' && <AssetsView unit={currentUnit} subject={currentSubject} />}
           {currentTab === 'exam' && <GLExamView unit={currentUnit} subject={currentSubject} />}
+          {currentTab === 'assignments' && (
+            <AssignmentManager mode={mode} subject={currentSubject} studentId={studentId} />
+          )}
         </div>
       </main>
 

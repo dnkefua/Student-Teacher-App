@@ -113,7 +113,12 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
     }
   };
 
-  const navItems = getNavItems();
+  // Always append the Assignments tab to whichever per-subject nav list
+  // was returned, so teachers and students can reach it from anywhere.
+  const navItems = [
+    ...getNavItems(),
+    { id: 'assignments' as TabType, label: 'Assignments', icon: <GraduationCap className="w-5 h-5" /> },
+  ];
   
   const getThemeColor = () => {
     switch (currentUnit) {
