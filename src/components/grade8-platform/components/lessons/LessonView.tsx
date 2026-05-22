@@ -9,6 +9,103 @@ import { BookOpen, ChevronRight, Lightbulb, Calculator, Info, PenTool, ChevronDo
 import { UnitId, Example, SubjectId } from '../../types';
 import { ExampleGraph } from './ExampleGraph';
 
+/**
+ * Renders a single solved-example step in a clean textbook style:
+ *
+ *   • "Step N:" lifts out as a bold blue heading
+ *   • The English explanation stays as regular sans-serif body text
+ *   • The mathematical expression after the final ":" or after a clear
+ *     equation marker drops to its own centered display line in a
+ *     serif math face — no more monospace typewriter look.
+ *
+ * Accepts strings such as
+ *    "Step 1: Calculate 5% of 150: 0.05 × 150 = 7.5"
+ *    "Final Answer: 157.5 AED"
+ *    "Multiply both sides by 4: 4x = 24"
+ *
+ * If no recognisable structure is found, falls back to a plain paragraph.
+ */
+function MathStep({ text, tone = 'blue' }: { text: string; tone?: 'blue' | 'amber' | 'slate' }) {
+  // Normalise ASCII operators to their proper Unicode glyphs.
+  const normalize = (s: string) =>
+    s
+      .replace(/\s\*\s/g, ' × ')
+      .replace(/(\d)\*(\d)/g, '$1×$2')
+      .replace(/\s\/\s/g, ' ÷ ')
+      .replace(/\\n/g, '\n');
+
+  // Render the inline body, treating **…** as <strong> (existing convention).
+  const renderInline = (input: string) => {
+    const out: React.ReactNode[] = [];
+    const re = /\*\*(.*?)\*\*/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(input)) !== null) {
+      if (m.index > last) out.push(input.slice(last, m.index));
+      out.push(
+        <strong key={out.length} className="font-bold text-slate-900">
+          {m[1]}
+        </strong>,
+      );
+      last = m.index + m[0].length;
+    }
+    if (last < input.length) out.push(input.slice(last));
+    return out;
+  };
+
+  const looksLikeEquation = (s: string) => /=|→|->/.test(s) && /[0-9x-z()×÷+\-]/i.test(s);
+  const stepMatch = text.match(/^\s*(Step\s*\d+|Final\s*Answer|Answer|Method\s*\d+)\s*:\s*(.*)$/i);
+
+  let heading: string | null = null;
+  let rest = normalize(text);
+
+  if (stepMatch) {
+    heading = stepMatch[1];
+    rest = normalize(stepMatch[2]);
+  }
+
+  // If the rest contains a colon followed by an equation, split it.
+  let body: string | null = rest;
+  let equation: string | null = null;
+  const colonSplit = rest.split(/\s*:\s+/);
+  if (colonSplit.length >= 2 && looksLikeEquation(colonSplit[colonSplit.length - 1])) {
+    equation = colonSplit.pop()!.trim();
+    body = colonSplit.join(': ').trim() || null;
+  } else if (!stepMatch && looksLikeEquation(rest)) {
+    // No "Step N:" prefix but the whole line is an equation
+    body = null;
+    equation = rest;
+  }
+
+  const headingColor =
+    tone === 'amber'
+      ? 'text-amber-700'
+      : tone === 'slate'
+        ? 'text-slate-700'
+        : 'text-blue-600';
+
+  return (
+    <div className="text-slate-700 leading-relaxed">
+      {heading && (
+        <p className={`mb-1 text-base font-bold ${headingColor}`}>{heading}</p>
+      )}
+      {body && (
+        <p className="text-base">{renderInline(body)}</p>
+      )}
+      {equation && (
+        <div className="my-3 flex justify-center">
+          <span
+            className="inline-block rounded-md border border-slate-200 bg-slate-50 px-5 py-2 text-lg text-slate-900"
+            style={{ fontFamily: 'Cambria Math, Cambria, Georgia, "Times New Roman", serif' }}
+          >
+            {equation}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TechniqueCard({ tech }: { tech: any; key?: React.Key }) {
   const [expanded, setExpanded] = useState(false);
   
@@ -212,14 +309,11 @@ export function LessonView({ unit, subject }: { unit: UnitId, subject?: SubjectI
                             <span className="text-blue-600 font-bold mr-2">Example {idx + 1}:</span>
                             {se.question}
                           </div>
-                          <div className="p-4 bg-white space-y-2">
-                            <h4 className="font-bold text-xs uppercase text-slate-500 tracking-wider mb-2">Solution</h4>
-                            {se.solution.map((step, sIdx) => {
-                               const formatted = step.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                               return (
-                                 <p key={sIdx} className="text-slate-700 font-mono text-sm" dangerouslySetInnerHTML={{ __html: formatted }}></p>
-                               );
-                            })}
+                          <div className="p-5 bg-white space-y-3">
+                            <h4 className="font-bold text-xs uppercase text-slate-500 tracking-wider mb-1">Solution</h4>
+                            {se.solution.map((step, sIdx) => (
+                              <MathStep key={sIdx} text={step} />
+                            ))}
                           </div>
                         </div>
                       ))}
@@ -241,17 +335,19 @@ export function LessonView({ unit, subject }: { unit: UnitId, subject?: SubjectI
                         ))
                       ) : (
                         ex.method1Steps && ex.method1Steps.map((step, idx) => {
+                          // Each line may bundle several sub-lines separated by literal "\n".
                           const parts = step.split('\\n');
-                         return (
-                          <div key={idx} className="text-slate-600 text-sm leading-relaxed p-4 bg-slate-50 rounded-xl border border-slate-100">
-                             {parts.map((part, i) => {
-                               const formatted = part.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                               return (
-                                 <p key={i} className={i > 0 ? "mt-2 font-mono text-xs bg-slate-200 px-2 py-1 rounded inline-block text-slate-800" : ""} dangerouslySetInnerHTML={{ __html: formatted }}></p>
-                               )
-                             })}
-                          </div>
-                        )})
+                          return (
+                            <div
+                              key={idx}
+                              className="p-5 bg-slate-50 rounded-xl border border-slate-100 space-y-2"
+                            >
+                              {parts.map((part, i) => (
+                                <MathStep key={i} text={part} tone="blue" />
+                              ))}
+                            </div>
+                          );
+                        })
                       )}
                     </div>
                   </div>
@@ -266,16 +362,17 @@ export function LessonView({ unit, subject }: { unit: UnitId, subject?: SubjectI
                       <div className="space-y-4">
                         {ex.method2Steps.map((step, idx) => {
                           const parts = step.split('\\n');
-                         return (
-                          <div key={idx} className="text-slate-600 text-sm leading-relaxed p-4 bg-amber-50/50 rounded-xl border border-amber-100/50">
-                             {parts.map((part, i) => {
-                               const formatted = part.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                               return (
-                                 <p key={i} className={i > 0 ? "mt-2 font-mono text-xs bg-amber-100/80 px-2 py-1 rounded inline-block text-amber-900" : ""} dangerouslySetInnerHTML={{ __html: formatted }}></p>
-                               )
-                             })}
-                          </div>
-                        )})}
+                          return (
+                            <div
+                              key={idx}
+                              className="p-5 bg-amber-50/50 rounded-xl border border-amber-100/50 space-y-2"
+                            >
+                              {parts.map((part, i) => (
+                                <MathStep key={i} text={part} tone="amber" />
+                              ))}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
