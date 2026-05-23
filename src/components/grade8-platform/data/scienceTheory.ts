@@ -46,6 +46,7 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
         { term: "Organelle", definition: "A tiny cellular structure that performs specific functions within a cell.", example: "Mitochondria act as the powerhouses of the cell." },
         { term: "Tissue", definition: "A group of similar cells working together to perform a specific function.", example: "Muscle tissue allows for movement." }
       ],
+      interactiveLab: "cell-3d",
       formulas: [
         { 
           name: "Magnification Calculation", 
@@ -202,6 +203,7 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
         "Physical change: same substance, new form.  Chemical change: new substance.",
         "Mass is conserved in every reaction — atoms are only rearranged.",
       ],
+      interactiveLab: "chemical-reaction",
       media: [
         {
           type: "image",
@@ -313,6 +315,7 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
           ],
         },
       ],
+      interactiveLab: "ecosystem-simulation",
     },
     {
       title: "Decomposers — Recycling the Ecosystem",
@@ -357,6 +360,7 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
         "Greenhouse gases trap infrared radiation → enhanced greenhouse effect → warming.",
         "Renewables (solar, wind, hydro) are the low-carbon alternative.",
       ],
+      interactiveLab: "forces-motion",
       media: [
         {
           type: "image",
@@ -409,6 +413,7 @@ export const scienceTheoryData: Record<string, ConceptDef[]> = {
         "All EM waves travel at 3 × 10⁸ m/s in a vacuum.",
         "Shorter wavelength = higher frequency = higher energy.",
       ],
+      interactiveLab: "electric-circuit",
       media: [
         {
           type: "image",

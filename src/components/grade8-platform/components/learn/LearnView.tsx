@@ -20,6 +20,26 @@ const ParticleModel3D = dynamic(
   () => import('@/components/grade8-platform/components/labs/ParticleModel3D').then((m) => m.ParticleModel3D),
   { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading 3D particle lab…</div> },
 );
+const Cell3DLab = dynamic(
+  () => import('@/components/grade8-platform/components/labs/Cell3DLab').then((m) => m.Cell3DLab),
+  { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading 3D cell lab…</div> },
+);
+const ChemicalReactionLab = dynamic(
+  () => import('@/components/grade8-platform/components/labs/ChemicalReactionLab').then((m) => m.ChemicalReactionLabComponent),
+  { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading reaction lab…</div> },
+);
+const CircuitLab = dynamic(
+  () => import('@/components/grade8-platform/components/labs/CircuitLab').then((m) => m.CircuitLab),
+  { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading circuit lab…</div> },
+);
+const ForcesMotionLab = dynamic(
+  () => import('@/components/grade8-platform/components/labs/ForcesMotionLab').then((m) => m.ForcesMotionLab),
+  { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading forces lab…</div> },
+);
+const EcosystemLab = dynamic(
+  () => import('@/components/grade8-platform/components/labs/EcosystemLab').then((m) => m.EcosystemLab),
+  { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading ecosystem sim…</div> },
+);
 
 /**
  * Registry of available interactive labs. The data only stores a short id;
@@ -28,6 +48,11 @@ const ParticleModel3D = dynamic(
 const INTERACTIVE_LABS: Record<NonNullable<ConceptDef['interactiveLab']>, React.ComponentType> = {
   'mcdonalds-ads': MediaAdvertisementLab,
   'states-of-matter': ParticleModel3D,
+  'cell-3d': Cell3DLab,
+  'chemical-reaction': ChemicalReactionLab,
+  'electric-circuit': CircuitLab,
+  'forces-motion': ForcesMotionLab,
+  'ecosystem-simulation': EcosystemLab,
 };
 
 export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {
