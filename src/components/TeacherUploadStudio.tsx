@@ -16,7 +16,14 @@ import {
   X,
 } from 'lucide-react';
 import { LessonLibraryPanel } from './LessonLibraryPanel';
-import { extractPdfText } from '@/lib/extractors/pdfExtractor';
+// pdfExtractor pulls in pdfjs-dist which uses topLevelAwait. Static import
+// would force every page load to include the pdf bundle and emit the
+// "target environment does not support async/await" warning during dev.
+// Load it dynamically only when the user actually picks a PDF.
+async function loadPdfExtractor() {
+  const mod = await import('@/lib/extractors/pdfExtractor');
+  return mod.extractPdfText;
+}
 import type { TabType } from './Sidebar';
 import { aiGenerateLesson } from '@/lib/ai/client';
 import type { GeneratedLesson as AiGeneratedLesson } from '@/lib/ai/types';
@@ -132,6 +139,7 @@ export function TeacherUploadStudio({ setActiveTab }: TeacherUploadStudioProps =
     if (picked.type === 'application/pdf') {
       setExtracting(true);
       try {
+        const extractPdfText = await loadPdfExtractor();
         const text = await extractPdfText(picked);
         if (text) {
           setContext((prev) => (prev ? `${prev}\n\n--- From ${picked.name} ---\n${text}` : text));

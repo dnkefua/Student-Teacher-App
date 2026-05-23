@@ -109,14 +109,22 @@ function writeLocal(store: Store) {
 let fsSubscribersAttached = false;
 let fsUnsubA: Unsubscribe | null = null;
 let fsUnsubS: Unsubscribe | null = null;
+/** True once a Firestore network error has occurred so we stop retrying
+ *  and stop polluting the console. */
+let fsDisabledAfterError = false;
 
 /**
  * Lazily attach Firestore onSnapshot listeners the first time the store
  * is touched on the client. Both collections feed the same in-memory
  * cache so readers see consistent state.
+ *
+ * The onSnapshot calls also get an error handler — if Firestore can't be
+ * reached (DNS failure, network drop, unauthenticated, security rules
+ * deny) we disconnect, set fsDisabledAfterError, and the rest of the
+ * app silently falls back to the localStorage path. No console spam.
  */
 function ensureFirestoreSubscribed() {
-  if (!useFirestore() || fsSubscribersAttached) return;
+  if (!useFirestore() || fsSubscribersAttached || fsDisabledAfterError) return;
   const db = getDb();
   if (!db) return;
   fsSubscribersAttached = true;
@@ -125,28 +133,50 @@ function ensureFirestoreSubscribed() {
   // to render between page-load and the first snapshot.
   cache = readLocal();
 
-  fsUnsubA = onSnapshot(collection(db, FS_ASSIGNMENTS), (snap) => {
-    const next = snap.docs.map((d) => d.data() as Assignment);
-    cache = { ...cache, assignments: next };
-    // Mirror to localStorage so a momentarily-offline reload still works.
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-    } catch {
-      /* ignore */
+  const onFsError = (err: unknown) => {
+    // Drop the listeners and stop retrying — log once at warn level so
+    // engineers can still see it during development.
+    fsDisabledAfterError = true;
+    if (fsUnsubA) { fsUnsubA(); fsUnsubA = null; }
+    if (fsUnsubS) { fsUnsubS(); fsUnsubS = null; }
+    fsSubscribersAttached = false;
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn(
+        '[assignmentStore] Firestore unreachable — falling back to localStorage.',
+        err instanceof Error ? err.message : err,
+      );
     }
-    emitChange();
-  });
+  };
 
-  fsUnsubS = onSnapshot(collection(db, FS_SUBMISSIONS), (snap) => {
-    const next = snap.docs.map((d) => d.data() as Submission);
-    cache = { ...cache, submissions: next };
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
-    } catch {
-      /* ignore */
-    }
-    emitChange();
-  });
+  fsUnsubA = onSnapshot(
+    collection(db, FS_ASSIGNMENTS),
+    (snap) => {
+      const next = snap.docs.map((d) => d.data() as Assignment);
+      cache = { ...cache, assignments: next };
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+      } catch {
+        /* ignore */
+      }
+      emitChange();
+    },
+    onFsError,
+  );
+
+  fsUnsubS = onSnapshot(
+    collection(db, FS_SUBMISSIONS),
+    (snap) => {
+      const next = snap.docs.map((d) => d.data() as Submission);
+      cache = { ...cache, submissions: next };
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cache));
+      } catch {
+        /* ignore */
+      }
+      emitChange();
+    },
+    onFsError,
+  );
 }
 
 // On the client, also seed cache from localStorage immediately for the
@@ -176,7 +206,7 @@ export function createAssignment(
     id: input.id ?? `assignment-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     createdAt: new Date().toISOString(),
   };
-  if (useFirestore()) {
+  if (useFirestore() && !fsDisabledAfterError) {
     const db = getDb();
     if (db) {
       void setDoc(doc(db, FS_ASSIGNMENTS, assignment.id), assignment);
@@ -195,7 +225,7 @@ export function createAssignment(
 }
 
 export function deleteAssignment(id: string) {
-  if (useFirestore()) {
+  if (useFirestore() && !fsDisabledAfterError) {
     const db = getDb();
     if (db) {
       void deleteDoc(doc(db, FS_ASSIGNMENTS, id));
@@ -220,7 +250,7 @@ export function deleteAssignment(id: string) {
 }
 
 export function submitAssignment(submission: Submission) {
-  if (useFirestore()) {
+  if (useFirestore() && !fsDisabledAfterError) {
     const db = getDb();
     if (db) {
       // Composite-key the submission so re-submitting overwrites the same doc.
