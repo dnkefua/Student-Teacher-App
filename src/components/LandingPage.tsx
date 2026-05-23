@@ -126,11 +126,26 @@ const CRITERIA = [
 
 // ── Hooks ────────────────────────────────────────────────────────────
 
-/** Tracks normalised mouse position (-1 … +1) for 3D parallax. */
+/**
+ * Tracks normalised mouse position (-1 … +1) for 3D parallax.
+ *
+ * On touch devices (no fine pointer) we disable the listener entirely so
+ * scrolling on a phone is never starved of CPU by parallax recalculation.
+ * Also respects `prefers-reduced-motion`: returns a fixed centred value.
+ */
 function useMouseParallax() {
   const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [enabled, setEnabled] = useState(false);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const fine = window.matchMedia('(pointer: fine)').matches;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setEnabled(fine && !reduced);
+  }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
     const handle = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth) * 2 - 1;
       const y = (e.clientY / window.innerHeight) * 2 - 1;
@@ -138,8 +153,26 @@ function useMouseParallax() {
     };
     window.addEventListener('mousemove', handle);
     return () => window.removeEventListener('mousemove', handle);
-  }, []);
+  }, [enabled]);
+
   return pos;
+}
+
+/**
+ * Detects whether we're on a small / touch device. Used to thin the
+ * particle field and shrink heavy effects on mobile.
+ */
+function useIsCompactViewport() {
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(max-width: 640px), (pointer: coarse)');
+    const update = () => setCompact(mq.matches);
+    update();
+    mq.addEventListener?.('change', update);
+    return () => mq.removeEventListener?.('change', update);
+  }, []);
+  return compact;
 }
 
 /** Animated count-up from 0 to `target` over `durationMs`. */
@@ -208,7 +241,7 @@ function ParticleField({ count = 60 }: { count?: number }) {
 function StudioHub({ mouse }: { mouse: { x: number; y: number } }) {
   return (
     <div
-      className="relative grid h-80 w-80 place-items-center md:h-96 md:w-96"
+      className="relative grid h-56 w-56 place-items-center sm:h-72 sm:w-72 md:h-96 md:w-96"
       style={{
         transform: `perspective(1200px) rotateX(${mouse.y * -4}deg) rotateY(${mouse.x * 4}deg)`,
         transition: 'transform 0.25s ease-out',
@@ -258,15 +291,15 @@ function StudioHub({ mouse }: { mouse: { x: number; y: number } }) {
       </svg>
 
       {/* central glass disc */}
-      <div className="relative grid h-44 w-44 place-items-center rounded-full border border-white/30 bg-gradient-to-br from-[#0c4a6e]/70 via-[#5b21b6]/70 to-[#831843]/70 shadow-[inset_0_0_50px_rgba(255,255,255,0.2),0_0_80px_rgba(217,70,239,0.4)] backdrop-blur-xl">
-        <div className="text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">
+      <div className="relative grid h-32 w-32 place-items-center rounded-full border border-white/30 bg-gradient-to-br from-[#0c4a6e]/70 via-[#5b21b6]/70 to-[#831843]/70 shadow-[inset_0_0_50px_rgba(255,255,255,0.2),0_0_80px_rgba(217,70,239,0.4)] backdrop-blur-xl sm:h-40 sm:w-40 md:h-44 md:w-44">
+        <div className="px-3 text-center">
+          <p className="text-[8px] font-black uppercase tracking-[0.3em] text-white/60 sm:text-[10px]">
             EIS Jumeirah
           </p>
-          <p className="mt-1 bg-gradient-to-r from-sky-200 via-white to-fuchsia-200 bg-clip-text text-lg font-black text-transparent">
+          <p className="mt-1 bg-gradient-to-r from-sky-200 via-white to-fuchsia-200 bg-clip-text text-sm font-black text-transparent sm:text-base md:text-lg">
             Learning Studio
           </p>
-          <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/50">
+          <p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-white/50 sm:text-[9px]">
             Grade 8 · One Platform
           </p>
         </div>
@@ -282,10 +315,10 @@ function StudioHub({ mouse }: { mouse: { x: number; y: number } }) {
             style={{ transform: `rotate(${angle}deg)`, animation: 'landing-spin 25s linear infinite' }}
           >
             <div
-              className={`absolute left-1/2 top-1 -translate-x-1/2 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br ${s.from} ${s.to} shadow-lg ring-2 ring-white/40`}
+              className={`absolute left-1/2 top-1 -translate-x-1/2 grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br ${s.from} ${s.to} shadow-lg ring-2 ring-white/40 sm:h-9 sm:w-9 md:h-10 md:w-10`}
               style={{ animation: 'landing-spin 25s linear infinite reverse' }}
             >
-              <s.icon className="h-4 w-4 text-white" />
+              <s.icon className="h-3.5 w-3.5 text-white sm:h-4 sm:w-4" />
             </div>
           </div>
         );
@@ -419,12 +452,12 @@ function SubjectCard({
 function StatTile({ stat }: { stat: typeof STATS[number] }) {
   const value = useCountUp(stat.value, 1400);
   return (
-    <div className="rounded-2xl border border-white/15 bg-white/5 p-4 text-center backdrop-blur-xl">
-      <p className="bg-gradient-to-r from-sky-300 via-fuchsia-200 to-amber-200 bg-clip-text text-3xl font-black text-transparent">
+    <div className="rounded-xl border border-white/15 bg-white/5 px-2 py-3 text-center backdrop-blur-xl sm:rounded-2xl sm:p-4">
+      <p className="bg-gradient-to-r from-sky-300 via-fuchsia-200 to-amber-200 bg-clip-text text-2xl font-black text-transparent sm:text-3xl">
         {value}
         {stat.suffix}
       </p>
-      <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+      <p className="mt-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-white/60 sm:mt-1 sm:text-[10px] sm:tracking-[0.2em]">
         {stat.label}
       </p>
     </div>
@@ -467,6 +500,7 @@ function FeatureCard({ feature, mouse, index }: { feature: Feature; mouse: { x: 
 export function LandingPage() {
   const [showPlatform, setShowPlatform] = useState(false);
   const mouse = useMouseParallax();
+  const compact = useIsCompactViewport();
 
   if (showPlatform) {
     return <ClientPage />;
@@ -495,44 +529,50 @@ export function LandingPage() {
         <div className="absolute right-[6%] top-[12%] h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" style={{ animation: 'landing-float 18s ease-in-out 2s infinite' }} />
         <div className="absolute left-[10%] bottom-[8%] h-80 w-80 rounded-full bg-amber-500/15 blur-3xl" style={{ animation: 'landing-float 20s ease-in-out 1s infinite' }} />
         <div className="absolute right-[8%] bottom-[10%] h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl" style={{ animation: 'landing-float 17s ease-in-out 3s infinite' }} />
-        {/* twinkling particle field */}
-        <ParticleField count={70} />
+        {/* twinkling particle field — thinner on mobile to save battery & paint cost */}
+        <ParticleField count={compact ? 25 : 70} />
       </div>
 
       {/* ──────── top bar ──────── */}
-      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-        <div className="flex items-center gap-3">
-          <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-white/20 bg-white/10 backdrop-blur-xl">
+      <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-8 sm:py-5">
+        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl border border-white/20 bg-white/10 backdrop-blur-xl sm:h-10 sm:w-10">
             <Image src={brandLogoSrc} alt="EIS Learning Studio" fill sizes="40px" />
           </div>
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">Emirates International School</p>
-            <p className="text-sm font-black text-white">Learning Studio · Jumeirah</p>
+          <div className="min-w-0">
+            <p className="hidden text-[10px] font-black uppercase tracking-[0.3em] text-white/70 sm:block">
+              Emirates International School
+            </p>
+            <p className="truncate text-xs font-black text-white sm:text-sm">
+              <span className="sm:hidden">EIS Studio</span>
+              <span className="hidden sm:inline">Learning Studio · Jumeirah</span>
+            </p>
           </div>
         </div>
         <button
           onClick={() => setShowPlatform(true)}
-          className="group inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-white backdrop-blur-xl transition hover:border-white/40 hover:bg-white/20"
+          className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-xl transition hover:border-white/40 hover:bg-white/20 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
         >
-          Enter platform
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          <span className="hidden sm:inline">Enter platform</span>
+          <span className="sm:hidden">Enter</span>
+          <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5 sm:h-3.5 sm:w-3.5" />
         </button>
       </header>
 
       {/* ──────── hero copy ──────── */}
-      <section className="relative z-10 mx-auto max-w-5xl px-5 pt-6 text-center sm:px-8 sm:pt-12">
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.4em] text-white/70 backdrop-blur-xl">
-          <Sparkles className="h-3.5 w-3.5" />
+      <section className="relative z-10 mx-auto max-w-5xl px-4 pt-4 text-center sm:px-8 sm:pt-12">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.3em] text-white/70 backdrop-blur-xl sm:gap-2 sm:px-3 sm:text-[10px] sm:tracking-[0.4em]">
+          <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           Grade 8 · IB MYP
         </span>
-        <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight text-white sm:text-6xl">
+        <h1 className="mt-4 text-[1.75rem] font-black leading-[1.1] tracking-tight text-white sm:mt-5 sm:text-5xl md:text-6xl">
           <span className="bg-gradient-to-r from-sky-300 via-fuchsia-200 to-amber-200 bg-clip-text text-transparent">
             Three subjects.
           </span>
           <br />
           One studio. Every concept.
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
+        <p className="mx-auto mt-3 max-w-2xl text-xs leading-5 text-slate-300 sm:mt-4 sm:text-base sm:leading-6">
           Maths, Science and English brought together with worked solutions,
           3D interactive labs, labelled diagrams, read-aloud lessons and a
           built-in teacher → student assignment loop.
@@ -540,8 +580,8 @@ export function LandingPage() {
       </section>
 
       {/* ──────── stats strip ──────── */}
-      <section className="relative z-10 mx-auto mt-8 max-w-3xl px-5 sm:px-8">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <section className="relative z-10 mx-auto mt-6 max-w-3xl px-4 sm:mt-8 sm:px-8">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
           {STATS.map((s) => (
             <StatTile key={s.label} stat={s} />
           ))}
@@ -549,30 +589,33 @@ export function LandingPage() {
       </section>
 
       {/* ──────── 3D Hub + Subject cards ──────── */}
-      <section className="relative z-10 mx-auto mt-14 max-w-7xl px-5 sm:px-8">
-        <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_auto_1fr]">
+      <section className="relative z-10 mx-auto mt-10 max-w-7xl px-4 sm:mt-14 sm:px-8">
+        {/* Mobile: hub stays at the top, then all three subject cards stack.
+            Desktop: classic side-by-side composition with the hub in the
+            centre column. */}
+        <div className="relative grid items-center gap-6 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
+          {/* centre hub (sits first on mobile, in column 2 on desktop) */}
+          <div className="order-first flex justify-center lg:order-none lg:col-start-2">
+            <StudioHub mouse={mouse} />
+          </div>
+
           {/* left subject card */}
-          <div className="flex justify-center">
+          <div className="flex justify-center lg:col-start-1 lg:row-start-1">
             <div className="w-full max-w-sm">
               <SubjectCard subject={SUBJECTS[0]} mouse={mouse} index={0} />
             </div>
           </div>
 
-          {/* centre hub */}
-          <div className="order-first flex justify-center lg:order-none">
-            <StudioHub mouse={mouse} />
-          </div>
-
           {/* right subject card */}
-          <div className="flex justify-center">
+          <div className="flex justify-center lg:col-start-3 lg:row-start-1">
             <div className="w-full max-w-sm">
               <SubjectCard subject={SUBJECTS[2]} mouse={mouse} index={2} />
             </div>
           </div>
         </div>
 
-        {/* science card centred below the hub */}
-        <div className="mt-8 flex justify-center">
+        {/* science card centred below the hub on all viewports */}
+        <div className="mt-6 flex justify-center sm:mt-8">
           <div className="w-full max-w-sm">
             <SubjectCard subject={SUBJECTS[1]} mouse={mouse} index={1} />
           </div>
@@ -580,14 +623,16 @@ export function LandingPage() {
       </section>
 
       {/* ──────── Feature constellation ──────── */}
-      <section className="relative z-10 mx-auto mt-20 max-w-6xl px-5 sm:px-8">
-        <div className="mb-6 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60">What you get</p>
-          <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
+      <section className="relative z-10 mx-auto mt-12 max-w-6xl px-4 sm:mt-20 sm:px-8">
+        <div className="mb-5 text-center sm:mb-6">
+          <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white/60 sm:text-[10px] sm:tracking-[0.4em]">
+            What you get
+          </p>
+          <h2 className="mt-2 text-xl font-black text-white sm:text-3xl">
             A complete teaching toolkit
           </h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {FEATURES.map((f, i) => (
             <FeatureCard key={f.title} feature={f} mouse={mouse} index={i} />
           ))}
@@ -595,21 +640,21 @@ export function LandingPage() {
       </section>
 
       {/* ──────── assessment criteria strip ──────── */}
-      <section className="relative z-10 mx-auto mt-16 max-w-5xl px-5 sm:px-8">
-        <div className="rounded-3xl border border-white/15 bg-white/5 p-5 backdrop-blur-2xl">
+      <section className="relative z-10 mx-auto mt-10 max-w-5xl px-4 sm:mt-16 sm:px-8">
+        <div className="rounded-2xl border border-white/15 bg-white/5 p-4 backdrop-blur-2xl sm:rounded-3xl sm:p-5">
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60">
+            <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/60 sm:text-[10px] sm:tracking-[0.4em]">
               Assessment Objectives · MYP Criteria
             </span>
             <span className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2.5 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
             {CRITERIA.map((c) => (
-              <div key={c.tag} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 px-3 py-3 transition hover:-translate-y-0.5 hover:border-white/30">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-400 to-fuchsia-400 text-xs font-black text-slate-900">
+              <div key={c.tag} className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 px-2.5 py-2.5 transition hover:-translate-y-0.5 hover:border-white/30 sm:gap-3 sm:rounded-2xl sm:px-3 sm:py-3">
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-400 to-fuchsia-400 text-[10px] font-black text-slate-900 sm:h-8 sm:w-8 sm:text-xs">
                   {c.tag}
                 </span>
-                <span className="text-xs font-bold text-white">{c.label}</span>
+                <span className="text-[11px] font-bold text-white sm:text-xs">{c.label}</span>
               </div>
             ))}
           </div>
@@ -617,16 +662,16 @@ export function LandingPage() {
       </section>
 
       {/* ──────── CTA ──────── */}
-      <section className="relative z-10 mx-auto mt-12 max-w-3xl px-5 pb-16 text-center sm:mt-16 sm:px-8 sm:pb-24">
+      <section className="relative z-10 mx-auto mt-10 max-w-3xl px-4 pb-12 text-center sm:mt-16 sm:px-8 sm:pb-24">
         <button
           onClick={() => setShowPlatform(true)}
-          className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-sky-400 via-fuchsia-400 to-amber-300 px-8 py-4 text-sm font-black uppercase tracking-widest text-slate-950 shadow-[0_30px_80px_-20px_rgba(217,70,239,0.6)] transition hover:shadow-[0_30px_100px_-15px_rgba(217,70,239,0.8)]"
+          className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-sky-400 via-fuchsia-400 to-amber-300 px-6 py-3.5 text-xs font-black uppercase tracking-widest text-slate-950 shadow-[0_30px_80px_-20px_rgba(217,70,239,0.6)] transition hover:shadow-[0_30px_100px_-15px_rgba(217,70,239,0.8)] sm:w-auto sm:gap-3 sm:px-8 sm:py-4 sm:text-sm"
         >
           <span className="relative">Enter the studio</span>
-          <ArrowRight className="relative h-4 w-4 transition-transform group-hover:translate-x-1" />
+          <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-1 sm:h-4 sm:w-4" />
           <span className="absolute inset-0 -translate-x-full bg-white/40 transition-transform duration-700 group-hover:translate-x-full" />
         </button>
-        <p className="mt-4 text-[10px] font-black uppercase tracking-[0.4em] text-white/40">
+        <p className="mt-4 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 sm:text-[10px] sm:tracking-[0.4em]">
           Built for Emirates International School · Jumeirah
         </p>
       </section>
