@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { TabType } from './Sidebar';
 import { StudentDashboardClean } from '@/components/StudentDashboardClean';
+import { ClassLinkSettings } from '@/components/ClassLinkSettings';
 import { ExplainerByType } from '@/components/Math3DExplainers';
 import { Math3DShowcase } from '@/components/Math3DShowcase';
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
@@ -437,6 +438,11 @@ function TeacherDashboard({
             })}
           </div>
         </section>
+
+        {/* Class-link settings — appears at the bottom of the teacher dashboard
+            so teachers can paste the live-class URL once without poking at
+            localStorage. Read by ClassLink on the student dashboard. */}
+        <ClassLinkSettings />
       </div>
     );
   }
