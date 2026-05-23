@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { UnitId, SubjectId, ConceptDef } from '../../types';
 import { scienceTheoryData } from '../../data/scienceTheory';
 import { englishTheoryData } from '../../data/englishTheory';
+import { mathTheoryData } from '../../data/mathTheory';
 import { BookOpen, Calculator, Type, Focus, CheckCircle2, Zap, Maximize2, Lightbulb } from 'lucide-react';
 import ImageModal from '../ImageModal';
 import { ReadAloud } from './ReadAloud';
@@ -58,19 +59,19 @@ const INTERACTIVE_LABS: Record<NonNullable<ConceptDef['interactiveLab']>, React.
 export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {
   const [modalImage, setModalImage] = useState<{url: string, caption?: string} | null>(null);
 
-  // Pick the theory data set for the active subject. Maths still has no
-  // dedicated "Learn" concepts in this platform — it surfaces via Lessons.
+  // Pick the theory data set for the active subject.
   const concepts: ConceptDef[] | undefined =
     subject === 'science' ? scienceTheoryData[unit] :
     subject === 'english' ? englishTheoryData[unit] :
+    subject === 'math' ? mathTheoryData[unit] :
     undefined;
 
-  if (!subject || subject === 'math') {
+  if (!subject) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500 min-h-[50vh]">
         <BookOpen className="w-16 h-16 mb-4 opacity-50 text-blue-500" />
-        <h3 className="text-xl font-bold text-slate-800 mb-2">Use the Lessons tab for Maths</h3>
-        <p>Maths content lives in the Lessons tab with worked examples and step-by-step working.</p>
+        <h3 className="text-xl font-bold text-slate-800 mb-2">Pick a subject</h3>
+        <p>Choose Maths, Science or English from the sidebar to read its core concepts.</p>
       </div>
     );
   }

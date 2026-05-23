@@ -196,7 +196,8 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
       case 'unit1':
         return [
           { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
-          { id: 'lesson' as TabType, label: '1.1 Proportions & %', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'learn' as TabType, label: 'Core Concepts', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '1.1 Proportions & %', icon: <Calculator className="w-5 h-5" /> },
           { id: 'practice' as TabType, label: 'Practice (10 Qs)', icon: <PenTool className="w-5 h-5" /> },
           { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
           { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
@@ -204,7 +205,8 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
       case 'unit2':
         return [
           { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
-          { id: 'lesson' as TabType, label: '2.1 & 2.2 Models', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'learn' as TabType, label: 'Core Concepts', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '2.1 & 2.2 Models', icon: <Calculator className="w-5 h-5" /> },
           { id: 'practice' as TabType, label: 'Practice (18 Qs)', icon: <PenTool className="w-5 h-5" /> },
           { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
           { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
@@ -212,7 +214,8 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
       case 'unit3':
         return [
           { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
-          { id: 'lesson' as TabType, label: '3.1 & 3.2 Spatial', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'learn' as TabType, label: 'Core Concepts', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '3.1 & 3.2 Spatial', icon: <Calculator className="w-5 h-5" /> },
           { id: 'practice' as TabType, label: 'Practice (20 Qs)', icon: <PenTool className="w-5 h-5" /> },
           { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
           { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
@@ -220,7 +223,8 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
       case 'unit4':
         return [
           { id: 'overview' as TabType, label: 'Unit Overview', icon: <Target className="w-5 h-5" /> },
-          { id: 'lesson' as TabType, label: '4.1 & 4.2 Data', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'learn' as TabType, label: 'Core Concepts', icon: <BookOpen className="w-5 h-5" /> },
+          { id: 'lesson' as TabType, label: '4.1 & 4.2 Data', icon: <Calculator className="w-5 h-5" /> },
           { id: 'practice' as TabType, label: 'Practice (20 Qs)', icon: <PenTool className="w-5 h-5" /> },
           { id: 'assessment' as TabType, label: 'Assessment', icon: <CheckSquare className="w-5 h-5" /> },
           { id: 'exam' as TabType, label: 'GL Exams', icon: <PenTool className="w-5 h-5" /> },
