@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Volume2, Pause, Square, Settings2 } from 'lucide-react';
+import { Volume2, Pause, Square, Settings2, Cloud, Loader2 } from 'lucide-react';
 
 /**
  * Browser-native text-to-speech control with a hand-picked voice list.
@@ -25,10 +25,26 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
   const [supported, setSupported] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [voiceURI, setVoiceURI] = useState<string | null>(null);
   const [showPicker, setShowPicker] = useState(false);
+  const [cloudAvailable, setCloudAvailable] = useState<boolean | null>(null);
+  const [usingCloud, setUsingCloud] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // ── probe the cloud TTS endpoint once ────────────────────────────
+  useEffect(() => {
+    // HEAD with an empty body — endpoint returns 400 (missing_text) if a
+    // provider is configured, 503 if not. Either way we tell quickly.
+    fetch('/api/tts', { method: 'GET' })
+      .then((r) => {
+        // 503 == no_provider, 400 == provider exists but no text yet.
+        setCloudAvailable(r.status !== 503);
+      })
+      .catch(() => setCloudAvailable(false));
+  }, []);
 
   // ── voice discovery ───────────────────────────────────────────────
   useEffect(() => {
@@ -109,12 +125,12 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
       .replace(/([.!?])\s+/g, '$1   ') // triple-space gives engines a longer beat
       .trim();
 
-  const start = () => {
+  const startBrowserTTS = () => {
     if (!supported) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(prepText(text));
     if (selectedVoice) utterance.voice = selectedVoice;
-    utterance.rate = 0.92; // slightly slower than default for a calmer cadence
+    utterance.rate = 0.92;
     utterance.pitch = 1.0;
     utterance.onstart = () => {
       setSpeaking(true);
@@ -129,10 +145,70 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
       setPaused(false);
     };
     utteranceRef.current = utterance;
+    setUsingCloud(false);
     window.speechSynthesis.speak(utterance);
   };
 
+  const start = async () => {
+    // Prefer the cloud route if one is configured; fall back to browser
+    // SpeechSynthesis otherwise (or on cloud failure).
+    if (cloudAvailable) {
+      try {
+        setLoading(true);
+        const r = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: prepText(text) }),
+        });
+        if (!r.ok) throw new Error(`status ${r.status}`);
+        const blob = await r.blob();
+        const url = URL.createObjectURL(blob);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.src = '';
+        }
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onplay = () => {
+          setSpeaking(true);
+          setPaused(false);
+          setUsingCloud(true);
+        };
+        audio.onpause = () => {
+          if (audio.currentTime > 0 && !audio.ended) setPaused(true);
+        };
+        audio.onended = () => {
+          setSpeaking(false);
+          setPaused(false);
+          URL.revokeObjectURL(url);
+        };
+        audio.onerror = () => {
+          setSpeaking(false);
+          setPaused(false);
+          URL.revokeObjectURL(url);
+        };
+        await audio.play();
+        return;
+      } catch {
+        // Fall through to browser TTS
+      } finally {
+        setLoading(false);
+      }
+    }
+    startBrowserTTS();
+  };
+
   const togglePause = () => {
+    if (usingCloud && audioRef.current) {
+      if (audioRef.current.paused) {
+        audioRef.current.play();
+        setPaused(false);
+      } else {
+        audioRef.current.pause();
+        setPaused(true);
+      }
+      return;
+    }
     if (!supported) return;
     if (paused) {
       window.speechSynthesis.resume();
@@ -144,8 +220,11 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
   };
 
   const stop = () => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    if (supported) window.speechSynthesis.cancel();
     setSpeaking(false);
     setPaused(false);
   };
@@ -176,11 +255,23 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
       {!speaking ? (
         <button
           onClick={start}
-          className="group inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-purple-500/30 transition hover:scale-[1.03] hover:shadow-purple-500/50 active:scale-[0.98]"
-          title={selectedVoice ? `Listen with ${selectedVoice.name}` : 'Listen to this concept'}
+          disabled={loading}
+          className="group inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-purple-500/30 transition hover:scale-[1.03] hover:shadow-purple-500/50 active:scale-[0.98] disabled:opacity-70"
+          title={cloudAvailable ? 'Listen with studio-quality cloud voice' : (selectedVoice ? `Listen with ${selectedVoice.name}` : 'Listen to this concept')}
         >
-          <Volume2 className="h-4 w-4" />
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : cloudAvailable ? (
+            <Cloud className="h-4 w-4" />
+          ) : (
+            <Volume2 className="h-4 w-4" />
+          )}
           <span>{label}</span>
+          {cloudAvailable && (
+            <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+              HD
+            </span>
+          )}
         </button>
       ) : (
         <>
