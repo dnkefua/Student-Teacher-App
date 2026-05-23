@@ -83,11 +83,12 @@ export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId
       {concepts.map((concept, index) => (
         <section key={index} className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
           
-          <div className="bg-slate-900 px-8 py-6 text-white border-b border-slate-800 flex items-start justify-between gap-3">
-            <h2 className="text-2xl font-bold font-sans tracking-tight">{concept.title}</h2>
+          <div className="bg-slate-900 px-8 py-6 text-white border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            <h2 className="min-w-0 flex-1 text-2xl font-bold font-sans tracking-tight">{concept.title}</h2>
             {/* Concatenate description + paragraphs + key ideas so the
                 listener hears the whole concept in one pass. */}
             <ReadAloud
+              label="Listen to concept"
               text={[
                 concept.title,
                 concept.description,

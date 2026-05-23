@@ -94,35 +94,40 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
   };
 
   if (!supported) {
-    return null; // Quietly hide on browsers without TTS support
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-2 text-xs font-bold text-slate-400">
+        <Volume2 className="h-4 w-4 opacity-50" />
+        TTS not supported in this browser
+      </span>
+    );
   }
 
   return (
-    <div className="inline-flex items-center gap-1.5">
+    <div className="inline-flex shrink-0 items-center gap-1.5">
       {!speaking ? (
         <button
           onClick={start}
-          className="inline-flex items-center gap-1.5 rounded-md border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700 transition hover:border-purple-400 hover:bg-purple-100"
-          title="Listen to this section"
+          className="group inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-purple-500/30 transition hover:scale-[1.03] hover:shadow-purple-500/50 active:scale-[0.98]"
+          title="Listen to this concept being read aloud"
         >
-          <Volume2 className="h-3.5 w-3.5" />
-          {label}
+          <Volume2 className="h-4 w-4" />
+          <span>{label}</span>
         </button>
       ) : (
         <>
           <button
             onClick={togglePause}
-            className="inline-flex items-center gap-1.5 rounded-md border border-purple-300 bg-purple-100 px-3 py-1.5 text-xs font-bold text-purple-800 transition hover:bg-purple-200"
+            className="inline-flex items-center gap-2 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-purple-500/30 transition hover:bg-purple-600"
           >
-            <Pause className="h-3.5 w-3.5" />
+            <Pause className="h-4 w-4" />
             {paused ? 'Resume' : 'Pause'}
           </button>
           <button
             onClick={stop}
-            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-lg bg-white px-3 py-2.5 text-sm font-black text-slate-700 shadow-md transition hover:bg-slate-50"
             title="Stop reading"
           >
-            <Square className="h-3 w-3" />
+            <Square className="h-4 w-4 fill-current" />
           </button>
         </>
       )}
