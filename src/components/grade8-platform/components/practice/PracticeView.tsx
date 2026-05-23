@@ -7,6 +7,7 @@ import { englishUnit1Practice, englishUnit2Practice, englishUnit3Practice, engli
 import { scienceUnit1Practice, scienceUnit2Practice, scienceUnit3Practice, scienceUnit4Practice, scienceUnit5Practice, scienceUnit6Practice } from '../../data/scienceCurriculum';
 import { Brain, Eye, EyeOff, CheckCircle2, XCircle, PenTool } from 'lucide-react';
 import { UnitId, PracticeQuestion, SubjectId } from '../../types';
+import { QuickAssignButton } from '../QuickAssignButton';
 
 export function PracticeView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {
   const getData = (): PracticeQuestion[] => {
@@ -188,9 +189,21 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
                   {q.id}
                 </div>
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-medium text-slate-900 mb-3">{q.question}</h3>
-                
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="text-lg font-medium text-slate-900">{q.question}</h3>
+                  {subject && (
+                    <QuickAssignButton
+                      refId={`practice-${subject}-${unit}-${q.id}`}
+                      label={q.question}
+                      subject={subject}
+                      unit={unit}
+                      kind="exercise"
+                      defaultTitle={`Practice Q${q.id}`}
+                    />
+                  )}
+                </div>
+
                 {q.hint && !revealed[q.id] && (
                   <p className="text-sm text-slate-500 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-100 inline-block">
                     <strong className="text-slate-700 mr-1">Hint:</strong> {q.hint}

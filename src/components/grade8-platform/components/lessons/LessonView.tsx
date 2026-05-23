@@ -139,6 +139,7 @@ function TechniqueCard({ tech }: { tech: any; key?: React.Key }) {
 }
 
 import { solvedExamplesData } from '../../data/solvedExamplesData';
+import { QuickAssignButton } from '../QuickAssignButton';
 
 export function LessonView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {
   const getData = (): Example[] => {
@@ -305,9 +306,21 @@ export function LessonView({ unit, subject }: { unit: UnitId, subject?: SubjectI
                     <div className="space-y-6">
                       {(ex.solvedExamples || solvedExamplesData[ex.id]).map((se, idx) => (
                         <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                          <div className="bg-slate-50 p-4 border-b border-slate-200 font-medium text-slate-800">
-                            <span className="text-blue-600 font-bold mr-2">Example {idx + 1}:</span>
-                            {se.question}
+                          <div className="bg-slate-50 p-4 border-b border-slate-200 font-medium text-slate-800 flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <span className="text-blue-600 font-bold mr-2">Example {idx + 1}:</span>
+                              {se.question}
+                            </div>
+                            {subject && (
+                              <QuickAssignButton
+                                refId={`example-${subject}-${unit}-${ex.id}-${idx}`}
+                                label={se.question}
+                                subject={subject as SubjectId}
+                                unit={unit}
+                                kind="exercise"
+                                defaultTitle={`${ex.title} · Example ${idx + 1}`}
+                              />
+                            )}
                           </div>
                           <div className="p-5 bg-white space-y-3">
                             <h4 className="font-bold text-xs uppercase text-slate-500 tracking-wider mb-1">Solution</h4>

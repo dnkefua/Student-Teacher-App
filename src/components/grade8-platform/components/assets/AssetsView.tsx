@@ -4,6 +4,7 @@ import { UnitId, SubjectId, Asset } from '../../types';
 import { englishUnit1Assets, englishUnit2Assets, englishUnit3Assets, englishUnit4Assets, englishUnit5Assets } from '../../data/englishCurriculum';
 import { scienceAssets } from '../../data/scienceCurriculum';
 import ImageModal from '../ImageModal';
+import { QuickAssignButton } from '../QuickAssignButton';
 
 export function AssetsView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {
   const [modalImage, setModalImage] = useState<{url: string, caption?: string} | null>(null);
@@ -103,14 +104,26 @@ export function AssetsView({ unit, subject }: { unit: UnitId, subject?: SubjectI
             </div>
             
             <div className="p-6 flex-1 flex flex-col">
-              <h3 className="text-xl font-bold text-slate-900 mb-2">{asset.title}</h3>
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <h3 className="text-xl font-bold text-slate-900">{asset.title}</h3>
+                {subject && (
+                  <QuickAssignButton
+                    refId={`asset-${subject}-${unit}-${asset.id}`}
+                    label={asset.title}
+                    subject={subject}
+                    unit={unit}
+                    kind="reading"
+                    defaultTitle={asset.title}
+                  />
+                )}
+              </div>
               <p className="text-slate-600 leading-relaxed text-sm flex-1 mb-6">
                 {asset.description}
               </p>
-              
-              <a 
-                href={asset.link || '#'} 
-                target="_blank" 
+
+              <a
+                href={asset.link || '#'}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-50 text-slate-700 font-medium border border-slate-200 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                 onClick={(e) => !asset.link && e.preventDefault()}

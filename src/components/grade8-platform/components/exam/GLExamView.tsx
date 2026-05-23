@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Timer, PlayCircle, CheckCircle2, XCircle, ArrowRight, BookOpen, Clock } from 'lucide-react';
 import { glExams } from '../../data/glExams';
 import { UnitId, SubjectId } from '../../types';
+import { QuickAssignButton } from '../QuickAssignButton';
 
 type TimerMode = '5s' | '10s' | '15s' | '90s';
 
@@ -236,16 +237,37 @@ export function GLExamView({ unit, subject }: { unit: UnitId, subject?: SubjectI
        {!selectedExam ? (
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {glExams.map(exam => (
-              <div key={exam.id} className="bg-white border-2 border-slate-200 p-8 rounded-3xl hover:border-indigo-300 transition-all cursor-pointer shadow-sm hover:shadow-md" onClick={() => setSelectedExam(exam.id)}>
-                <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
-                  <BookOpen className="w-6 h-6 text-indigo-600" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">{exam.title}</h3>
-                <p className="text-slate-500 font-medium mb-6">{exam.questions.length} Questions</p>
-                
-                <div className="flex items-center text-indigo-600 font-bold gap-2">
-                  Select Timer Options <ArrowRight className="w-5 h-5" />
-                </div>
+              <div key={exam.id} className="relative bg-white border-2 border-slate-200 p-8 rounded-3xl hover:border-indigo-300 transition-all shadow-sm hover:shadow-md">
+                {/* Quick-assign in the corner — sits OUTSIDE the click-to-open
+                    affordance so clicking the assign button doesn't also start
+                    the exam. */}
+                {subject && (
+                  <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+                    <QuickAssignButton
+                      refId={`exam-${exam.id}`}
+                      label={exam.title}
+                      subject={subject}
+                      unit={unit}
+                      kind="exam"
+                      defaultTitle={exam.title}
+                    />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedExam(exam.id)}
+                  className="w-full text-left cursor-pointer"
+                >
+                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-6">
+                    <BookOpen className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">{exam.title}</h3>
+                  <p className="text-slate-500 font-medium mb-6">{exam.questions.length} Questions</p>
+
+                  <div className="flex items-center text-indigo-600 font-bold gap-2">
+                    Select Timer Options <ArrowRight className="w-5 h-5" />
+                  </div>
+                </button>
               </div>
             ))}
          </div>
