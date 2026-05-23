@@ -32,28 +32,34 @@ export function SubjectStudioShell({ subject, label, mode = 'teacher' }: Props) 
 
   return (
     <div className="h-full min-h-0">
-      <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm sm:px-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           {mode === 'student' && view === 'platform' && (
             <button
               type="button"
               onClick={() => setView('home')}
-              className="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-600 hover:bg-slate-50"
+              className="shrink-0 rounded-md border border-slate-200 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-slate-600 hover:bg-slate-50"
             >
               ← Home
             </button>
           )}
           <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wide text-slate-500">EIS Learning Studio</p>
-            <h1 className="truncate text-base font-black text-slate-950">{label}</h1>
+            <p className="hidden text-[10px] font-black uppercase tracking-wide text-slate-500 sm:block">
+              EIS Learning Studio
+            </p>
+            <h1 className="truncate text-sm font-black text-slate-950 sm:text-base">{label}</h1>
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-          {mode === 'teacher' ? 'Teacher view' : 'Student view'}
+        <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700 sm:px-2.5 sm:text-[10px]">
+          {mode === 'teacher' ? 'Teacher' : 'Student'}
+          <span className="hidden sm:inline"> view</span>
         </span>
       </div>
 
-      <div className="h-[calc(100vh-130px)] min-h-[680px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+      {/* Use dynamic viewport height (dvh) so mobile browser chrome doesn't
+          double-clip the platform area. Falls back gracefully where dvh isn't
+          supported via the calc() fallback. */}
+      <div className="h-[calc(100vh-110px)] min-h-[560px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:h-[calc(100vh-130px)] sm:min-h-[680px]">
         {mode === 'student' && view === 'home' ? (
           <StudentSubjectHome
             subject={subject}

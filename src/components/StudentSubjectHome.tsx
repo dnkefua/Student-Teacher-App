@@ -118,35 +118,35 @@ export function StudentSubjectHome({
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-950 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-5xl space-y-6">
+    <div className="h-full overflow-y-auto bg-slate-950 p-3 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-5xl space-y-4 sm:space-y-6">
         {/* ── Hero ── */}
-        <header className={`relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br ${meta.from} ${meta.to} p-5 text-white shadow-2xl sm:p-7`}>
+        <header className={`relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br ${meta.from} ${meta.to} p-4 text-white shadow-2xl sm:p-7`}>
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/15 blur-3xl" />
-          <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.3em] text-white/90">
+              <div className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.25em] text-white/90 sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-[10px] sm:tracking-[0.3em]">
                 <Sparkles className="h-3 w-3" /> Student view
               </div>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/30 backdrop-blur">
-                  <Icon className="h-7 w-7 text-white" />
+              <div className="mt-2.5 flex items-center gap-2.5 sm:mt-3 sm:gap-3">
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/15 ring-1 ring-white/30 backdrop-blur sm:h-14 sm:w-14 sm:rounded-2xl">
+                  <Icon className="h-5 w-5 text-white sm:h-7 sm:w-7" />
                 </div>
-                <div>
-                  <h1 className="text-2xl font-black sm:text-3xl">{meta.name}</h1>
-                  <p className="text-xs text-white/80">{meta.tagline}</p>
+                <div className="min-w-0">
+                  <h1 className="truncate text-xl font-black sm:text-3xl">{meta.name}</h1>
+                  <p className="truncate text-[11px] text-white/80 sm:text-xs">{meta.tagline}</p>
                 </div>
               </div>
             </div>
             <div className="w-full sm:w-auto sm:min-w-[200px]">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Your progress</span>
-                <span className="text-lg font-black text-white">{progress}%</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-white/70 sm:text-[10px]">Your progress</span>
+                <span className="text-base font-black text-white sm:text-lg">{progress}%</span>
               </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-black/30">
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-black/30 sm:mt-1.5 sm:h-2">
                 <div className="h-full rounded-full bg-white/90 transition-all duration-700" style={{ width: `${progress}%` }} />
               </div>
-              <p className="mt-1 text-[10px] text-white/70">
+              <p className="mt-1 text-[9px] text-white/70 sm:text-[10px]">
                 {completedCount} of {total} assignment{total === 1 ? '' : 's'} submitted
               </p>
             </div>
@@ -154,28 +154,28 @@ export function StudentSubjectHome({
         </header>
 
         {/* ── Continue ── */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
+          <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 sm:text-[10px] sm:tracking-[0.3em]">
             Continue where you left off
           </p>
           {continueItem ? (
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-4">
+            <div className="mt-3 flex flex-col gap-3 rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-4">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-black text-white">{continueItem.title}</p>
-                <p className="mt-0.5 text-xs text-slate-400">
+                <p className="line-clamp-2 text-sm font-black text-white sm:truncate sm:text-base">{continueItem.title}</p>
+                <p className="mt-0.5 text-[11px] text-slate-400 sm:text-xs">
                   {continueItem.kind} · due {new Date(continueItem.dueAt).toLocaleDateString()}
                 </p>
               </div>
               <button
                 onClick={() => onBrowse('assignments')}
-                className={`inline-flex items-center gap-2 rounded-lg bg-gradient-to-r ${meta.from} ${meta.to} px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg transition hover:scale-[1.02]`}
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r ${meta.from} ${meta.to} px-4 py-2 text-xs font-black uppercase tracking-widest text-white shadow-lg transition hover:scale-[1.02] sm:w-auto`}
               >
                 Open <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
-            <div className="mt-3 flex flex-col items-center justify-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-6 text-center">
-              <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+            <div className="mt-3 flex flex-col items-center justify-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-5 text-center sm:p-6">
+              <CheckCircle2 className="h-8 w-8 text-emerald-400 sm:h-10 sm:w-10" />
               <p className="text-sm font-black text-white">All caught up</p>
               <p className="text-xs text-slate-400">No pending {meta.name} assignments.</p>
             </div>
@@ -183,7 +183,7 @@ export function StudentSubjectHome({
         </section>
 
         {/* ── Your assignments ── */}
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:p-5">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
               Your assignments

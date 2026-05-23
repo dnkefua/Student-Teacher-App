@@ -85,7 +85,7 @@ export function QuickAssignButton({
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className={`group inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-bold transition ${
+        className={`group inline-flex shrink-0 items-center gap-1 rounded-md border px-2 py-1.5 text-[11px] font-bold transition sm:gap-1.5 sm:px-2.5 ${
           open
             ? 'border-blue-400 bg-blue-50 text-blue-700'
             : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700'
@@ -94,14 +94,14 @@ export function QuickAssignButton({
         aria-expanded={open}
       >
         <GraduationCap className="h-3.5 w-3.5" />
-        <span>Assign</span>
+        <span className="hidden sm:inline">Assign</span>
       </button>
 
       {open && (
         <form
           onSubmit={post}
           onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 top-[calc(100%+4px)] z-50 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl"
+          className="absolute right-0 top-[calc(100%+4px)] z-50 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-3 shadow-2xl"
         >
           {posted ? (
             <div className="flex flex-col items-center gap-2 py-4">

@@ -75,8 +75,8 @@ export function ClassLinkSettings() {
         "Join live class" button on their dashboard until you clear it.
       </p>
 
-      <div className="mt-3 flex items-stretch gap-2">
-        <div className="relative flex-1">
+      <div className="mt-3 flex flex-col items-stretch gap-2 sm:flex-row">
+        <div className="relative min-w-0 flex-1">
           <Link2 className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
           <input
             type="url"
@@ -88,7 +88,7 @@ export function ClassLinkSettings() {
         </div>
         <button
           onClick={save}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-sky-500 px-3 py-2 text-xs font-black text-white shadow-md transition hover:bg-sky-400"
+          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-sky-500 px-3 py-2 text-xs font-black text-white shadow-md transition hover:bg-sky-400"
         >
           {saved ? <Check className="h-3.5 w-3.5" /> : null}
           {saved ? 'Saved' : 'Save'}

@@ -303,7 +303,7 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
       </button>
 
       {showPicker && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl">
+        <div className="absolute right-0 top-full z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-3 shadow-2xl">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
               Choose voice
