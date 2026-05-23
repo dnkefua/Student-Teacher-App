@@ -1,34 +1,94 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { Volume2, Pause, Square } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Volume2, Pause, Square, Settings2 } from 'lucide-react';
 
 /**
- * Browser-native text-to-speech control.
+ * Browser-native text-to-speech control with a hand-picked voice list.
  *
- * Uses the standard SpeechSynthesis API so we get audio narration without
- * any external service or extra dependency. Concatenates the supplied
- * `text` pieces into one utterance, lets the user play / pause / stop,
- * and picks a clearer English voice when one is available.
+ * The default SpeechSynthesis voice that the browser picks is almost always
+ * one of the legacy robotic eSpeak / SAPI voices. Modern OSes ship far more
+ * natural-sounding neural voices (Microsoft Aria / Jenny / Guy Natural,
+ * Google UK English Female / Male, macOS Samantha / Daniel) but you have
+ * to ask for them by name. This component:
  *
- * Speech is *paused* between paragraphs in the source string so the
- * reader can keep up — handled by the engine via punctuation. A 1×
- * default rate sounds neutral; we expose no rate control here to keep
- * the surface area small.
+ *   1. Waits for the `voiceschanged` event so it can see the full list,
+ *      not the empty initial array Chrome returns synchronously.
+ *   2. Scores each voice — natural / neural / online voices win, with
+ *      a soft preference for English voices.
+ *   3. Exposes a small picker so the student or teacher can audition
+ *      other voices and pick the one that sounds most human to them.
+ *   4. Pauses cleanly between sentences by adding extra punctuation
+ *      before the engine speaks.
  */
 export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?: string }) {
   const [supported, setSupported] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceURI, setVoiceURI] = useState<string | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // ── voice discovery ───────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    setSupported('speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function');
+    const isSupported =
+      'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+    setSupported(isSupported);
+    if (!isSupported) return;
+
+    const refresh = () => {
+      const list = window.speechSynthesis.getVoices();
+      setVoices(list);
+    };
+    refresh();
+    // Chrome populates voices asynchronously; this event fires once they load.
+    window.speechSynthesis.addEventListener?.('voiceschanged', refresh);
+    return () => {
+      window.speechSynthesis.removeEventListener?.('voiceschanged', refresh);
+    };
   }, []);
 
+  // Score every voice so the most human-sounding one wins. The higher the
+  // score, the more natural we expect the voice to be.
+  const sortedVoices = useMemo(() => {
+    const score = (v: SpeechSynthesisVoice): number => {
+      let s = 0;
+      const name = v.name.toLowerCase();
+      const lang = (v.lang || '').toLowerCase();
+      // Marketing terms that vendors put on their neural voices.
+      if (/natural|neural|online|premium|enhanced|hd\b|wavenet/.test(name)) s += 50;
+      // Microsoft's neural voice names ship as "Microsoft Aria Online (Natural)" etc.
+      if (/aria|jenny|guy|sonia|ryan|davis|emma|brian|libby|sara|olivia|liam/.test(name)) s += 25;
+      // Apple's most natural voices.
+      if (/samantha|daniel|karen|moira|tessa|alex\b|fred\b/.test(name)) s += 15;
+      // Google voices are mid-quality on Chrome but better than eSpeak.
+      if (/google\s/.test(name)) s += 10;
+      // English-language preference.
+      if (lang.startsWith('en-gb')) s += 8;
+      else if (lang.startsWith('en-us')) s += 7;
+      else if (lang.startsWith('en')) s += 5;
+      // De-rank the obviously legacy voices.
+      if (/espeak|festival|sapi5|microsoft (david|zira|mark|hazel)\b/.test(name)) s -= 30;
+      // Local-service voices tend to be lower quality than online neural ones.
+      if (!v.localService) s += 5;
+      return s;
+    };
+    return voices
+      .map((v) => ({ v, s: score(v) }))
+      .sort((a, b) => b.s - a.s)
+      .map(({ v }) => v);
+  }, [voices]);
+
+  // Pick the first time voices are available; never override a user choice.
+  useEffect(() => {
+    if (voiceURI || sortedVoices.length === 0) return;
+    setVoiceURI(sortedVoices[0].voiceURI);
+  }, [sortedVoices, voiceURI]);
+
   // If the user navigates away or the parent unmounts, stop whatever is
-  // currently being read — otherwise voice continues across pages.
+  // currently being read.
   useEffect(() => {
     return () => {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -37,28 +97,25 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
     };
   }, []);
 
-  const pickVoice = (): SpeechSynthesisVoice | undefined => {
-    if (typeof window === 'undefined') return undefined;
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length === 0) return undefined;
-    // Prefer a natural-sounding English voice when one is available.
-    const preferred =
-      voices.find((v) => /Google.*English/i.test(v.name)) ||
-      voices.find((v) => /Microsoft.*(Aria|Jenny|Guy|Sonia|Ryan)/i.test(v.name)) ||
-      voices.find((v) => v.lang?.startsWith('en-GB')) ||
-      voices.find((v) => v.lang?.startsWith('en-US')) ||
-      voices.find((v) => v.lang?.startsWith('en'));
-    return preferred;
-  };
+  const selectedVoice = useMemo(
+    () => sortedVoices.find((v) => v.voiceURI === voiceURI) || sortedVoices[0],
+    [sortedVoices, voiceURI],
+  );
+
+  /** Insert a short pause at every sentence boundary so the engine breathes. */
+  const prepText = (raw: string) =>
+    raw
+      .replace(/\s+/g, ' ')
+      .replace(/([.!?])\s+/g, '$1   ') // triple-space gives engines a longer beat
+      .trim();
 
   const start = () => {
     if (!supported) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voice = pickVoice();
-    if (voice) utterance.voice = voice;
-    utterance.rate = 0.95;
-    utterance.pitch = 1;
+    const utterance = new SpeechSynthesisUtterance(prepText(text));
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.rate = 0.92; // slightly slower than default for a calmer cadence
+    utterance.pitch = 1.0;
     utterance.onstart = () => {
       setSpeaking(true);
       setPaused(false);
@@ -93,6 +150,18 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
     setPaused(false);
   };
 
+  /** Brief sample so the picker can audition a voice without playing the
+   *  whole concept. */
+  const auditionVoice = (v: SpeechSynthesisVoice) => {
+    if (!supported) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance('Hello, this is what I sound like.');
+    u.voice = v;
+    u.rate = 0.92;
+    u.pitch = 1.0;
+    window.speechSynthesis.speak(u);
+  };
+
   if (!supported) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-800 px-3 py-2 text-xs font-bold text-slate-400">
@@ -103,12 +172,12 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
   }
 
   return (
-    <div className="inline-flex shrink-0 items-center gap-1.5">
+    <div className="relative inline-flex shrink-0 items-center gap-1.5">
       {!speaking ? (
         <button
           onClick={start}
           className="group inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-500 px-4 py-2.5 text-sm font-black text-white shadow-lg shadow-purple-500/30 transition hover:scale-[1.03] hover:shadow-purple-500/50 active:scale-[0.98]"
-          title="Listen to this concept being read aloud"
+          title={selectedVoice ? `Listen with ${selectedVoice.name}` : 'Listen to this concept'}
         >
           <Volume2 className="h-4 w-4" />
           <span>{label}</span>
@@ -130,6 +199,81 @@ export function ReadAloud({ text, label = 'Read aloud' }: { text: string; label?
             <Square className="h-4 w-4 fill-current" />
           </button>
         </>
+      )}
+
+      {/* Voice picker */}
+      <button
+        onClick={() => setShowPicker((v) => !v)}
+        className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/10 px-2 py-2.5 text-white transition hover:bg-white/20"
+        title="Choose voice"
+        aria-expanded={showPicker}
+      >
+        <Settings2 className="h-4 w-4" />
+      </button>
+
+      {showPicker && (
+        <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              Choose voice
+            </p>
+            <p className="text-[10px] text-slate-400">
+              {sortedVoices.length} available
+            </p>
+          </div>
+          {sortedVoices.length === 0 ? (
+            <p className="rounded-md bg-slate-50 p-3 text-xs text-slate-500">
+              Voices still loading… try again in a moment.
+            </p>
+          ) : (
+            <div className="max-h-64 space-y-1 overflow-y-auto">
+              {sortedVoices.map((v, i) => {
+                const isActive = v.voiceURI === voiceURI;
+                const isNatural = /natural|neural|online|premium|enhanced|wavenet/i.test(v.name);
+                return (
+                  <div
+                    key={v.voiceURI}
+                    className={`flex items-center gap-2 rounded-md p-2 text-xs ${
+                      isActive ? 'bg-purple-50 ring-1 ring-purple-300' : 'hover:bg-slate-50'
+                    }`}
+                  >
+                    <button
+                      onClick={() => setVoiceURI(v.voiceURI)}
+                      className="min-w-0 flex-1 text-left"
+                    >
+                      <p className="truncate font-bold text-slate-900">
+                        {v.name}
+                        {isNatural && (
+                          <span className="ml-1.5 inline-block rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-bold text-emerald-700">
+                            NATURAL
+                          </span>
+                        )}
+                        {i === 0 && !isNatural && (
+                          <span className="ml-1.5 inline-block rounded bg-blue-100 px-1 py-0.5 text-[9px] font-bold text-blue-700">
+                            BEST AVAILABLE
+                          </span>
+                        )}
+                      </p>
+                      <p className="truncate text-[10px] text-slate-500">{v.lang}</p>
+                    </button>
+                    <button
+                      onClick={() => auditionVoice(v)}
+                      className="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:bg-white"
+                      title="Hear a sample"
+                    >
+                      Sample
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <p className="mt-2 text-[10px] text-slate-400">
+            For the most human voices, try a recent version of Microsoft Edge — it
+            ships neural voices like Aria, Jenny and Guy that sound far less
+            robotic than the default.
+          </p>
+        </div>
       )}
     </div>
   );
