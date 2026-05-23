@@ -24,6 +24,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { TabType } from './Sidebar';
+import { StudentDashboardClean } from '@/components/StudentDashboardClean';
 import { ExplainerByType } from '@/components/Math3DExplainers';
 import { Math3DShowcase } from '@/components/Math3DShowcase';
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
@@ -512,69 +513,14 @@ function TeacherDashboard({
 }
 
 function StudentDashboard({
-  assignment,
-  setAssignment,
   setActiveTab,
 }: {
-  assignment: DemoAssignment;
-  setAssignment: (assignment: DemoAssignment) => void;
+  // Unused legacy props kept for backwards compatibility with the parent.
+  assignment?: DemoAssignment;
+  setAssignment?: (assignment: DemoAssignment) => void;
   setActiveTab: (tab: TabType) => void;
 }) {
-  return (
-    <div className="space-y-6">
-      {/* Hero */}
-      <section className="relative overflow-hidden rounded-lg border border-white/10 p-6 text-white shadow-[0_24px_90px_rgba(5,7,17,.45)] lg:p-10">
-        <HeroBackdrop />
-        <div className="relative grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-md border border-[#49c8ff]/35 bg-[#49c8ff]/10 px-3 py-2 text-xs font-black uppercase tracking-wide text-[#8ddfff]">
-              Student View
-            </div>
-            <h1 className="mt-5 text-3xl font-black tracking-normal sm:text-4xl lg:text-5xl">
-              Learn, interact, answer, submit.
-            </h1>
-            <p className="mt-4 max-w-xl text-lg font-semibold leading-8 text-slate-200">
-              Follow the visual model, solve the assigned checkpoint, receive instant feedback, then join the virtual class.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                onClick={() => setActiveTab('eis-maths')}
-                className="inline-flex items-center gap-2 rounded-md bg-[#49c8ff] px-4 py-3 font-black text-[#061126] transition hover:bg-[#8ddfff]"
-              >
-                Start 3D Lesson <Play className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setActiveTab('classroom')}
-                className="inline-flex items-center gap-2 rounded-md border border-white/20 px-4 py-3 font-black text-white transition hover:border-[#ffc43b] hover:text-[#ffc43b]"
-              >
-                Join Live Class <MonitorPlay className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          <ExplainerByType type={assignment.threeDType} />
-        </div>
-      </section>
-
-      <PlatformDirectionCard compact />
-
-      <StudentAssignmentList
-        activeAssignmentId={assignment.id}
-        onSelect={setAssignment}
-        onOpenLesson={() => setActiveTab('lesson')}
-      />
-
-      <StudentCinematicAssignmentList />
-
-      <StudentAssignmentCard
-        assignment={assignment}
-        setAssignment={setAssignment}
-        setActiveTab={setActiveTab}
-      />
-
-      {/* 3D Lesson Library — single viewport, switchable */}
-      <Math3DShowcase initial={assignment.threeDType} />
-    </div>
-  );
+  return <StudentDashboardClean setActiveTab={setActiveTab} />;
 }
 
 export function DashboardHome({ mode, setMode: _setMode, setActiveTab }: DashboardHomeProps) {
