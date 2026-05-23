@@ -1,97 +1,120 @@
 'use client';
 
 import Image from 'next/image';
-import React, { useState } from 'react';
-import { ArrowRight, Compass } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ArrowRight,
+  Atom,
+  BookOpen,
+  Calculator,
+  CheckCircle2,
+  FlaskConical,
+  GraduationCap,
+  Layers3,
+  Sparkles,
+  Volume2,
+  type LucideIcon,
+} from 'lucide-react';
 import { ClientPage } from '@/components/ClientPage';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
 /**
- * EIS Maths Studio — Grade 8 MYP Course Map landing page.
+ * EIS Learning Studio — Grade 8 platform landing page.
  *
- * A 3D cinematic glassmorphic experience that mirrors the official course
- * map: a rotating compass at the centre with four bearings, each holding
- * a glass card for one of the four MYP reasoning strands:
+ * A 3D cinematic glassmorphic experience that surfaces all three subjects
+ * the platform actually delivers — Mathematics, Science and English —
+ * with mouse-parallax tilt on every floating card and an animated
+ * subject hub at the centre.
  *
- *     N  Numerical & Abstract Reasoning  (blue · crystals)
- *     E  Thinking with Models            (green · bridge)
- *     S  Spatial Reasoning               (orange · solids)
- *     W  Reasoning with Data             (purple · charts)
- *
- * Everything is plain Tailwind + CSS-keyframe animation so it stays light:
- * no R3F bundle, no extra dependency. Glassmorphism via backdrop-blur and
- * white-alpha gradients on a soft mesh background.
+ * Pure Tailwind + a small block of CSS keyframes. No R3F bundle, no
+ * extra dependency.
  */
 
-type Bearing = 'N' | 'E' | 'S' | 'W';
-type Strand = {
-  bearing: Bearing;
-  title: string;
-  subtitle: string;
+// ── Subject data ──────────────────────────────────────────────────────
+
+type SubjectMeta = {
+  id: 'math' | 'science' | 'english';
+  name: string;
+  tagline: string;
+  units: string;
+  icon: LucideIcon;
+  /** Two-tone Tailwind colours for gradient surfaces. */
+  from: string;
+  to: string;
+  /** Soft-glow shadow colour as `rgb` text for inline style. */
+  glow: string;
   topics: string[];
-  /** Tailwind accent classes for the card. */
-  accent: { ring: string; chip: string; chipText: string; glow: string; gradient: string };
-  illustration: 'crystals' | 'bridge' | 'solids' | 'charts';
 };
 
-const STRANDS: Strand[] = [
+const SUBJECTS: SubjectMeta[] = [
   {
-    bearing: 'N',
-    title: 'Numerical & Abstract Reasoning',
-    subtitle: 'Number sense, ratio, algebra, equations',
-    topics: ['Number sense & operations', 'Equivalence & representation', 'Proportional reasoning', 'Solving equations & inequalities'],
-    accent: {
-      ring: 'ring-sky-400/40',
-      chip: 'bg-sky-400/20',
-      chipText: 'text-sky-200',
-      glow: 'shadow-[0_30px_90px_-20px_rgba(56,189,248,0.55)]',
-      gradient: 'from-sky-400/30 via-sky-500/15 to-blue-600/10',
-    },
-    illustration: 'crystals',
+    id: 'math',
+    name: 'Mathematics',
+    tagline: 'Grade 8 MYP · Four reasoning strands',
+    units: '4 strands · 60+ worked examples',
+    icon: Calculator,
+    from: 'from-sky-400',
+    to: 'to-blue-700',
+    glow: '14,165,233',
+    topics: [
+      'Numerical & abstract reasoning',
+      'Thinking with models',
+      'Spatial reasoning',
+      'Reasoning with data',
+    ],
   },
   {
-    bearing: 'E',
-    title: 'Thinking with Models',
-    subtitle: 'Functions, graphs, transformations',
-    topics: ['Representation & shape of functions', 'Linear functions', 'Quadratic & exponential models', 'Transformations of functions'],
-    accent: {
-      ring: 'ring-emerald-400/40',
-      chip: 'bg-emerald-400/20',
-      chipText: 'text-emerald-200',
-      glow: 'shadow-[0_30px_90px_-20px_rgba(52,211,153,0.55)]',
-      gradient: 'from-emerald-400/30 via-emerald-500/15 to-teal-600/10',
-    },
-    illustration: 'bridge',
+    id: 'science',
+    name: 'Science',
+    tagline: 'Year 8 · Biology · Chemistry · Physics',
+    units: '6 units · 13 labelled diagrams · 3D labs',
+    icon: FlaskConical,
+    from: 'from-emerald-400',
+    to: 'to-teal-700',
+    glow: '52,211,153',
+    topics: [
+      'Cells, digestion, circulation',
+      'Atoms & states of matter',
+      'Ecology — food chains & webs',
+      'Waves, energy & photosynthesis',
+    ],
   },
   {
-    bearing: 'S',
-    title: 'Spatial Reasoning',
-    subtitle: 'Shape, space, transformations',
-    topics: ['Visualisation of 3D shapes', 'Surface area & volume', 'Transformations', 'Similarity & congruency'],
-    accent: {
-      ring: 'ring-amber-400/40',
-      chip: 'bg-amber-400/20',
-      chipText: 'text-amber-200',
-      glow: 'shadow-[0_30px_90px_-20px_rgba(251,191,36,0.55)]',
-      gradient: 'from-amber-400/30 via-orange-500/15 to-rose-600/10',
-    },
-    illustration: 'solids',
+    id: 'english',
+    name: 'English',
+    tagline: 'Year 8 · Language, literature & analysis',
+    units: '5 units · Interactive ad-analysis lab',
+    icon: BookOpen,
+    from: 'from-fuchsia-400',
+    to: 'to-rose-700',
+    glow: '232,121,249',
+    topics: [
+      'Advertising & persuasion',
+      'The novel',
+      'Voices in verse',
+      'Language, film & Shakespeare',
+    ],
   },
-  {
-    bearing: 'W',
-    title: 'Reasoning with Data',
-    subtitle: 'Statistics & probability',
-    topics: ['Data collection & analysis', 'Measures of central tendency', 'Data distribution', 'Probability'],
-    accent: {
-      ring: 'ring-fuchsia-400/40',
-      chip: 'bg-fuchsia-400/20',
-      chipText: 'text-fuchsia-200',
-      glow: 'shadow-[0_30px_90px_-20px_rgba(217,70,239,0.55)]',
-      gradient: 'from-fuchsia-400/30 via-purple-500/15 to-violet-600/10',
-    },
-    illustration: 'charts',
-  },
+];
+
+// ── Stats and features ───────────────────────────────────────────────
+
+const STATS = [
+  { value: 3, label: 'Subjects', suffix: '' },
+  { value: 15, label: 'Units', suffix: '' },
+  { value: 60, label: 'Worked examples', suffix: '+' },
+  { value: 13, label: 'Labelled diagrams', suffix: '' },
+];
+
+type Feature = { title: string; copy: string; icon: LucideIcon; tone: string };
+const FEATURES: Feature[] = [
+  { title: 'Step-by-step worked solutions', copy: 'Every example walks the student through the WHY and the working line in a clean serif math display.', icon: CheckCircle2, tone: 'from-sky-400/40 to-blue-600/20' },
+  { title: '3D interactive labs', copy: 'Particle model, McDonald\'s persuasive-devices lab, food webs — touch and explore.', icon: Atom, tone: 'from-emerald-400/40 to-teal-600/20' },
+  { title: 'Read-aloud narration', copy: 'Browser-native TTS with a hand-picked neural voice for every concept.', icon: Volume2, tone: 'from-fuchsia-400/40 to-purple-600/20' },
+  { title: 'Teacher → student loop', copy: 'Post assignments, students submit, completion tracked in real time.', icon: GraduationCap, tone: 'from-amber-400/40 to-orange-600/20' },
+  { title: 'Labelled SVG diagrams', copy: 'Every science subtopic ships with a clean labelled diagram authored in code.', icon: Layers3, tone: 'from-cyan-400/40 to-sky-600/20' },
+  { title: 'Built for Grade 8 IB MYP', copy: 'Aligned to the four assessment criteria from day one.', icon: Sparkles, tone: 'from-rose-400/40 to-fuchsia-600/20' },
 ];
 
 const CRITERIA = [
@@ -101,241 +124,341 @@ const CRITERIA = [
   { tag: 'D', label: 'Applying in Real-Life' },
 ];
 
-// ── SVG illustrations ─────────────────────────────────────────────────
+// ── Hooks ────────────────────────────────────────────────────────────
 
-function Crystals() {
-  return (
-    <svg viewBox="0 0 200 140" className="h-full w-full">
-      <defs>
-        <linearGradient id="cryA" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#7dd3fc" />
-          <stop offset="1" stopColor="#0c4a6e" />
-        </linearGradient>
-        <linearGradient id="cryB" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#bae6fd" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#1e40af" stopOpacity="0.4" />
-        </linearGradient>
-      </defs>
-      <polygon points="60,120 75,40 95,30 110,120" fill="url(#cryA)" stroke="#7dd3fc" strokeWidth="0.8" />
-      <polygon points="60,120 110,120 95,30" fill="url(#cryB)" opacity="0.7" />
-      <polygon points="100,120 120,55 140,50 155,120" fill="url(#cryA)" stroke="#7dd3fc" strokeWidth="0.8" />
-      <polygon points="100,120 155,120 140,50" fill="url(#cryB)" opacity="0.6" />
-      <polygon points="135,125 150,85 165,80 175,125" fill="url(#cryA)" stroke="#7dd3fc" strokeWidth="0.8" />
-    </svg>
+/** Tracks normalised mouse position (-1 … +1) for 3D parallax. */
+function useMouseParallax() {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handle = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      setPos({ x, y });
+    };
+    window.addEventListener('mousemove', handle);
+    return () => window.removeEventListener('mousemove', handle);
+  }, []);
+  return pos;
+}
+
+/** Animated count-up from 0 to `target` over `durationMs`. */
+function useCountUp(target: number, durationMs = 1500): number {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const ratio = Math.min(1, elapsed / durationMs);
+      // ease-out
+      const eased = 1 - Math.pow(1 - ratio, 3);
+      setValue(Math.round(target * eased));
+      if (ratio < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, durationMs]);
+  return value;
+}
+
+// ── Background ───────────────────────────────────────────────────────
+
+/** Random particle field — purely cosmetic. Memoised so positions don't
+ *  shuffle on every re-render. */
+function ParticleField({ count = 60 }: { count?: number }) {
+  const seeds = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => {
+        const rnd = (n: number) => ((Math.sin(i * 99.9 + n) + 1) / 2);
+        return {
+          left: rnd(1) * 100,
+          top: rnd(2) * 100,
+          size: 1 + rnd(3) * 2.5,
+          delay: rnd(4) * 12,
+          duration: 8 + rnd(5) * 10,
+          opacity: 0.2 + rnd(6) * 0.5,
+        };
+      }),
+    [count],
   );
-}
-
-function Bridge() {
   return (
-    <svg viewBox="0 0 200 140" className="h-full w-full">
-      <defs>
-        <linearGradient id="brSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#34d399" stopOpacity="0.6" />
-          <stop offset="1" stopColor="#0f172a" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="200" height="140" fill="url(#brSky)" opacity="0.4" />
-      {/* deck */}
-      <path d="M 10 95 Q 100 30 190 95" stroke="#a7f3d0" strokeWidth="2.5" fill="none" />
-      <line x1="10" y1="95" x2="190" y2="95" stroke="#6ee7b7" strokeWidth="3" />
-      {/* cables */}
-      <g stroke="#34d399" strokeWidth="0.6" opacity="0.7">
-        <line x1="30" y1="95" x2="35" y2="62" />
-        <line x1="55" y1="95" x2="60" y2="52" />
-        <line x1="80" y1="95" x2="85" y2="46" />
-        <line x1="105" y1="95" x2="115" y2="46" />
-        <line x1="130" y1="95" x2="135" y2="50" />
-        <line x1="155" y1="95" x2="160" y2="58" />
-      </g>
-      {/* towers */}
-      <rect x="48" y="40" width="4" height="55" fill="#34d399" />
-      <rect x="148" y="40" width="4" height="55" fill="#34d399" />
-      {/* graph line on the deck representing 'model' */}
-      <path d="M 20 120 Q 60 100 100 110 T 180 90" stroke="#facc15" strokeWidth="1.5" fill="none" opacity="0.9" />
-      <circle cx="180" cy="90" r="3" fill="#facc15" />
-    </svg>
-  );
-}
-
-function Solids() {
-  return (
-    <svg viewBox="0 0 200 140" className="h-full w-full">
-      <defs>
-        <linearGradient id="slFace" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fbbf24" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#7c2d12" stopOpacity="0.5" />
-        </linearGradient>
-      </defs>
-      {/* cube isometric */}
-      <g transform="translate(35 35)">
-        <polygon points="0,30 30,15 60,30 30,45" fill="url(#slFace)" stroke="#fcd34d" />
-        <polygon points="0,30 0,70 30,85 30,45" fill="#b45309" stroke="#fcd34d" opacity="0.8" />
-        <polygon points="60,30 60,70 30,85 30,45" fill="#92400e" stroke="#fcd34d" opacity="0.8" />
-      </g>
-      {/* pyramid */}
-      <g transform="translate(110 35)">
-        <polygon points="30,5 0,75 60,75" fill="url(#slFace)" stroke="#fcd34d" />
-        <polygon points="30,5 60,75 75,55" fill="#b45309" stroke="#fcd34d" opacity="0.8" />
-      </g>
-      {/* sphere */}
-      <g transform="translate(150 80)">
-        <circle r="22" fill="url(#slFace)" stroke="#fcd34d" />
-        <ellipse cx="-4" cy="-6" rx="8" ry="3" fill="#fef3c7" opacity="0.6" />
-      </g>
-    </svg>
-  );
-}
-
-function Charts() {
-  return (
-    <svg viewBox="0 0 200 140" className="h-full w-full">
-      <defs>
-        <linearGradient id="chBar" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0" stopColor="#a78bfa" />
-          <stop offset="1" stopColor="#f0abfc" />
-        </linearGradient>
-      </defs>
-      {/* axis */}
-      <line x1="20" y1="115" x2="180" y2="115" stroke="#c4b5fd" strokeWidth="1" />
-      <line x1="20" y1="115" x2="20" y2="25" stroke="#c4b5fd" strokeWidth="1" />
-      {/* bars */}
-      <rect x="35" y="80" width="18" height="35" rx="2" fill="url(#chBar)" />
-      <rect x="62" y="60" width="18" height="55" rx="2" fill="url(#chBar)" />
-      <rect x="89" y="45" width="18" height="70" rx="2" fill="url(#chBar)" />
-      <rect x="116" y="55" width="18" height="60" rx="2" fill="url(#chBar)" />
-      <rect x="143" y="35" width="18" height="80" rx="2" fill="url(#chBar)" />
-      {/* trend line */}
-      <path d="M 44 80 L 71 60 L 98 45 L 125 55 L 152 35" stroke="#facc15" strokeWidth="2" fill="none" strokeLinecap="round" />
-      <circle cx="44" cy="80" r="3" fill="#facc15" />
-      <circle cx="71" cy="60" r="3" fill="#facc15" />
-      <circle cx="98" cy="45" r="3" fill="#facc15" />
-      <circle cx="125" cy="55" r="3" fill="#facc15" />
-      <circle cx="152" cy="35" r="3" fill="#facc15" />
-    </svg>
-  );
-}
-
-function Illustration({ kind }: { kind: Strand['illustration'] }) {
-  if (kind === 'crystals') return <Crystals />;
-  if (kind === 'bridge') return <Bridge />;
-  if (kind === 'solids') return <Solids />;
-  return <Charts />;
-}
-
-// ── 3D animated compass rose ─────────────────────────────────────────
-
-function CompassRose() {
-  return (
-    <div className="relative grid h-72 w-72 place-items-center md:h-80 md:w-80">
-      {/* concentric rings */}
-      <div className="absolute inset-0 rounded-full border border-white/10 bg-white/5 backdrop-blur-xl" />
-      <div className="absolute inset-2 rounded-full border border-white/15" />
-      <div className="absolute inset-6 rounded-full border border-white/10" />
-
-      {/* spinning rose */}
-      <svg
-        viewBox="-100 -100 200 200"
-        className="absolute inset-0 h-full w-full animate-[spin_60s_linear_infinite]"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="needleA" x1="0" y1="-1" x2="0" y2="1">
-            <stop offset="0" stopColor="#f43f5e" />
-            <stop offset="0.5" stopColor="#ffffff" />
-            <stop offset="1" stopColor="#3b82f6" />
-          </linearGradient>
-        </defs>
-        {/* N-S needle */}
-        <polygon points="0,-80 8,0 0,80 -8,0" fill="url(#needleA)" stroke="#fff" strokeWidth="0.5" />
-        {/* E-W needle (rotated) */}
-        <polygon points="0,-80 8,0 0,80 -8,0" fill="url(#needleA)" stroke="#fff" strokeWidth="0.5" opacity="0.7" transform="rotate(90)" />
-        {/* diagonal accents */}
-        <g opacity="0.5">
-          <polygon points="0,-55 4,0 0,55 -4,0" fill="#fde047" transform="rotate(45)" />
-          <polygon points="0,-55 4,0 0,55 -4,0" fill="#fde047" transform="rotate(135)" />
-        </g>
-        {/* tick marks */}
-        {Array.from({ length: 36 }).map((_, i) => (
-          <line
-            key={i}
-            x1="0"
-            y1="-90"
-            x2="0"
-            y2={i % 9 === 0 ? -82 : -86}
-            stroke="#ffffff"
-            strokeOpacity={i % 9 === 0 ? 0.8 : 0.3}
-            strokeWidth={i % 9 === 0 ? 1.5 : 0.6}
-            transform={`rotate(${i * 10})`}
-          />
-        ))}
-      </svg>
-
-      {/* fixed cardinal letters above the spinning rose */}
-      <div className="absolute inset-0">
-        <span className="absolute left-1/2 top-3 -translate-x-1/2 text-[11px] font-black tracking-[0.4em] text-white/80">N</span>
-        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[11px] font-black tracking-[0.4em] text-white/80">S</span>
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-black tracking-[0.4em] text-white/80">W</span>
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-black tracking-[0.4em] text-white/80">E</span>
-      </div>
-
-      {/* centre disc */}
-      <div className="relative grid h-40 w-40 place-items-center rounded-full border border-white/20 bg-gradient-to-br from-[#1e3a8a]/80 via-[#5b21b6]/70 to-[#831843]/70 shadow-[inset_0_0_40px_rgba(255,255,255,0.15)] backdrop-blur-xl">
-        <div className="text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">EIS · Grade 8</p>
-          <p className="mt-1 bg-gradient-to-r from-sky-200 via-white to-fuchsia-200 bg-clip-text text-base font-black text-transparent">
-            MYP Mathematics
-          </p>
-          <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/50">Course Map</p>
-        </div>
-      </div>
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      {seeds.map((s, i) => (
+        <span
+          key={i}
+          className="absolute rounded-full bg-white"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            width: `${s.size}px`,
+            height: `${s.size}px`,
+            opacity: s.opacity,
+            animation: `landing-twinkle ${s.duration}s ease-in-out ${s.delay}s infinite`,
+          }}
+        />
+      ))}
     </div>
   );
 }
 
-// ── Strand card ──────────────────────────────────────────────────────
+// ── 3D Subject Hub (centre) ──────────────────────────────────────────
 
-function StrandCard({ strand, index }: { strand: Strand; index: number }) {
+/** Animated central hub that pulses behind the subject cards. */
+function StudioHub({ mouse }: { mouse: { x: number; y: number } }) {
   return (
-    <article
-      className={`group relative overflow-hidden rounded-3xl border border-white/15 bg-white/5 p-6 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-1 hover:bg-white/[0.08] ${strand.accent.glow}`}
+    <div
+      className="relative grid h-80 w-80 place-items-center md:h-96 md:w-96"
       style={{
-        animation: `landing-float 8s ease-in-out ${index * 1.3}s infinite`,
+        transform: `perspective(1200px) rotateX(${mouse.y * -4}deg) rotateY(${mouse.x * 4}deg)`,
+        transition: 'transform 0.25s ease-out',
       }}
     >
-      {/* gradient halo */}
-      <div className={`pointer-events-none absolute -inset-1 bg-gradient-to-br ${strand.accent.gradient} opacity-60 blur-2xl`} />
+      {/* spinning conic gradient ring */}
+      <div
+        className="absolute inset-0 rounded-full opacity-40"
+        style={{
+          background:
+            'conic-gradient(from 0deg, rgba(56,189,248,0), rgba(56,189,248,0.6), rgba(52,211,153,0.6), rgba(217,70,239,0.6), rgba(251,191,36,0.6), rgba(56,189,248,0))',
+          animation: 'landing-spin 30s linear infinite',
+          filter: 'blur(8px)',
+        }}
+      />
+      {/* counter-spinning ring */}
+      <div
+        className="absolute inset-6 rounded-full opacity-30"
+        style={{
+          background:
+            'conic-gradient(from 180deg, rgba(232,121,249,0.5), rgba(56,189,248,0.5), rgba(52,211,153,0.5), rgba(232,121,249,0.5))',
+          animation: 'landing-spin 45s linear infinite reverse',
+          filter: 'blur(10px)',
+        }}
+      />
 
-      <div className="relative">
-        <div className="flex items-start justify-between gap-3">
-          <span
-            className={`inline-flex h-9 w-9 items-center justify-center rounded-full font-black text-white ring-2 ${strand.accent.ring} bg-white/10`}
-            aria-hidden="true"
-          >
-            {strand.bearing}
-          </span>
-          <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${strand.accent.chip} ${strand.accent.chipText}`}>
-            Strand
-          </span>
+      {/* glass rings */}
+      <div className="absolute inset-2 rounded-full border border-white/15" />
+      <div className="absolute inset-8 rounded-full border border-white/10" />
+      <div className="absolute inset-14 rounded-full border border-white/20" />
+
+      {/* orbital ticks */}
+      <svg className="absolute inset-0 h-full w-full animate-[landing-spin_50s_linear_infinite]" viewBox="-100 -100 200 200">
+        {Array.from({ length: 60 }).map((_, i) => (
+          <line
+            key={i}
+            x1="0"
+            y1="-94"
+            x2="0"
+            y2={i % 5 === 0 ? -86 : -90}
+            stroke="#ffffff"
+            strokeOpacity={i % 5 === 0 ? 0.6 : 0.2}
+            strokeWidth={i % 5 === 0 ? 1.2 : 0.5}
+            transform={`rotate(${i * 6})`}
+          />
+        ))}
+      </svg>
+
+      {/* central glass disc */}
+      <div className="relative grid h-44 w-44 place-items-center rounded-full border border-white/30 bg-gradient-to-br from-[#0c4a6e]/70 via-[#5b21b6]/70 to-[#831843]/70 shadow-[inset_0_0_50px_rgba(255,255,255,0.2),0_0_80px_rgba(217,70,239,0.4)] backdrop-blur-xl">
+        <div className="text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/60">
+            EIS Jumeirah
+          </p>
+          <p className="mt-1 bg-gradient-to-r from-sky-200 via-white to-fuchsia-200 bg-clip-text text-lg font-black text-transparent">
+            Learning Studio
+          </p>
+          <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/50">
+            Grade 8 · One Platform
+          </p>
         </div>
-
-        <h3 className="mt-4 text-lg font-black text-white">{strand.title}</h3>
-        <p className="mt-1 text-xs text-slate-300">{strand.subtitle}</p>
-
-        {/* Illustration */}
-        <div className="mt-4 h-32 overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-black/30 p-2">
-          <Illustration kind={strand.illustration} />
-        </div>
-
-        <ul className="mt-4 space-y-1.5">
-          {strand.topics.map((topic) => (
-            <li key={topic} className="flex items-start gap-2 text-xs text-slate-200">
-              <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${strand.accent.chip}`} />
-              <span>{topic}</span>
-            </li>
-          ))}
-        </ul>
       </div>
-    </article>
+
+      {/* orbiting subject motes */}
+      {SUBJECTS.map((s, idx) => {
+        const angle = (idx * 360) / SUBJECTS.length;
+        return (
+          <div
+            key={s.id}
+            className="absolute inset-0"
+            style={{ transform: `rotate(${angle}deg)`, animation: 'landing-spin 25s linear infinite' }}
+          >
+            <div
+              className={`absolute left-1/2 top-1 -translate-x-1/2 grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br ${s.from} ${s.to} shadow-lg ring-2 ring-white/40`}
+              style={{ animation: 'landing-spin 25s linear infinite reverse' }}
+            >
+              <s.icon className="h-4 w-4 text-white" />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Subject card with parallax tilt ──────────────────────────────────
+
+function SubjectCard({
+  subject,
+  mouse,
+  index,
+}: {
+  subject: SubjectMeta;
+  mouse: { x: number; y: number };
+  index: number;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const Icon = subject.icon;
+
+  // Per-card tilt amplified when hovered; each card gets a slightly
+  // different baseline angle so they don't all mirror each other.
+  const baseRotate = (index - 1) * 6; // -6, 0, +6
+  const tiltX = mouse.y * (hovered ? -12 : -4);
+  const tiltY = mouse.x * (hovered ? 14 : 6) + baseRotate;
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="relative cursor-pointer"
+      style={{
+        transform: `perspective(1400px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(${hovered ? -8 : 0}px)`,
+        transition: 'transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
+        animation: `landing-float 9s ease-in-out ${index * 1.4}s infinite`,
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      {/* outer glow */}
+      <div
+        className="pointer-events-none absolute -inset-4 rounded-3xl opacity-60 blur-2xl"
+        style={{
+          background: `radial-gradient(circle at 50% 50%, rgba(${subject.glow}, 0.5) 0%, transparent 70%)`,
+        }}
+      />
+
+      <article
+        className={`relative overflow-hidden rounded-3xl border border-white/20 bg-white/[0.07] p-6 backdrop-blur-2xl transition-all duration-500 ${
+          hovered ? 'border-white/40 bg-white/[0.12]' : ''
+        }`}
+        style={{
+          boxShadow: hovered
+            ? `0 50px 120px -20px rgba(${subject.glow}, 0.6), inset 0 1px 0 rgba(255,255,255,0.15)`
+            : `0 30px 90px -25px rgba(${subject.glow}, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)`,
+        }}
+      >
+        {/* gradient halo behind icon */}
+        <div className={`absolute -right-10 -top-10 h-40 w-40 rounded-full bg-gradient-to-br ${subject.from} ${subject.to} opacity-30 blur-3xl`} />
+
+        <div className="relative">
+          <div className="flex items-start justify-between gap-3">
+            <div
+              className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${subject.from} ${subject.to} shadow-lg ring-1 ring-white/30`}
+              style={{
+                transform: hovered ? 'translateZ(40px) rotate(-6deg)' : 'translateZ(20px)',
+                transition: 'transform 0.35s ease',
+              }}
+            >
+              <Icon className="h-7 w-7 text-white" />
+            </div>
+            <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-white/80">
+              {subject.id === 'math' ? 'Maths' : subject.id}
+            </span>
+          </div>
+
+          <h3
+            className="mt-5 text-2xl font-black text-white"
+            style={{
+              transform: hovered ? 'translateZ(20px)' : 'translateZ(0)',
+              transition: 'transform 0.35s ease',
+            }}
+          >
+            {subject.name}
+          </h3>
+          <p className="mt-1 text-xs text-slate-300">{subject.tagline}</p>
+
+          <p className={`mt-3 inline-block rounded-full bg-gradient-to-r ${subject.from} ${subject.to} bg-clip-text px-2 py-0.5 text-xs font-black text-transparent ring-1 ring-white/20`}>
+            {subject.units}
+          </p>
+
+          <ul className="mt-4 space-y-1.5">
+            {subject.topics.map((topic) => (
+              <li key={topic} className="flex items-start gap-2 text-xs leading-5 text-slate-200">
+                <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r ${subject.from} ${subject.to}`} />
+                <span>{topic}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div
+            className="mt-5 flex items-center justify-between border-t border-white/10 pt-4"
+            style={{
+              transform: hovered ? 'translateZ(15px)' : 'translateZ(0)',
+              transition: 'transform 0.35s ease',
+            }}
+          >
+            <span className="text-[10px] font-black uppercase tracking-widest text-white/50">
+              Explore →
+            </span>
+            <ArrowRight className={`h-4 w-4 transition-transform ${hovered ? 'translate-x-1 text-white' : 'text-white/60'}`} />
+          </div>
+        </div>
+
+        {/* shimmer sweep on hover */}
+        <span
+          className={`pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 ${
+            hovered ? 'translate-x-full' : ''
+          }`}
+        />
+      </article>
+    </div>
+  );
+}
+
+// ── Stat tile ────────────────────────────────────────────────────────
+
+function StatTile({ stat }: { stat: typeof STATS[number] }) {
+  const value = useCountUp(stat.value, 1400);
+  return (
+    <div className="rounded-2xl border border-white/15 bg-white/5 p-4 text-center backdrop-blur-xl">
+      <p className="bg-gradient-to-r from-sky-300 via-fuchsia-200 to-amber-200 bg-clip-text text-3xl font-black text-transparent">
+        {value}
+        {stat.suffix}
+      </p>
+      <p className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+        {stat.label}
+      </p>
+    </div>
+  );
+}
+
+// ── Feature card ─────────────────────────────────────────────────────
+
+function FeatureCard({ feature, mouse, index }: { feature: Feature; mouse: { x: number; y: number }; index: number }) {
+  const [hovered, setHovered] = useState(false);
+  const Icon = feature.icon;
+  const tiltX = mouse.y * (hovered ? -6 : -2);
+  const tiltY = mouse.x * (hovered ? 6 : 2);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="group relative h-full"
+      style={{
+        transform: `perspective(1200px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+        transition: 'transform 0.4s ease',
+        animation: `landing-float 11s ease-in-out ${index * 0.7}s infinite`,
+      }}
+    >
+      <div className={`pointer-events-none absolute -inset-1 rounded-2xl bg-gradient-to-br ${feature.tone} blur-xl opacity-50`} />
+      <div className="relative h-full overflow-hidden rounded-2xl border border-white/15 bg-white/[0.05] p-4 backdrop-blur-xl">
+        <div className={`mb-3 grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br ${feature.tone} ring-1 ring-white/20`}>
+          <Icon className="h-5 w-5 text-white" />
+        </div>
+        <p className="text-sm font-black text-white">{feature.title}</p>
+        <p className="mt-1.5 text-xs leading-5 text-slate-300">{feature.copy}</p>
+      </div>
+    </div>
   );
 }
 
@@ -343,6 +466,7 @@ function StrandCard({ strand, index }: { strand: Strand; index: number }) {
 
 export function LandingPage() {
   const [showPlatform, setShowPlatform] = useState(false);
+  const mouse = useMouseParallax();
 
   if (showPlatform) {
     return <ClientPage />;
@@ -352,26 +476,38 @@ export function LandingPage() {
     <main className="relative min-h-screen overflow-hidden bg-[#040711] text-white">
       {/* ──────── ambient backdrop ──────── */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        {/* soft mesh gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_18%,rgba(56,189,248,0.22),transparent_45%),radial-gradient(circle_at_85%_22%,rgba(52,211,153,0.18),transparent_45%),radial-gradient(circle_at_18%_85%,rgba(251,191,36,0.18),transparent_42%),radial-gradient(circle_at_85%_85%,rgba(217,70,239,0.20),transparent_45%)]" />
+        {/* radial mesh gradient — moves slightly with the mouse */}
+        <div
+          className="absolute inset-0 transition-transform duration-700"
+          style={{
+            background:
+              'radial-gradient(circle at 15% 18%, rgba(56,189,248,0.22), transparent 45%),' +
+              'radial-gradient(circle at 85% 22%, rgba(52,211,153,0.20), transparent 45%),' +
+              'radial-gradient(circle at 18% 85%, rgba(251,191,36,0.18), transparent 42%),' +
+              'radial-gradient(circle at 85% 85%, rgba(232,121,249,0.22), transparent 45%)',
+            transform: `translate(${mouse.x * 12}px, ${mouse.y * 12}px)`,
+          }}
+        />
         {/* faint grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.08)_1px,transparent_1px)] bg-[size:60px_60px]" />
-        {/* floating orbs */}
-        <div className="absolute left-[10%] top-[20%] h-64 w-64 rounded-full bg-sky-500/20 blur-3xl" style={{ animation: 'landing-float 14s ease-in-out infinite' }} />
-        <div className="absolute right-[8%] top-[15%] h-72 w-72 rounded-full bg-emerald-500/20 blur-3xl" style={{ animation: 'landing-float 16s ease-in-out 2s infinite' }} />
-        <div className="absolute left-[12%] bottom-[12%] h-72 w-72 rounded-full bg-amber-500/20 blur-3xl" style={{ animation: 'landing-float 18s ease-in-out 1s infinite' }} />
-        <div className="absolute right-[10%] bottom-[12%] h-72 w-72 rounded-full bg-fuchsia-500/20 blur-3xl" style={{ animation: 'landing-float 15s ease-in-out 3s infinite' }} />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(148,163,184,.07)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,.07)_1px,transparent_1px)] bg-[size:60px_60px]" />
+        {/* large floating orbs */}
+        <div className="absolute left-[8%] top-[18%] h-72 w-72 rounded-full bg-sky-500/20 blur-3xl" style={{ animation: 'landing-float 16s ease-in-out infinite' }} />
+        <div className="absolute right-[6%] top-[12%] h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl" style={{ animation: 'landing-float 18s ease-in-out 2s infinite' }} />
+        <div className="absolute left-[10%] bottom-[8%] h-80 w-80 rounded-full bg-amber-500/15 blur-3xl" style={{ animation: 'landing-float 20s ease-in-out 1s infinite' }} />
+        <div className="absolute right-[8%] bottom-[10%] h-80 w-80 rounded-full bg-fuchsia-500/20 blur-3xl" style={{ animation: 'landing-float 17s ease-in-out 3s infinite' }} />
+        {/* twinkling particle field */}
+        <ParticleField count={70} />
       </div>
 
       {/* ──────── top bar ──────── */}
       <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-3">
           <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-white/20 bg-white/10 backdrop-blur-xl">
-            <Image src={brandLogoSrc} alt="EIS Maths Studio" fill sizes="40px" />
+            <Image src={brandLogoSrc} alt="EIS Learning Studio" fill sizes="40px" />
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">Emirates International School</p>
-            <p className="text-sm font-black text-white">Maths Studio · Jumeirah</p>
+            <p className="text-sm font-black text-white">Learning Studio · Jumeirah</p>
           </div>
         </div>
         <button
@@ -386,60 +522,90 @@ export function LandingPage() {
       {/* ──────── hero copy ──────── */}
       <section className="relative z-10 mx-auto max-w-5xl px-5 pt-6 text-center sm:px-8 sm:pt-12">
         <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.4em] text-white/70 backdrop-blur-xl">
-          <Compass className="h-3.5 w-3.5" />
-          Year 8 MYP · Course Map
+          <Sparkles className="h-3.5 w-3.5" />
+          Grade 8 · IB MYP
         </span>
-        <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight text-white sm:text-5xl">
-          One platform.{' '}
+        <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight text-white sm:text-6xl">
           <span className="bg-gradient-to-r from-sky-300 via-fuchsia-200 to-amber-200 bg-clip-text text-transparent">
-            Four reasoning strands.
-          </span>{' '}
-          The whole Grade 8 curriculum.
+            Three subjects.
+          </span>
+          <br />
+          One studio. Every concept.
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">
-          Worked solutions, interactive 3D labs, read-aloud lessons and a built-in
-          assignment loop — all aligned to the four MYP reasoning strands and the
-          four assessment criteria.
+          Maths, Science and English brought together with worked solutions,
+          3D interactive labs, labelled diagrams, read-aloud lessons and a
+          built-in teacher → student assignment loop.
         </p>
       </section>
 
-      {/* ──────── compass + strand grid ──────── */}
-      <section className="relative z-10 mx-auto mt-10 max-w-7xl px-5 sm:mt-14 sm:px-8">
-        <div className="relative grid gap-5 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
-          {/* left column: N (top), W (bottom) */}
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 lg:gap-8">
-            <StrandCard strand={STRANDS[0]} index={0} />
-            <StrandCard strand={STRANDS[3]} index={3} />
+      {/* ──────── stats strip ──────── */}
+      <section className="relative z-10 mx-auto mt-8 max-w-3xl px-5 sm:px-8">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {STATS.map((s) => (
+            <StatTile key={s.label} stat={s} />
+          ))}
+        </div>
+      </section>
+
+      {/* ──────── 3D Hub + Subject cards ──────── */}
+      <section className="relative z-10 mx-auto mt-14 max-w-7xl px-5 sm:px-8">
+        <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_auto_1fr]">
+          {/* left subject card */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-sm">
+              <SubjectCard subject={SUBJECTS[0]} mouse={mouse} index={0} />
+            </div>
           </div>
 
-          {/* centre compass */}
-          <div className="order-first flex justify-center self-center lg:order-none">
-            <CompassRose />
+          {/* centre hub */}
+          <div className="order-first flex justify-center lg:order-none">
+            <StudioHub mouse={mouse} />
           </div>
 
-          {/* right column: E (top), S (bottom) */}
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 lg:gap-8">
-            <StrandCard strand={STRANDS[1]} index={1} />
-            <StrandCard strand={STRANDS[2]} index={2} />
+          {/* right subject card */}
+          <div className="flex justify-center">
+            <div className="w-full max-w-sm">
+              <SubjectCard subject={SUBJECTS[2]} mouse={mouse} index={2} />
+            </div>
+          </div>
+        </div>
+
+        {/* science card centred below the hub */}
+        <div className="mt-8 flex justify-center">
+          <div className="w-full max-w-sm">
+            <SubjectCard subject={SUBJECTS[1]} mouse={mouse} index={1} />
           </div>
         </div>
       </section>
 
+      {/* ──────── Feature constellation ──────── */}
+      <section className="relative z-10 mx-auto mt-20 max-w-6xl px-5 sm:px-8">
+        <div className="mb-6 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60">What you get</p>
+          <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">
+            A complete teaching toolkit
+          </h2>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f, i) => (
+            <FeatureCard key={f.title} feature={f} mouse={mouse} index={i} />
+          ))}
+        </div>
+      </section>
+
       {/* ──────── assessment criteria strip ──────── */}
-      <section className="relative z-10 mx-auto mt-12 max-w-5xl px-5 sm:mt-16 sm:px-8">
+      <section className="relative z-10 mx-auto mt-16 max-w-5xl px-5 sm:px-8">
         <div className="rounded-3xl border border-white/15 bg-white/5 p-5 backdrop-blur-2xl">
           <div className="mb-3 flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/60">
-              Assessment Objectives
+              Assessment Objectives · MYP Criteria
             </span>
             <span className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {CRITERIA.map((c) => (
-              <div
-                key={c.tag}
-                className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 px-3 py-3 transition hover:border-white/30"
-              >
+              <div key={c.tag} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 px-3 py-3 transition hover:-translate-y-0.5 hover:border-white/30">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-400 to-fuchsia-400 text-xs font-black text-slate-900">
                   {c.tag}
                 </span>
@@ -469,7 +635,15 @@ export function LandingPage() {
       <style jsx>{`
         @keyframes landing-float {
           0%, 100% { transform: translateY(0px); }
-          50%      { transform: translateY(-12px); }
+          50%      { transform: translateY(-14px); }
+        }
+        @keyframes landing-spin {
+          0%   { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes landing-twinkle {
+          0%, 100% { opacity: 0.15; transform: scale(0.8); }
+          50%      { opacity: 0.85; transform: scale(1.4); }
         }
       `}</style>
     </main>
