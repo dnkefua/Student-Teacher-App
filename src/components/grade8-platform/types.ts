@@ -25,6 +25,16 @@ export interface ConceptDef {
     | 'electric-circuit'
     | 'forces-motion'
     | 'ecosystem-simulation';
+  /**
+   * Optional HD video explainer for this concept. Accepts:
+   *   • A full YouTube URL ("https://www.youtube.com/watch?v=VID_ID")
+   *   • A YouTube short-form URL ("https://youtu.be/VID_ID")
+   *   • A bare YouTube video id ("VID_ID")
+   *   • Any other embeddable iframe src
+   * LearnView normalises the value into an embed URL and renders it
+   * inline with autoplay disabled.
+   */
+  videoUrl?: string;
 }
 
 export interface Example {

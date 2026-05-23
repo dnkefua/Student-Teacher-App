@@ -11,6 +11,8 @@
     .arrow-in { stroke: #fde047; stroke-width: 4; fill: none; }
     .arrow-out { stroke: #f97316; stroke-width: 3; fill: none; }
     .arrow-trap { stroke: #dc2626; stroke-width: 3; fill: none; }
+    @keyframes sunSpin { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(15deg); } }
+    .sun-spin { transform-origin: 125px 130px; animation: sunSpin 4s ease-in-out infinite; }
   </style>
   <rect width="800" height="520" fill="#eff6ff"/>
   <text x="400" y="32" class="title">The Greenhouse Effect</text>
@@ -23,10 +25,45 @@
   <rect x="40" y="170" width="720" height="50" fill="#94a3b8" opacity="0.4" stroke="#475569" stroke-dasharray="6 4"/>
   <text x="755" y="195" font-size="11" font-weight="700" fill="#0f172a" text-anchor="end">Greenhouse gas layer  (CO₂, CH₄, H₂O vapour)</text>
 
-  <!-- Sun -->
-  <g transform="translate(125 130)">
+  <!-- Sun (animated halo) -->
+  <g transform="translate(125 130)" class="sun-spin">
     <circle r="36" fill="#fde047" stroke="#a16207" stroke-width="2"/>
     <text y="6" font-size="14" font-weight="800" fill="#7c2d12" text-anchor="middle">SUN</text>
+  </g>
+
+  <!-- Solar photons travelling DOWN to the surface -->
+  <g>
+    <circle r="4" fill="#fde047" opacity="0.9">
+      <animateMotion dur="2.5s" repeatCount="indefinite">
+        <mpath href="#solarRay" />
+      </animateMotion>
+    </circle>
+    <circle r="3.5" fill="#facc15" opacity="0.8">
+      <animateMotion dur="2.5s" begin="0.8s" repeatCount="indefinite">
+        <mpath href="#solarRay" />
+      </animateMotion>
+    </circle>
+    <circle r="4" fill="#fbbf24" opacity="0.85">
+      <animateMotion dur="2.5s" begin="1.6s" repeatCount="indefinite">
+        <mpath href="#solarRay" />
+      </animateMotion>
+    </circle>
+    <path id="solarRay" d="M 165 165 L 380 360" fill="none" stroke="none"/>
+  </g>
+
+  <!-- Long-wave IR rebounding off the greenhouse gas layer -->
+  <g>
+    <circle r="3.5" fill="#f97316" opacity="0.9">
+      <animateMotion dur="3s" repeatCount="indefinite">
+        <mpath href="#irBounce" />
+      </animateMotion>
+    </circle>
+    <circle r="3" fill="#dc2626" opacity="0.85">
+      <animateMotion dur="3s" begin="1.5s" repeatCount="indefinite">
+        <mpath href="#irBounce" />
+      </animateMotion>
+    </circle>
+    <path id="irBounce" d="M 460 360 L 520 220 L 640 360" fill="none" stroke="none"/>
   </g>
 
   <!-- EARTH SURFACE -->

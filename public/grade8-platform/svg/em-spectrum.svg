@@ -8,6 +8,11 @@
       <stop offset="0.75" stop-color="#f97316"/>
       <stop offset="1" stop-color="#dc2626"/>
     </linearGradient>
+    <linearGradient id="scannerBeam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
     <linearGradient id="vis" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#7c3aed"/>
       <stop offset="0.2" stop-color="#3b82f6"/>
@@ -29,6 +34,17 @@
 
   <!-- spectrum bar -->
   <rect x="60" y="80" width="780" height="48" fill="url(#spec)" stroke="#0f172a"/>
+
+  <!-- Scanning beam — a thin white highlight sweeps left → right across the
+       band, like a spectrometer scanning from radio to gamma. -->
+  <rect x="60" y="80" width="40" height="48" fill="url(#scannerBeam)" opacity="0.55">
+    <animate
+      attributeName="x"
+      values="60;800;60"
+      dur="6s"
+      repeatCount="indefinite"
+    />
+  </rect>
 
   <!-- 7 region labels -->
   <g>
@@ -91,7 +107,15 @@
   <g transform="translate(60 380)">
     <path d="M 0 50 L 380 50" stroke="#94a3b8" stroke-dasharray="3 3"/>
     <path d="M 0 50 Q 30 0 60 50 T 120 50 T 180 50 T 240 50 T 300 50 T 360 50"
-      fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+      fill="none" stroke="#7c3aed" stroke-width="2.5"
+      stroke-dasharray="6 4">
+      <animate
+        attributeName="stroke-dashoffset"
+        values="0;-100"
+        dur="1.5s"
+        repeatCount="indefinite"
+      />
+    </path>
     <!-- wavelength bracket -->
     <line x1="60" y1="20" x2="180" y2="20" stroke="#dc2626" stroke-width="1.5"/>
     <line x1="60" y1="15" x2="60" y2="25" stroke="#dc2626"/>

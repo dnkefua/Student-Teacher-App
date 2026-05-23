@@ -4,7 +4,7 @@ import { UnitId, SubjectId, ConceptDef } from '../../types';
 import { scienceTheoryData } from '../../data/scienceTheory';
 import { englishTheoryData } from '../../data/englishTheory';
 import { mathTheoryData } from '../../data/mathTheory';
-import { BookOpen, Calculator, Type, Focus, CheckCircle2, Zap, Maximize2, Lightbulb } from 'lucide-react';
+import { BookOpen, Calculator, Type, Focus, CheckCircle2, Zap, Maximize2, Lightbulb, PlayCircle } from 'lucide-react';
 import ImageModal from '../ImageModal';
 import { ReadAloud } from './ReadAloud';
 
@@ -41,6 +41,33 @@ const EcosystemLab = dynamic(
   () => import('@/components/grade8-platform/components/labs/EcosystemLab').then((m) => m.EcosystemLab),
   { ssr: false, loading: () => <div className="p-8 text-center text-sm text-slate-500">Loading ecosystem sim…</div> },
 );
+
+/**
+ * Normalise a videoUrl (full URL / shortlink / bare YouTube id / generic
+ * iframe src) into a safe iframe src. Returns null if the value cannot be
+ * understood — the caller then skips the video block.
+ */
+function toEmbedSrc(raw: string): string | null {
+  const value = raw.trim();
+  if (!value) return null;
+  // Bare 11-char YouTube id (most common case for hand-authored data).
+  if (/^[A-Za-z0-9_-]{11}$/.test(value)) {
+    return `https://www.youtube-nocookie.com/embed/${value}?rel=0&modestbranding=1`;
+  }
+  // Standard YouTube watch URL.
+  const watchMatch = value.match(/youtube\.com\/watch\?[^#]*v=([A-Za-z0-9_-]{11})/);
+  if (watchMatch) {
+    return `https://www.youtube-nocookie.com/embed/${watchMatch[1]}?rel=0&modestbranding=1`;
+  }
+  // youtu.be short URL.
+  const shortMatch = value.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);
+  if (shortMatch) {
+    return `https://www.youtube-nocookie.com/embed/${shortMatch[1]}?rel=0&modestbranding=1`;
+  }
+  // Already an embed URL or other iframe-safe src (Vimeo etc.) — pass through.
+  if (/^https?:\/\//.test(value)) return value;
+  return null;
+}
 
 /**
  * Registry of available interactive labs. The data only stores a short id;
@@ -133,6 +160,32 @@ export function LearnView({ unit, subject }: { unit: UnitId, subject?: SubjectId
                 </p>
               ))}
             </div>
+
+            {concept.videoUrl && (() => {
+              const embed = toEmbedSrc(concept.videoUrl);
+              if (!embed) return null;
+              return (
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 shadow-md">
+                  <div className="flex items-center gap-2 px-4 py-2.5 text-white">
+                    <PlayCircle className="h-4 w-4 text-rose-400" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+                      Watch this explainer
+                    </p>
+                  </div>
+                  <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
+                    <iframe
+                      src={embed}
+                      title={`${concept.title} — explainer video`}
+                      className="absolute inset-0 h-full w-full"
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              );
+            })()}
 
             {concept.keyIdeas && concept.keyIdeas.length > 0 && (
               <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5">
