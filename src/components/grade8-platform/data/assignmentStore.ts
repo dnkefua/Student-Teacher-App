@@ -67,8 +67,30 @@ const emptyStore: Store = { assignments: [], submissions: [] };
 
 // ── Backend selection ────────────────────────────────────────────────
 
+/**
+ * Firestore is used for assignments ONLY when ALL of these are true:
+ *   1. We're on the client (window exists),
+ *   2. Firebase env vars are configured,
+ *   3. The opt-in flag NEXT_PUBLIC_ENABLE_ASSIGNMENT_SYNC is set to "1",
+ *   4. The browser believes it has network connectivity.
+ *
+ * Why opt-in?  Even with error handlers, the Firestore SDK's internal
+ * transport layer logs network failures (ERR_NAME_NOT_RESOLVED, DNS
+ * failures, security-rule denials) before our onError can intervene.
+ * That floods the dev console with noise that confuses students and
+ * teachers running locally without a real Firestore project. The
+ * localStorage fallback is functionally identical for single-device
+ * use, so we default to it.
+ *
+ * Production schools that want cross-device sync set
+ * NEXT_PUBLIC_ENABLE_ASSIGNMENT_SYNC=1 in their deployment env.
+ */
 function useFirestore(): boolean {
-  return typeof window !== 'undefined' && isFirebaseConfigured();
+  if (typeof window === 'undefined') return false;
+  if (!isFirebaseConfigured()) return false;
+  if (process.env.NEXT_PUBLIC_ENABLE_ASSIGNMENT_SYNC !== '1') return false;
+  if (navigator && 'onLine' in navigator && !navigator.onLine) return false;
+  return true;
 }
 
 // ── In-memory cache (so synchronous reads work for both backends) ─────
