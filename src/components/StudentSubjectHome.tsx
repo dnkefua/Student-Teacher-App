@@ -162,7 +162,10 @@ export function StudentSubjectHome({
             <div className="mt-3 flex flex-col gap-3 rounded-xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:p-4">
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-2 text-sm font-black text-white sm:truncate sm:text-base">{continueItem.title}</p>
-                <p className="mt-0.5 text-[11px] text-slate-400 sm:text-xs">
+                <p
+                  className="mt-0.5 text-[11px] text-slate-400 sm:text-xs"
+                  suppressHydrationWarning
+                >
                   {continueItem.kind} · due {new Date(continueItem.dueAt).toLocaleDateString()}
                 </p>
               </div>
@@ -219,7 +222,10 @@ export function StudentSubjectHome({
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-white">{a.title}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-500">
+                      <p
+                        className="text-[10px] uppercase tracking-wider text-slate-500"
+                        suppressHydrationWarning
+                      >
                         {a.kind} · {new Date(a.dueAt).toLocaleDateString()}
                       </p>
                     </div>

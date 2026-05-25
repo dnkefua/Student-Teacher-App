@@ -361,7 +361,7 @@ function TeacherView({ initialSubject }: { initialSubject: SubjectId }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold text-slate-900">{a.title}</p>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-slate-500" suppressHydrationWarning>
                         {a.subject} · {a.unit.replace('unit', 'Unit ')} · {a.kind} ·{' '}
                         {a.items.length} item{a.items.length === 1 ? '' : 's'} · due{' '}
                         {new Date(a.dueAt).toLocaleDateString()}
@@ -490,7 +490,10 @@ function StudentAssignmentRow({
                 <AlertCircle className="h-3 w-3" /> Overdue
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+                suppressHydrationWarning
+              >
                 <Clock className="h-3 w-3" /> Due {new Date(assignment.dueAt).toLocaleDateString()}
               </span>
             )}

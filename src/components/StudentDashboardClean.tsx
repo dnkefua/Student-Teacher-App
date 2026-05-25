@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import {
   ArrowRight,
   BookOpen,
@@ -90,18 +90,30 @@ function useAssignments(): Assignment[] {
 // ── Greeting (very short) ───────────────────────────────────────────
 
 function Greeting() {
-  const today = new Date();
-  const dateLabel = today.toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-  const hour = today.getHours();
-  const part = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  // new Date() + toLocaleDateString depend on (a) the moment of render
+  // and (b) the runtime locale — both differ between server and client.
+  // Defer the actual date string to a useEffect so the first render
+  // matches between SSR and hydration, then fill in the real date.
+  const [today, setToday] = useState<Date | null>(null);
+  useEffect(() => {
+    setToday(new Date());
+  }, []);
+  const dateLabel = today
+    ? today.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
+    : '';
+  const hour = today ? today.getHours() : 0;
+  const part = today
+    ? hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+    : 'Hello';
   return (
     <header className="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">{dateLabel}</p>
+        <p
+          className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400"
+          suppressHydrationWarning
+        >
+          {dateLabel || ' '}
+        </p>
         <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">{part}, Student</h1>
       </div>
     </header>
@@ -257,7 +269,12 @@ function Calendar({ assignments }: { assignments: Assignment[] }) {
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
-          <span className="min-w-[110px] text-center text-sm font-bold text-white">{monthLabel}</span>
+          <span
+            className="min-w-[110px] text-center text-sm font-bold text-white"
+            suppressHydrationWarning
+          >
+            {monthLabel}
+          </span>
           <button
             onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
             className="rounded-md border border-white/10 bg-white/5 p-1 text-slate-300 hover:bg-white/10"
@@ -311,7 +328,10 @@ function Calendar({ assignments }: { assignments: Assignment[] }) {
 
       {/* selected-day list */}
       <div className="mt-3 border-t border-white/10 pt-3">
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+        <p
+          className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400"
+          suppressHydrationWarning
+        >
           {selected.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
         </p>
         {selectedAssignments.length === 0 ? (
@@ -392,7 +412,7 @@ function UpNext({ assignments, onOpen }: { assignments: Assignment[]; onOpen: ()
       {pending.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-6 text-center">
           <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-          <p className="text-sm font-bold text-white">You're all caught up</p>
+          <p className="text-sm font-bold text-white">You&apos;re all caught up</p>
           <p className="text-xs text-slate-500">No pending assignments.</p>
         </div>
       ) : (
@@ -416,6 +436,7 @@ function UpNext({ assignments, onOpen }: { assignments: Assignment[]; onOpen: ()
                   className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
                     isOverdue ? 'bg-red-500/20 text-red-300' : 'bg-white/10 text-slate-300'
                   }`}
+                  suppressHydrationWarning
                 >
                   {due.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                 </span>
