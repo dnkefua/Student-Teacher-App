@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sidebar, TabType } from '@/components/Sidebar';
 import { Menu } from 'lucide-react';
 import { DashboardHome } from '@/components/DashboardHome';
@@ -96,18 +96,27 @@ function ClientPageInner() {
   // from `mode` which is the current view. Teachers can preview the
   // student view by flipping mode; students are locked to mode='student'
   // and never see teacher surfaces.
-  const role: 'teacher' | 'student' = useMemo(() => {
-    if (typeof window === 'undefined') return 'teacher';
+  //
+  // IMPORTANT: don't read localStorage during render — it causes a
+  // hydration mismatch (server emits 'teacher', client may emit
+  // 'student'). Instead, start with 'teacher' on both sides and update
+  // from localStorage AFTER mount via useEffect.
+  const [role, setRole] = useState<'teacher' | 'student'>('teacher');
+  const [mode, setModeInternal] = useState<LearningMode>('teacher');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const stored = window.localStorage.getItem('eis-role');
-      if (stored === 'student' || stored === 'teacher') return stored;
+      if (stored === 'student' || stored === 'teacher') {
+        setRole(stored);
+        setModeInternal(stored);
+      }
     } catch {
       /* ignore */
     }
-    return 'teacher';
   }, []);
 
-  const [mode, setModeInternal] = useState<LearningMode>(role);
   // Wrap setMode so students CANNOT escape to teacher mode even if a
   // child component tries to call setMode('teacher').
   const setMode = (next: LearningMode) => {
