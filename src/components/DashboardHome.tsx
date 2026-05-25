@@ -26,6 +26,7 @@ import {
 import { TabType } from './Sidebar';
 import { StudentDashboardClean } from '@/components/StudentDashboardClean';
 import { ClassLinkSettings } from '@/components/ClassLinkSettings';
+import { InviteStudentsPanel } from '@/components/InviteStudentsPanel';
 import { ExplainerByType } from '@/components/Math3DExplainers';
 import { Math3DShowcase } from '@/components/Math3DShowcase';
 import { TeacherSubmissionsPanel } from '@/components/TeacherSubmissionsPanel';
@@ -443,6 +444,12 @@ function TeacherDashboard({
             so teachers can paste the live-class URL once without poking at
             localStorage. Read by ClassLink on the student dashboard. */}
         <ClassLinkSettings />
+
+        {/* My Students roster + invite-by-email flow. Generates a unique
+            invite link per student and (via mailto:) hands it off to the
+            teacher's email client. When the student opens the link, the
+            LandingPage records them as joined and locks them to student view. */}
+        <InviteStudentsPanel />
       </div>
     );
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback, useSyncExternalStore } from 'react';
 import { generateContent, DEFAULT_AI_MODEL, TTS_MODEL } from '@/lib/gemini';
 import {
   Send,
@@ -34,6 +34,12 @@ import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
 import { ActiveLessonPanel, type ShareableLesson } from './ActiveLessonPanel';
 import { TeacherVideoFloat } from './TeacherVideoFloat';
+import {
+  listStudents,
+  setInLiveClass,
+  subscribe as subscribeRoster,
+  type RosterStudent,
+} from '@/lib/roster/rosterStore';
 import type { DemoAssignment } from '@/lib/demoAssignments';
 import type { TabType } from './Sidebar';
 import { recordClassParticipationEvent } from '@/lib/learningHub/internalEvents';
@@ -62,6 +68,17 @@ export function VirtualClassroom({
   mode?: 'teacher' | 'student';
 } = {}) {
   const isTeacher = mode === 'teacher';
+
+  // Real roster (from the teacher's invite panel). When the roster is
+  // empty we fall back to the demo FAKE_STUDENTS so the screenshot/demo
+  // experience still feels populated.
+  const roster = useSyncExternalStore(subscribeRoster, listStudents, () => [] as RosterStudent[]);
+  const inClassRoster = useMemo(
+    () => roster.filter((s) => s.inLiveClass),
+    [roster],
+  );
+  const useRealRoster = roster.length > 0;
+  const presentCount = useRealRoster ? inClassRoster.length + 1 : FAKE_STUDENTS.length + 1;
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', sender: 'System', text: 'Class has started.', isTeacher: false, timestamp: new Date() },
     { id: '2', sender: 'Alice', text: 'Hi Mr. Smith! I have a question about the homework.', isTeacher: false, timestamp: new Date() },
@@ -731,7 +748,7 @@ export function VirtualClassroom({
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-white sm:text-sm">EIS Grade 8</p>
               <p className="truncate text-[10px] text-slate-400 sm:text-[11px]">
-                {FAKE_STUDENTS.length + 1} · ✋{raisedHands.length}
+                {presentCount} · ✋{raisedHands.length}
               </p>
             </div>
           </div>
@@ -1047,7 +1064,7 @@ export function VirtualClassroom({
               {(
                 ([
                   { id: 'chat', label: 'Chat', icon: MessageSquare, badge: messages.length },
-                  { id: 'people', label: 'People', icon: Users, badge: FAKE_STUDENTS.length + 1 },
+                  { id: 'people', label: 'People', icon: Users, badge: presentCount },
                   ...(isTeacher ? [{ id: 'tools', label: 'AI', icon: Sparkles, badge: 0 }] : []),
                 ] as { id: RightTab; label: string; icon: typeof MessageSquare; badge: number }[])
               ).map((tab) => {
@@ -1165,7 +1182,7 @@ export function VirtualClassroom({
                     )}
                     <div>
                       <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
-                        In class ({FAKE_STUDENTS.length + 1})
+                        In class ({presentCount})
                       </p>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 rounded-md bg-[#49c8ff]/10 px-2.5 py-1.5">
@@ -1178,23 +1195,78 @@ export function VirtualClassroom({
                           </div>
                           {isMuted && <MicOff className="h-3.5 w-3.5 text-red-400" />}
                         </div>
-                        {FAKE_STUDENTS.map((s) => (
-                          <div
-                            key={s.id}
-                            className="flex items-center gap-2 rounded-md px-2.5 py-1.5 hover:bg-white/5"
-                          >
-                            <div
-                              className="grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-slate-800"
-                              style={{ background: s.avatarColor }}
-                            >
-                              {s.name.charAt(8)}
+
+                        {useRealRoster ? (
+                          inClassRoster.map((s) => (
+                            <div key={s.id} className="flex items-center gap-2 rounded-md px-2.5 py-1.5 hover:bg-white/5">
+                              <div className="grid h-7 w-7 place-items-center rounded-full bg-emerald-500 text-xs font-bold text-emerald-950">
+                                {s.name.charAt(0).toUpperCase()}
+                              </div>
+                              <p className="min-w-0 flex-1 truncate text-sm text-slate-200">{s.name}</p>
+                              {isTeacher && (
+                                <button
+                                  onClick={() => setInLiveClass(s.id, false)}
+                                  className="rounded px-1.5 py-0.5 text-[10px] font-bold text-slate-500 hover:bg-red-500/15 hover:text-red-400"
+                                  title="Remove from class"
+                                >
+                                  Drop
+                                </button>
+                              )}
                             </div>
-                            <p className="min-w-0 flex-1 truncate text-sm text-slate-200">{s.name}</p>
-                            {raisedHands.includes(s.id) && <Hand className="h-3.5 w-3.5 text-amber-400" />}
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          FAKE_STUDENTS.map((s) => (
+                            <div key={s.id} className="flex items-center gap-2 rounded-md px-2.5 py-1.5 hover:bg-white/5">
+                              <div
+                                className="grid h-7 w-7 place-items-center rounded-full text-xs font-bold text-slate-800"
+                                style={{ background: s.avatarColor }}
+                              >
+                                {s.name.charAt(8)}
+                              </div>
+                              <p className="min-w-0 flex-1 truncate text-sm text-slate-200">{s.name}</p>
+                              {raisedHands.includes(s.id) && <Hand className="h-3.5 w-3.5 text-amber-400" />}
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
+
+                    {/* Teacher-only: roster of invited students NOT in class yet,
+                        with a one-click "Add to class" button. */}
+                    {isTeacher && useRealRoster && (
+                      <div className="mt-3">
+                        <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-amber-300">
+                          Your roster ({roster.filter((s) => !s.inLiveClass).length} available)
+                        </p>
+                        <div className="space-y-1">
+                          {roster
+                            .filter((s) => !s.inLiveClass)
+                            .map((s) => (
+                              <div
+                                key={s.id}
+                                className="flex items-center gap-2 rounded-md border border-white/5 bg-white/[0.03] px-2.5 py-1.5"
+                              >
+                                <div className="grid h-7 w-7 place-items-center rounded-full bg-slate-700 text-xs font-bold text-slate-200">
+                                  {s.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-white">{s.name}</p>
+                                  <p className="truncate text-[10px] text-slate-500">
+                                    {s.status === 'joined' ? 'Joined platform' : 'Invite pending'}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => setInLiveClass(s.id, true)}
+                                  className="rounded bg-amber-400 px-2 py-0.5 text-[10px] font-black text-amber-950 hover:bg-amber-300"
+                                  title="Add to live class"
+                                >
+                                  + Add
+                                </button>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

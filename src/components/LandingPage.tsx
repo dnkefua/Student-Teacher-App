@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { ClientPage } from '@/components/ClientPage';
+import { acceptInvite } from '@/lib/roster/rosterStore';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
@@ -497,6 +498,31 @@ export function LandingPage() {
   const [showPlatform, setShowPlatform] = useState(false);
   const mouse = useMouseParallax();
   const compact = useIsCompactViewport();
+
+  // Invite-link handling: if the URL carries ?invite=<token>, lock the
+  // role to student, mark the invite consumed in the roster, and drop
+  // straight into the student platform (skipping the landing page).
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('invite');
+    if (!token) return;
+    const student = acceptInvite(token);
+    if (student) {
+      try {
+        window.localStorage.setItem('eis-role', 'student');
+        window.localStorage.setItem('eis-student-id', student.id);
+        window.localStorage.setItem('eis-student-name', student.name);
+        window.localStorage.setItem('eis-student-email', student.email);
+      } catch {
+        /* ignore */
+      }
+      // Strip the invite param so refreshes don't re-trigger.
+      const cleanUrl = `${window.location.origin}${window.location.pathname}`;
+      window.history.replaceState({}, '', cleanUrl);
+      setShowPlatform(true);
+    }
+  }, []);
 
   if (showPlatform) {
     return <ClientPage />;
