@@ -5,22 +5,35 @@
     .leader { stroke: #475569; stroke-width: 1.2; fill: none; }
     .dot { fill: #475569; }
     .heading { font-size: 11px; font-weight: 700; fill: #ef4444; letter-spacing: 1px; text-transform: uppercase; }
+    @keyframes nucleusPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @keyframes mitoGlow { 0%,100% { filter: drop-shadow(0 0 0 rgba(239,68,68,0)); } 50% { filter: drop-shadow(0 0 4px rgba(239,68,68,0.6)); } }
+    @keyframes chloroGlow { 0%,100% { filter: drop-shadow(0 0 0 rgba(34,197,94,0)); } 50% { filter: drop-shadow(0 0 5px rgba(34,197,94,0.7)); } }
+    @keyframes membraneRipple { 0%,100% { stroke-width: 2.5; } 50% { stroke-width: 3.5; } }
+    @keyframes vesicleDrift { 0%,100% { transform: translate(0,0); } 33% { transform: translate(6px,-4px); } 66% { transform: translate(-4px,5px); } }
+    .nucleus-anim  { transform-origin: 200px 260px; animation: nucleusPulse 2.6s ease-in-out infinite; }
+    .nucleus-plant { transform-origin: 540px 240px; animation: nucleusPulse 2.6s ease-in-out infinite; }
+    .mito          { animation: mitoGlow 2s ease-in-out infinite; }
+    .chloro        { animation: chloroGlow 2.4s ease-in-out infinite; }
+    .animal-membrane { animation: membraneRipple 3s ease-in-out infinite; }
+    .vesicle       { animation: vesicleDrift 5s ease-in-out infinite; }
   </style>
   <rect width="800" height="500" fill="#f8fafc"/>
   <text x="400" y="32" class="title">Animal Cell  vs  Plant Cell</text>
 
   <!-- ANIMAL CELL (left) -->
   <text x="200" y="62" class="heading" text-anchor="middle">Animal Cell</text>
-  <ellipse cx="200" cy="270" rx="155" ry="135" fill="#fde68a" stroke="#b45309" stroke-width="2.5"/>
+  <ellipse cx="200" cy="270" rx="155" ry="135" fill="#fde68a" stroke="#b45309" stroke-width="2.5" class="animal-membrane"/>
   <!-- nucleus -->
-  <circle cx="200" cy="260" r="38" fill="#a78bfa" stroke="#6d28d9" stroke-width="2"/>
-  <circle cx="208" cy="252" r="10" fill="#6d28d9"/>
+  <g class="nucleus-anim">
+    <circle cx="200" cy="260" r="38" fill="#a78bfa" stroke="#6d28d9" stroke-width="2"/>
+    <circle cx="208" cy="252" r="10" fill="#6d28d9"/>
+  </g>
   <!-- mitochondria -->
-  <ellipse cx="135" cy="200" rx="22" ry="11" fill="#f87171" stroke="#b91c1c" stroke-width="1.5" transform="rotate(-25 135 200)"/>
-  <ellipse cx="265" cy="330" rx="22" ry="11" fill="#f87171" stroke="#b91c1c" stroke-width="1.5" transform="rotate(20 265 330)"/>
-  <!-- vesicles -->
-  <circle cx="150" cy="320" r="8" fill="#34d399"/>
-  <circle cx="240" cy="200" r="6" fill="#34d399"/>
+  <ellipse cx="135" cy="200" rx="22" ry="11" fill="#f87171" stroke="#b91c1c" stroke-width="1.5" transform="rotate(-25 135 200)" class="mito"/>
+  <ellipse cx="265" cy="330" rx="22" ry="11" fill="#f87171" stroke="#b91c1c" stroke-width="1.5" transform="rotate(20 265 330)" class="mito"/>
+  <!-- vesicles (drift around the cytoplasm) -->
+  <circle cx="150" cy="320" r="8" fill="#34d399" class="vesicle"/>
+  <circle cx="240" cy="200" r="6" fill="#34d399" class="vesicle" style="animation-delay:1.5s;"/>
   <!-- ribosomes (dots on ER) -->
   <path d="M 180 215 Q 200 200 230 230 Q 215 250 195 245" stroke="#0ea5e9" stroke-width="2.5" fill="none"/>
   <circle cx="186" cy="215" r="2" class="dot"/>
@@ -51,14 +64,14 @@
   <!-- vacuole (large central) -->
   <rect x="500" y="195" width="200" height="150" rx="12" fill="#fde047" stroke="#a16207" stroke-width="2"/>
   <!-- nucleus -->
-  <circle cx="540" cy="240" r="28" fill="#a78bfa" stroke="#6d28d9" stroke-width="2"/>
-  <!-- chloroplasts -->
-  <ellipse cx="490" cy="365" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
-  <ellipse cx="540" cy="375" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
-  <ellipse cx="690" cy="175" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
-  <ellipse cx="660" cy="380" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5"/>
+  <circle cx="540" cy="240" r="28" fill="#a78bfa" stroke="#6d28d9" stroke-width="2" class="nucleus-plant"/>
+  <!-- chloroplasts (gently glow) -->
+  <ellipse cx="490" cy="365" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5" class="chloro"/>
+  <ellipse cx="540" cy="375" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5" class="chloro" style="animation-delay:0.5s;"/>
+  <ellipse cx="690" cy="175" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5" class="chloro" style="animation-delay:1s;"/>
+  <ellipse cx="660" cy="380" rx="18" ry="10" fill="#16a34a" stroke="#14532d" stroke-width="1.5" class="chloro" style="animation-delay:1.5s;"/>
   <!-- mitochondria -->
-  <ellipse cx="610" cy="170" rx="18" ry="9" fill="#f87171" stroke="#b91c1c" stroke-width="1.5"/>
+  <ellipse cx="610" cy="170" rx="18" ry="9" fill="#f87171" stroke="#b91c1c" stroke-width="1.5" class="mito"/>
 
   <!-- plant labels -->
   <text x="760" y="135" class="label" text-anchor="end">Cell wall (rigid)</text>

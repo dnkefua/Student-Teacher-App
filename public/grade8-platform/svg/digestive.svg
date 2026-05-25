@@ -5,6 +5,8 @@
     .leader { stroke: #475569; stroke-width: 1.2; fill: none; }
     .dot { fill: #475569; }
     .organ { stroke: #b45309; stroke-width: 2; }
+    @keyframes stomachChurn { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+    .stomach-anim { transform-origin: 405px 295px; animation: stomachChurn 2.4s ease-in-out infinite; }
   </style>
   <rect width="800" height="600" fill="#fff7ed"/>
   <text x="400" y="34" class="title">The Human Digestive System</text>
@@ -21,9 +23,34 @@
   <!-- Esophagus -->
   <rect x="392" y="158" width="16" height="84" rx="4" fill="#fbcfe8" class="organ"/>
 
-  <!-- Stomach -->
-  <path d="M 360 250 Q 350 270 360 310 Q 380 340 430 330 Q 460 320 455 290 Q 450 260 420 252 Z" fill="#fb923c" class="organ"/>
-  <text x="405" y="295" font-size="11" font-weight="800" fill="#7c2d12" text-anchor="middle">Stomach</text>
+  <!-- Stomach (churns subtly) -->
+  <g class="stomach-anim">
+    <path d="M 360 250 Q 350 270 360 310 Q 380 340 430 330 Q 460 320 455 290 Q 450 260 420 252 Z" fill="#fb923c" class="organ"/>
+    <text x="405" y="295" font-size="11" font-weight="800" fill="#7c2d12" text-anchor="middle">Stomach</text>
+  </g>
+
+  <!-- Food bolus travelling mouth → esophagus → stomach → intestines -->
+  <circle r="6" fill="#92400e" opacity="0.85">
+    <animateMotion dur="9s" repeatCount="indefinite">
+      <mpath href="#digestiveTrail" />
+    </animateMotion>
+  </circle>
+  <circle r="5" fill="#a16207" opacity="0.75">
+    <animateMotion dur="9s" begin="3s" repeatCount="indefinite">
+      <mpath href="#digestiveTrail" />
+    </animateMotion>
+  </circle>
+  <circle r="5" fill="#854d0e" opacity="0.7">
+    <animateMotion dur="9s" begin="6s" repeatCount="indefinite">
+      <mpath href="#digestiveTrail" />
+    </animateMotion>
+  </circle>
+
+  <!-- Invisible path the bolus follows: mouth → esophagus → stomach
+       → small intestine coils → large intestine → rectum. -->
+  <path id="digestiveTrail"
+    d="M 400 140 L 400 240 Q 380 295 410 320 Q 380 380 420 420 Q 360 470 380 520"
+    fill="none" stroke="none"/>
 
   <!-- Liver -->
   <path d="M 300 270 Q 295 290 305 310 L 355 310 L 360 290 L 340 270 Z" fill="#a16207" class="organ"/>

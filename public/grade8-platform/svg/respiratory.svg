@@ -5,6 +5,11 @@
     .leader { stroke: #475569; stroke-width: 1.2; fill: none; }
     .o2 { fill: #ef4444; }
     .co2 { fill: #1d4ed8; }
+    @keyframes lungBreath { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.06); } }
+    @keyframes diaphragmDrop { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+    .lung-l { transform-origin: 270px 360px; animation: lungBreath 3s ease-in-out infinite; }
+    .lung-r { transform-origin: 530px 360px; animation: lungBreath 3s ease-in-out infinite; }
+    .diaphragm-anim { transform-origin: 400px 480px; animation: diaphragmDrop 3s ease-in-out infinite; }
   </style>
   <rect width="800" height="540" fill="#ecfeff"/>
   <text x="400" y="32" class="title">The Human Respiratory System</text>
@@ -26,9 +31,9 @@
   <text x="640" y="270" class="label" text-anchor="end">Bronchus → bronchioles</text>
   <path class="leader" d="M 638 268 L 510 285"/>
 
-  <!-- lungs -->
-  <ellipse cx="270" cy="360" rx="80" ry="115" fill="#fbcfe8" stroke="#be185d" stroke-width="2.5"/>
-  <ellipse cx="530" cy="360" rx="80" ry="115" fill="#fbcfe8" stroke="#be185d" stroke-width="2.5"/>
+  <!-- lungs (breathing) -->
+  <ellipse cx="270" cy="360" rx="80" ry="115" fill="#fbcfe8" stroke="#be185d" stroke-width="2.5" class="lung-l"/>
+  <ellipse cx="530" cy="360" rx="80" ry="115" fill="#fbcfe8" stroke="#be185d" stroke-width="2.5" class="lung-r"/>
   <!-- airways inside lungs -->
   <g stroke="#9f1239" stroke-width="1.5" fill="none" opacity="0.6">
     <path d="M 300 290 L 270 330 L 240 360"/>
@@ -41,9 +46,54 @@
     <path d="M 560 360 L 565 410"/>
   </g>
 
-  <!-- diaphragm -->
-  <path d="M 180 470 Q 400 510 620 470 L 620 490 Q 400 530 180 490 Z" fill="#fde68a" stroke="#a16207" stroke-width="2"/>
-  <text x="400" y="498" font-size="12" font-weight="800" fill="#7c2d12" text-anchor="middle">Diaphragm</text>
+  <!-- diaphragm (drops on inhale) -->
+  <g class="diaphragm-anim">
+    <path d="M 180 470 Q 400 510 620 470 L 620 490 Q 400 530 180 490 Z" fill="#fde68a" stroke="#a16207" stroke-width="2"/>
+    <text x="400" y="498" font-size="12" font-weight="800" fill="#7c2d12" text-anchor="middle">Diaphragm</text>
+  </g>
+
+  <!-- Animated air molecules flowing IN through the trachea -->
+  <g>
+    <circle r="3.5" fill="#0ea5e9" opacity="0.85">
+      <animateMotion dur="3s" repeatCount="indefinite">
+        <mpath href="#airIn"/>
+      </animateMotion>
+    </circle>
+    <circle r="3" fill="#38bdf8" opacity="0.75">
+      <animateMotion dur="3s" begin="1s" repeatCount="indefinite">
+        <mpath href="#airIn"/>
+      </animateMotion>
+    </circle>
+    <path id="airIn" d="M 400 95 L 400 240 L 270 320" fill="none" stroke="none"/>
+  </g>
+  <g>
+    <circle r="3" fill="#38bdf8" opacity="0.75">
+      <animateMotion dur="3s" begin="0.5s" repeatCount="indefinite">
+        <mpath href="#airInRight"/>
+      </animateMotion>
+    </circle>
+    <path id="airInRight" d="M 400 95 L 400 240 L 530 320" fill="none" stroke="none"/>
+  </g>
+
+  <!-- O2 entering the bloodstream at the alveoli -->
+  <g>
+    <circle r="3.5" fill="#ef4444" opacity="0.85">
+      <animateMotion dur="3s" repeatCount="indefinite">
+        <mpath href="#o2Diffuse"/>
+      </animateMotion>
+    </circle>
+    <path id="o2Diffuse" d="M 175 345 L 145 345" fill="none" stroke="none"/>
+  </g>
+
+  <!-- CO2 leaving the bloodstream and exhaled -->
+  <g>
+    <circle r="3.5" fill="#1d4ed8" opacity="0.85">
+      <animateMotion dur="3s" begin="1.5s" repeatCount="indefinite">
+        <mpath href="#co2Diffuse"/>
+      </animateMotion>
+    </circle>
+    <path id="co2Diffuse" d="M 145 390 L 175 390" fill="none" stroke="none"/>
+  </g>
 
   <!-- alveoli detail circle -->
   <g transform="translate(675 370)">

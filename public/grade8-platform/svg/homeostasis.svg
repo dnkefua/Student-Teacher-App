@@ -4,13 +4,15 @@
     .node-text { font-size: 12px; font-weight: 700; fill: #ffffff; text-anchor: middle; }
     .step-text { font-size: 11px; font-weight: 700; fill: #1e293b; text-anchor: middle; }
     .arrow { stroke: #1e293b; stroke-width: 2; fill: none; }
+    @keyframes setPointPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .setpoint-anim { transform-origin: 400px 260px; animation: setPointPulse 2.5s ease-in-out infinite; }
   </style>
   <rect width="800" height="500" fill="#f0f9ff"/>
   <text x="400" y="32" class="title">Homeostasis — Negative Feedback Loop (Thermoregulation)</text>
   <text x="400" y="52" font-size="12" fill="#64748b" text-anchor="middle">The body detects a change and triggers an opposite response to return to a set point</text>
 
-  <!-- SET POINT center -->
-  <circle cx="400" cy="260" r="55" fill="#fbbf24" stroke="#92400e" stroke-width="3"/>
+  <!-- SET POINT center (pulses to show the body is regulating) -->
+  <circle cx="400" cy="260" r="55" fill="#fbbf24" stroke="#92400e" stroke-width="3" class="setpoint-anim"/>
   <text x="400" y="252" font-size="12" font-weight="800" fill="#7c2d12" text-anchor="middle">SET POINT</text>
   <text x="400" y="270" font-size="11" fill="#7c2d12" text-anchor="middle">37 °C body</text>
   <text x="400" y="284" font-size="11" fill="#7c2d12" text-anchor="middle">temperature</text>
@@ -68,6 +70,27 @@
   <path d="M 560 395 Q 480 395 450 290" class="arrow" stroke-width="2.5"/>
   <polygon points="450,290 446,302 456,300" fill="#1e293b"/>
   <text x="510" y="385" class="step-text">5. Response: warm up → returns to set point</text>
+
+  <!-- Animated signal pulse flowing around the HOT loop:
+       stimulus (top-left) → receptor → control → effector → response → set point. -->
+  <circle r="5" fill="#ef4444" opacity="0.9">
+    <animateMotion dur="6s" repeatCount="indefinite">
+      <mpath href="#hotLoop"/>
+    </animateMotion>
+  </circle>
+  <path id="hotLoop"
+    d="M 150 125 L 150 215 L 150 305 L 150 395 Q 240 395 350 290 Q 400 250 400 260"
+    fill="none" stroke="none"/>
+
+  <!-- Animated signal pulse flowing around the COLD loop (mirror). -->
+  <circle r="5" fill="#1d4ed8" opacity="0.9">
+    <animateMotion dur="6s" begin="3s" repeatCount="indefinite">
+      <mpath href="#coldLoop"/>
+    </animateMotion>
+  </circle>
+  <path id="coldLoop"
+    d="M 650 125 L 650 215 L 650 305 L 650 395 Q 560 395 450 290 Q 400 250 400 260"
+    fill="none" stroke="none"/>
 
   <!-- KEY box -->
   <rect x="50" y="450" width="700" height="40" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
