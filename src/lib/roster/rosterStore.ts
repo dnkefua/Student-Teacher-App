@@ -44,6 +44,25 @@ export type Invite = {
 type Store = { students: RosterStudent[]; invites: Invite[] };
 const empty: Store = { students: [], invites: [] };
 
+// Cached, stable snapshots for useSyncExternalStore consumers. React
+// requires the getSnapshot function to return a referentially-stable
+// value until the store actually changes — otherwise the reconciler
+// loops and throws "Maximum update depth exceeded", which on the
+// client surfaces as the dreaded "Application error: a client-side
+// exception has occurred".
+let cachedStudents: RosterStudent[] = [];
+let cachedInvites: Invite[] = [];
+let cacheLoaded = false;
+
+function refreshCache() {
+  const s = read();
+  cachedStudents = s.students
+    .slice()
+    .sort((a, b) => a.invitedAt.localeCompare(b.invitedAt));
+  cachedInvites = s.invites.slice();
+  cacheLoaded = true;
+}
+
 function read(): Store {
   if (typeof window === 'undefined') return empty;
   try {
@@ -62,6 +81,9 @@ function read(): Store {
 function write(store: Store) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  // Refresh the snapshot cache BEFORE firing the change event so listeners
+  // synchronously read the new data from the cached references.
+  refreshCache();
   window.dispatchEvent(new CustomEvent(EVENT_NAME));
 }
 
@@ -82,13 +104,13 @@ function emailToName(email: string): string {
 // ── Public API ───────────────────────────────────────────────────────
 
 export function listStudents(): RosterStudent[] {
-  return read()
-    .students.slice()
-    .sort((a, b) => a.invitedAt.localeCompare(b.invitedAt));
+  if (!cacheLoaded) refreshCache();
+  return cachedStudents;
 }
 
 export function listInvites(): Invite[] {
-  return read().invites.slice();
+  if (!cacheLoaded) refreshCache();
+  return cachedInvites;
 }
 
 /**
