@@ -195,19 +195,28 @@ function useCountUp(target: number, durationMs = 1500): number {
 // ── Background ───────────────────────────────────────────────────────
 
 /** Random particle field — purely cosmetic. Memoised so positions don't
- *  shuffle on every re-render. */
+ *  shuffle on every re-render.
+ *
+ *  Every value is rounded to a fixed precision before becoming a string
+ *  in the style prop. Without this, Math.sin's full-precision result
+ *  produces strings like "9.451080459301037%" — and the React SSR
+ *  pipeline sometimes serialises the server side as "9.45108%" while
+ *  the client emits the full precision, triggering a hydration
+ *  mismatch warning. Forcing 4 decimals makes both identical. */
 function ParticleField({ count = 60 }: { count?: number }) {
   const seeds = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => {
         const rnd = (n: number) => ((Math.sin(i * 99.9 + n) + 1) / 2);
+        // Round at the source so subsequent template strings are stable.
+        const fix = (v: number, d = 4) => Number(v.toFixed(d));
         return {
-          left: rnd(1) * 100,
-          top: rnd(2) * 100,
-          size: 1 + rnd(3) * 2.5,
-          delay: rnd(4) * 12,
-          duration: 8 + rnd(5) * 10,
-          opacity: 0.2 + rnd(6) * 0.5,
+          left:     fix(rnd(1) * 100),
+          top:      fix(rnd(2) * 100),
+          size:     fix(1 + rnd(3) * 2.5, 2),
+          delay:    fix(rnd(4) * 12, 2),
+          duration: fix(8 + rnd(5) * 10, 2),
+          opacity:  fix(0.2 + rnd(6) * 0.5, 3),
         };
       }),
     [count],
