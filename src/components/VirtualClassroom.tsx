@@ -33,6 +33,7 @@ import {
 import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
 import { ActiveLessonPanel, type ShareableLesson } from './ActiveLessonPanel';
+import { TeacherVideoFloat } from './TeacherVideoFloat';
 import type { DemoAssignment } from '@/lib/demoAssignments';
 import type { TabType } from './Sidebar';
 import { recordClassParticipationEvent } from '@/lib/learningHub/internalEvents';
@@ -904,6 +905,20 @@ export function VirtualClassroom({
                   </span>
                 </div>
               )}
+
+              {/* Floating teacher-video tile.
+                  Always rendered on TOP of the stage. The teacher can
+                  drag, maximize to fill the stage, or hide. Students
+                  see whatever choice the teacher broadcast — they can
+                  drag their PiP locally but cannot change the
+                  maximize / hide state. */}
+              <TeacherVideoFloat
+                videoRef={localVideoRef}
+                isMuted={isMuted}
+                isVideoOff={isVideoOff}
+                mode={mode}
+                label="Teacher (You)"
+              />
             </div>
 
             {/* Filmstrip — teacher + students */}
