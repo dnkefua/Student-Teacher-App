@@ -135,14 +135,10 @@ const CRITERIA = [
  */
 function useMouseParallax() {
   const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [enabled, setEnabled] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const fine = window.matchMedia('(pointer: fine)').matches;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setEnabled(fine && !reduced);
-  }, []);
+  const enabled =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(pointer: fine)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
     if (!enabled) return;
@@ -550,7 +546,7 @@ export function LandingPage() {
           </div>
         </div>
         <button
-          onClick={() => setShowPlatform(true)}
+          onClick={() => { try { window.localStorage.setItem('eis-role', 'teacher'); } catch {} setShowPlatform(true); }}
           className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-xl transition hover:border-white/40 hover:bg-white/20 sm:gap-2 sm:px-4 sm:py-2 sm:text-xs"
         >
           <span className="hidden sm:inline">Enter platform</span>
@@ -661,16 +657,31 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ──────── CTA ──────── */}
+      {/* ──────── CTA: two entry points, role-locked ──────── */}
       <section className="relative z-10 mx-auto mt-10 max-w-3xl px-4 pb-12 text-center sm:mt-16 sm:px-8 sm:pb-24">
-        <button
-          onClick={() => setShowPlatform(true)}
-          className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-sky-400 via-fuchsia-400 to-amber-300 px-6 py-3.5 text-xs font-black uppercase tracking-widest text-slate-950 shadow-[0_30px_80px_-20px_rgba(217,70,239,0.6)] transition hover:shadow-[0_30px_100px_-15px_rgba(217,70,239,0.8)] sm:w-auto sm:gap-3 sm:px-8 sm:py-4 sm:text-sm"
-        >
-          <span className="relative">Enter the studio</span>
-          <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-1 sm:h-4 sm:w-4" />
-          <span className="absolute inset-0 -translate-x-full bg-white/40 transition-transform duration-700 group-hover:translate-x-full" />
-        </button>
+        <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <button
+            onClick={() => {
+              try { window.localStorage.setItem('eis-role', 'teacher'); } catch {}
+              setShowPlatform(true);
+            }}
+            className="group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-sky-400 via-fuchsia-400 to-amber-300 px-6 py-3.5 text-xs font-black uppercase tracking-widest text-slate-950 shadow-[0_30px_80px_-20px_rgba(217,70,239,0.6)] transition hover:shadow-[0_30px_100px_-15px_rgba(217,70,239,0.8)] sm:w-auto sm:gap-3 sm:px-8 sm:py-4 sm:text-sm"
+          >
+            <span className="relative">Sign in as teacher</span>
+            <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-1 sm:h-4 sm:w-4" />
+            <span className="absolute inset-0 -translate-x-full bg-white/40 transition-transform duration-700 group-hover:translate-x-full" />
+          </button>
+          <button
+            onClick={() => {
+              try { window.localStorage.setItem('eis-role', 'student'); } catch {}
+              setShowPlatform(true);
+            }}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3.5 text-xs font-black uppercase tracking-widest text-white transition hover:border-white/60 hover:bg-white/20 sm:w-auto sm:gap-3 sm:px-8 sm:py-4 sm:text-sm"
+          >
+            <span>Sign in as student</span>
+            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </button>
+        </div>
         <p className="mt-4 text-[9px] font-black uppercase tracking-[0.3em] text-white/40 sm:text-[10px] sm:tracking-[0.4em]">
           Built for Emirates International School · Jumeirah
         </p>

@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Sidebar, TabType } from '@/components/Sidebar';
 import { Menu } from 'lucide-react';
 import { DashboardHome } from '@/components/DashboardHome';
@@ -92,7 +92,28 @@ export function ClientPage() {
 
 function ClientPageInner() {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
-  const [mode, setMode] = useState<LearningMode>('teacher');
+  // Role is the user's persistent identity (teacher / student) — separate
+  // from `mode` which is the current view. Teachers can preview the
+  // student view by flipping mode; students are locked to mode='student'
+  // and never see teacher surfaces.
+  const role: 'teacher' | 'student' = useMemo(() => {
+    if (typeof window === 'undefined') return 'teacher';
+    try {
+      const stored = window.localStorage.getItem('eis-role');
+      if (stored === 'student' || stored === 'teacher') return stored;
+    } catch {
+      /* ignore */
+    }
+    return 'teacher';
+  }, []);
+
+  const [mode, setModeInternal] = useState<LearningMode>(role);
+  // Wrap setMode so students CANNOT escape to teacher mode even if a
+  // child component tries to call setMode('teacher').
+  const setMode = (next: LearningMode) => {
+    if (role === 'student' && next !== 'student') return;
+    setModeInternal(next);
+  };
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -127,6 +148,7 @@ function ClientPageInner() {
         setActiveTab={selectTab}
         mode={mode}
         setMode={setMode}
+        role={role}
         isOpen={isSidebarOpen}
         setIsOpen={setIsSidebarOpen}
         isCollapsed={isSidebarCollapsed}
@@ -171,7 +193,7 @@ function ClientPageInner() {
             {effectiveActiveTab === 'upload-studio' && mode === 'teacher' && <TeacherUploadStudio setActiveTab={selectTab} />}
             {effectiveActiveTab === 'lesson-planner' && mode === 'teacher' && <LessonPlanner />}
             {effectiveActiveTab === 'grader' && mode === 'teacher' && <Grader />}
-            {effectiveActiveTab === 'classroom' && <VirtualClassroom setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'classroom' && <VirtualClassroom setActiveTab={selectTab} mode={mode} />}
             {effectiveActiveTab === 'email' && mode === 'teacher' && <EmailAssistant />}
             {effectiveActiveTab === 'neuroquest' && <NeuroQuestHub setActiveTab={selectTab} />}
           </div>

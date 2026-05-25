@@ -52,7 +52,15 @@ const FAKE_STUDENTS = Array.from({ length: 29 }, (_, i) => ({
   avatarColor: `hsl(${(i * 137.5) % 360}, 70%, 80%)`,
 }));
 
-export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabType) => void } = {}) {
+export function VirtualClassroom({
+  setActiveTab,
+  mode = 'teacher',
+}: {
+  setActiveTab?: (tab: TabType) => void;
+  /** Drives which controls are visible — students only see mute / cam / chat / leave. */
+  mode?: 'teacher' | 'student';
+} = {}) {
+  const isTeacher = mode === 'teacher';
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', sender: 'System', text: 'Class has started.', isTeacher: false, timestamp: new Date() },
     { id: '2', sender: 'Alice', text: 'Hi Mr. Smith! I have a question about the homework.', isTeacher: false, timestamp: new Date() },
@@ -550,14 +558,20 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
   }, [isVideoActive]);
 
   const stageTabs: { id: StageView; label: string; icon: typeof Presentation; available: boolean }[] = useMemo(
-    () => [
-      { id: 'lesson', label: 'Lesson', icon: Presentation, available: true },
-      { id: 'slide', label: 'Slide', icon: ImageIcon, available: Boolean(currentSlide) },
-      { id: 'screen', label: 'Screen', icon: ScreenShare, available: isScreenSharing },
-      { id: 'whiteboard', label: 'Whiteboard', icon: Pencil, available: true },
-      { id: 'spotlight', label: 'Spotlight', icon: Maximize2, available: true },
-    ],
-    [currentSlide, isScreenSharing],
+    () => {
+      const base = [
+        { id: 'lesson' as StageView,     label: 'Lesson',     icon: Presentation, available: true },
+        { id: 'slide' as StageView,      label: 'Slide',      icon: ImageIcon,    available: Boolean(currentSlide) },
+        { id: 'screen' as StageView,     label: 'Screen',     icon: ScreenShare,  available: isScreenSharing },
+        { id: 'spotlight' as StageView,  label: 'Spotlight',  icon: Maximize2,    available: true },
+      ];
+      // Whiteboard is a teacher-only stage — students just watch via Spotlight.
+      if (isTeacher) {
+        base.splice(3, 0, { id: 'whiteboard' as StageView, label: 'Whiteboard', icon: Pencil, available: true });
+      }
+      return base;
+    },
+    [currentSlide, isScreenSharing, isTeacher],
   );
 
   // Chat and Sidebar UI (reused in both layouts)
@@ -724,20 +738,23 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
             <span className="hidden rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[11px] text-slate-200 sm:inline-block">
               {formatElapsed(elapsedSec)}
             </span>
-            <button
-              onClick={copyClassLink}
-              className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10"
-              title="Copy class link"
-            >
-              {copiedClassLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-              <span className="hidden sm:inline">{copiedClassLink ? 'Copied' : 'Invite'}</span>
-            </button>
+            {isTeacher && (
+              <button
+                onClick={copyClassLink}
+                className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1.5 text-[11px] font-semibold text-slate-200 transition hover:bg-white/10"
+                title="Copy class link"
+              >
+                {copiedClassLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                <span className="hidden sm:inline">{copiedClassLink ? 'Copied' : 'Invite'}</span>
+              </button>
+            )}
             <button
               onClick={endVideoCall}
               className="inline-flex items-center gap-1 rounded-md bg-red-600 px-2.5 py-1.5 text-[11px] font-bold text-white transition hover:bg-red-500"
+              title={isTeacher ? 'End class for everyone' : 'Leave class'}
             >
               <PhoneOff className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">End</span>
+              <span className="hidden sm:inline">{isTeacher ? 'End' : 'Leave'}</span>
             </button>
           </div>
         </header>
@@ -941,29 +958,43 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
                   icon={isVideoOff ? VideoOff : Video}
                   label={isVideoOff ? 'Start video' : 'Stop video'}
                 />
-                <ControlButton
-                  active={isScreenSharing}
-                  onClick={isScreenSharing ? stopScreenShare : startScreenShare}
-                  icon={ScreenShare}
-                  label={isScreenSharing ? 'Stop share' : 'Share screen'}
-                />
-                <ControlButton
-                  onClick={() => slideInputRef.current?.click()}
-                  icon={ImageIcon}
-                  label="Share slide"
-                />
-                <ControlButton
-                  onClick={() => setStageView('whiteboard')}
-                  icon={Pencil}
-                  label="Whiteboard"
-                />
-                <input
-                  ref={slideInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={onSlideFileChosen}
-                  className="hidden"
-                />
+                {isTeacher && (
+                  <>
+                    <ControlButton
+                      active={isScreenSharing}
+                      onClick={isScreenSharing ? stopScreenShare : startScreenShare}
+                      icon={ScreenShare}
+                      label={isScreenSharing ? 'Stop share' : 'Share screen'}
+                    />
+                    <ControlButton
+                      onClick={() => slideInputRef.current?.click()}
+                      icon={ImageIcon}
+                      label="Share slide"
+                    />
+                    <ControlButton
+                      onClick={() => setStageView('whiteboard')}
+                      icon={Pencil}
+                      label="Whiteboard"
+                    />
+                    <input
+                      ref={slideInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={onSlideFileChosen}
+                      className="hidden"
+                    />
+                  </>
+                )}
+                {!isTeacher && (
+                  <ControlButton
+                    onClick={() => {
+                      setRaisedHands((prev) => prev.includes(-1) ? prev.filter((p) => p !== -1) : [...prev, -1]);
+                    }}
+                    active={raisedHands.includes(-1)}
+                    icon={Hand}
+                    label={raisedHands.includes(-1) ? 'Lower hand' : 'Raise hand'}
+                  />
+                )}
               </div>
 
               <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
@@ -977,11 +1008,13 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
                   icon={Users}
                   label="People"
                 />
-                <ControlButton
-                  onClick={() => setRightTab('tools')}
-                  icon={Hand}
-                  label="Tools"
-                />
+                {isTeacher && (
+                  <ControlButton
+                    onClick={() => setRightTab('tools')}
+                    icon={Hand}
+                    label="Tools"
+                  />
+                )}
                 <button
                   onClick={endVideoCall}
                   className="ml-2 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-500"
@@ -994,13 +1027,15 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
 
           {/* RIGHT RAIL — fixed share of viewport on mobile, fixed width on desktop */}
           <aside className="flex h-[40vh] w-full shrink-0 flex-col border-t border-white/10 bg-[#070a12] xl:h-auto xl:w-[360px] xl:border-t-0">
-            {/* Right rail tabs */}
+            {/* Right rail tabs — AI tools tab is teacher-only. */}
             <div className="flex shrink-0 border-b border-white/10">
-              {([
-                { id: 'chat', label: 'Chat', icon: MessageSquare, badge: messages.length },
-                { id: 'people', label: 'People', icon: Users, badge: FAKE_STUDENTS.length + 1 },
-                { id: 'tools', label: 'AI', icon: Sparkles, badge: 0 },
-              ] as { id: RightTab; label: string; icon: typeof MessageSquare; badge: number }[]).map((tab) => {
+              {(
+                ([
+                  { id: 'chat', label: 'Chat', icon: MessageSquare, badge: messages.length },
+                  { id: 'people', label: 'People', icon: Users, badge: FAKE_STUDENTS.length + 1 },
+                  ...(isTeacher ? [{ id: 'tools', label: 'AI', icon: Sparkles, badge: 0 }] : []),
+                ] as { id: RightTab; label: string; icon: typeof MessageSquare; badge: number }[])
+              ).map((tab) => {
                 const Icon = tab.icon;
                 const isActive = rightTab === tab.id;
                 return (
@@ -1046,7 +1081,7 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
                         >
                           {msg.text}
                         </div>
-                        {!msg.isTeacher && msg.sender !== 'System' && (
+                        {isTeacher && !msg.isTeacher && msg.sender !== 'System' && (
                           <button
                             onClick={() => answerWithAI(msg.text)}
                             className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#8ddfff] hover:underline"
@@ -1087,7 +1122,7 @@ export function VirtualClassroom({ setActiveTab }: { setActiveTab?: (tab: TabTyp
               {rightTab === 'people' && (
                 <div className="flex h-full flex-col">
                   <div className="flex-1 overflow-y-auto p-3 space-y-3">
-                    {waitingRoom.length > 0 && (
+                    {isTeacher && waitingRoom.length > 0 && (
                       <div>
                         <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-amber-400">
                           Waiting room ({waitingRoom.length})

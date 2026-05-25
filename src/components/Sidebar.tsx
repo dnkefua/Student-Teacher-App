@@ -46,6 +46,8 @@ interface SidebarProps {
   setActiveTab: (tab: TabType) => void;
   mode: LearningMode;
   setMode: (mode: LearningMode) => void;
+  /** Persistent identity. Students never see the teacher↔student toggle. */
+  role?: 'teacher' | 'student';
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   isCollapsed?: boolean;
@@ -104,6 +106,7 @@ export function Sidebar({
   setActiveTab,
   mode,
   setMode,
+  role = 'teacher',
   isOpen,
   setIsOpen,
   isCollapsed = false,
@@ -220,8 +223,11 @@ export function Sidebar({
           )})}
         </nav>
 
-        {/* Footer: role toggle + profile */}
+        {/* Footer: role toggle + profile.
+            Students are LOCKED to student view — only teachers see the
+            teacher↔student toggle (so they can preview the student UI). */}
         <div className={cn('border-t border-white/10', collapsed ? 'p-2' : 'p-3')}>
+          {role === 'teacher' && (
           <div
             className={cn(
               'mb-3 gap-1 rounded-md border border-white/10 bg-[#050711]/70 p-1',
@@ -250,6 +256,7 @@ export function Sidebar({
               </button>
             ))}
           </div>
+          )}
           <div className={cn('flex items-center gap-2', collapsed ? 'justify-center' : 'px-1')}>
             <UserCircle className="h-5 w-5 shrink-0 text-[#49c8ff]" />
             {!collapsed && (
