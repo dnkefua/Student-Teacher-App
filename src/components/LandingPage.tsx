@@ -538,7 +538,7 @@ export function LandingPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#040711] text-white">
+    <main className="relative min-h-dvh overflow-hidden bg-[#040711] text-white safe-bottom">
       {/* ──────── ambient backdrop ──────── */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         {/* radial mesh gradient — moves slightly with the mouse */}

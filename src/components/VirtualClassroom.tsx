@@ -737,7 +737,7 @@ export function VirtualClassroom({
   // ── Premium classroom shell rendering ─────────────────────────────────
   if (isVideoActive) {
     return (
-      <div className="fixed inset-0 z-40 flex flex-col overflow-hidden bg-[#0a0d14] text-white">
+      <div className="fixed inset-0 z-40 flex h-dvh flex-col overflow-hidden bg-[#0a0d14] text-white safe-bottom">
         {/* Top bar */}
         <header className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-[#070a12] px-3 py-2 sm:px-4">
           <div className="flex min-w-0 items-center gap-2">
@@ -966,7 +966,7 @@ export function VirtualClassroom({
                 ))}
                 <button
                   onClick={() => setRightTab('people')}
-                  className="grid h-12 w-20 shrink-0 place-items-center rounded-md border border-dashed border-white/20 text-[10px] font-semibold text-slate-400 hover:border-white/40 hover:text-white sm:h-16 sm:w-24"
+                  className="grid h-14 w-24 shrink-0 place-items-center rounded-md border border-dashed border-white/20 text-[10px] font-semibold text-slate-400 active:bg-white/5 hover:border-white/40 hover:text-white sm:h-16 sm:w-24"
                 >
                   +{FAKE_STUDENTS.length - 10}
                 </button>
@@ -1499,7 +1499,7 @@ function FilmstripTile({
   handRaised?: boolean;
 }) {
   return (
-    <div className="relative h-12 w-20 shrink-0 overflow-hidden rounded-md border border-white/10 bg-black sm:h-16 sm:w-24">
+    <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-md border border-white/10 bg-black sm:h-16 sm:w-24">
       {children}
       <div className="absolute bottom-0.5 left-0.5 max-w-[80%] truncate rounded bg-black/60 px-1 py-0.5 text-[9px] font-bold text-white">
         {label}

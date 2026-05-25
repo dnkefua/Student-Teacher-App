@@ -151,7 +151,7 @@ function ClientPageInner() {
   const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isCinematic;
 
   return (
-    <div className={`flex h-screen overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
+    <div className={`flex h-dvh overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
       <Sidebar
         activeTab={effectiveActiveTab}
         setActiveTab={selectTab}

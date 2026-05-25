@@ -305,12 +305,12 @@ function Calendar({ assignments }: { assignments: Assignment[] }) {
             <button
               key={key}
               onClick={() => setSelected(dayDate)}
-              className={`relative grid h-12 place-items-center rounded-lg text-xs font-bold transition ${
+              className={`relative grid h-11 place-items-center rounded-lg text-sm font-bold transition active:scale-95 sm:h-12 sm:text-xs ${
                 isSelected
                   ? 'bg-gradient-to-br from-sky-500/40 to-fuchsia-500/40 text-white ring-2 ring-white/60'
                   : isToday
                     ? 'bg-white/10 text-white ring-1 ring-white/30'
-                    : 'text-slate-300 hover:bg-white/5'
+                    : 'text-slate-300 hover:bg-white/5 active:bg-white/10'
               }`}
             >
               {day}

@@ -33,7 +33,32 @@ body {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   overscroll-behavior-y: contain;
+  /* Kill iOS Safari's blue/grey tap highlight that flashes over every
+   * actionable element on touch. Apps that want it can opt back in
+   * locally. */
+  -webkit-tap-highlight-color: transparent;
 }
+
+/* Smooth in-page scrolling for anchor jumps (skip-to-section etc.). */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Honour iOS notches and the home-bar safe areas. Anything pinned to
+ * the screen edges that picks up these helpers stays inside the visible
+ * area on iPhone X/14/15-class devices. */
+.safe-top    { padding-top:    env(safe-area-inset-top, 0px); }
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-x      { padding-left:   env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+
+/* Dynamic viewport height: matches the visible area as iOS browser
+ * chrome shows / hides. Falls back to vh on browsers that don't
+ * support dvh. */
+.h-dvh    { height:     100vh;  height: 100dvh; }
+.min-h-dvh{ min-height: 100vh;  min-height: 100dvh; }
+.max-h-dvh{ max-height: 100vh;  max-height: 100dvh; }
 
 /* Mobile spillage prevention. Long unbreakable tokens (accepted-keyword
  * strings, IDs, URLs, large numbers, code snippets, file paths) and very

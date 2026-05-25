@@ -59,7 +59,7 @@ export function SubjectStudioShell({ subject, label, mode = 'teacher' }: Props) 
       {/* Use dynamic viewport height (dvh) so mobile browser chrome doesn't
           double-clip the platform area. Falls back gracefully where dvh isn't
           supported via the calc() fallback. */}
-      <div className="h-[calc(100vh-110px)] min-h-[560px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:h-[calc(100vh-130px)] sm:min-h-[680px]">
+      <div className="h-[calc(100dvh-110px)] min-h-[560px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm sm:h-[calc(100dvh-130px)] sm:min-h-[680px]">
         {mode === 'student' && view === 'home' ? (
           <StudentSubjectHome
             subject={subject}
