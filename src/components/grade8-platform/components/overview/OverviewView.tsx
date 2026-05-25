@@ -1,20 +1,168 @@
-import React from 'react';
-import { Target, Layers, BrainCircuit, Milestone, PlayCircle, Maximize2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Target, Layers, BrainCircuit, Milestone, Maximize2, Minimize2, ChevronDown } from 'lucide-react';
 import { UnitId, SubjectId } from '../../types';
 
-function VideoEmbed({ videoId, title }: { videoId: string, title?: string }) {
-  if (!videoId) return null;
+type SubtopicVideo = {
+  title: string;
+  description: string;
+  visual: 'cell' | 'digestive' | 'circulation' | 'homeostasis';
+};
+
+function VideoEmbed({ videoId, title, videoUrl, thumbnailUrl }: { videoId?: string, title?: string, videoUrl?: string, thumbnailUrl?: string }) {
+  if (!videoId && !videoUrl) return null;
+
   return (
-    <div className="w-full aspect-video rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-slate-900 mb-8 relative group">
-      <iframe
-        className="w-full h-full"
-        src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
-        title={title || "Educational Video"}
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      ></iframe>
+    <div className="mb-8 overflow-hidden rounded-3xl border border-slate-200 bg-black shadow-sm">
+      {videoUrl ? (
+        <video
+          className="aspect-video w-full bg-black"
+          src={videoUrl}
+          poster={thumbnailUrl}
+          title={title || 'Educational Video'}
+          controls
+          playsInline
+        />
+      ) : (
+        <iframe
+          className="aspect-video w-full"
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title={title || 'Educational Video'}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      )}
     </div>
   );
+}
+
+// Each SubtopicVideo maps to one of the animated SVG files under
+// /grade8-platform/svg/. Using <object> instead of <img> so the SMIL
+// animations (animateMotion + animate) actually execute — img DOES
+// run SMIL but it pauses some browsers' compositors; <object> is the
+// most reliable way to get full vector animation.
+const VISUAL_SVG: Record<SubtopicVideo['visual'], { src: string; aspect: string }> = {
+  cell:         { src: '/grade8-platform/svg/cells.svg',        aspect: '800 / 500' },
+  digestive:    { src: '/grade8-platform/svg/digestive.svg',    aspect: '800 / 600' },
+  circulation:  { src: '/grade8-platform/svg/circulatory.svg',  aspect: '800 / 540' },
+  homeostasis:  { src: '/grade8-platform/svg/homeostasis.svg',  aspect: '800 / 500' },
+};
+
+function SubtopicCard({ video, index }: { video: SubtopicVideo; index: number }) {
+  const [expanded, setExpanded] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
+  const visual = VISUAL_SVG[video.visual];
+
+  return (
+    <article
+      className={`overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all ${
+        fullscreen ? 'fixed inset-4 z-50 flex flex-col' : ''
+      }`}
+    >
+      {/* Header — always visible. Click to expand. */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-4 bg-slate-950 px-5 py-4 text-left text-white transition hover:bg-slate-900"
+      >
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs font-black text-emerald-950">
+          {index + 1}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-300">Visual explainer</p>
+          <h3 className="truncate text-lg font-black sm:text-xl">{video.title}</h3>
+        </div>
+        <ChevronDown
+          className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+        />
+      </button>
+
+      {/* Expanded body: animated SVG + description side by side on lg+,
+          stacked on mobile. Full-screen toggle promotes the SVG to fill
+          the viewport. */}
+      {expanded && (
+        <div className={`bg-slate-950 p-3 ${fullscreen ? 'flex-1 overflow-hidden' : ''}`}>
+          <div
+            className={`grid gap-4 ${
+              fullscreen ? 'h-full grid-cols-1' : 'lg:grid-cols-[minmax(0,1.6fr)_minmax(240px,.4fr)]'
+            }`}
+          >
+            <div
+              className={`relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900 ${
+                fullscreen ? 'h-full min-h-0' : ''
+              }`}
+              style={fullscreen ? undefined : { aspectRatio: visual.aspect }}
+            >
+              {/* Use <object> so SMIL animations run reliably across browsers. */}
+              <object
+                type="image/svg+xml"
+                data={visual.src}
+                aria-label={video.title}
+                className="absolute inset-0 h-full w-full"
+              />
+              <button
+                type="button"
+                onClick={() => setFullscreen((v) => !v)}
+                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-md bg-slate-950/70 px-2.5 py-1.5 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-sm transition hover:bg-slate-950"
+                title={fullscreen ? 'Exit fullscreen' : 'Expand to fullscreen'}
+              >
+                {fullscreen ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                {fullscreen ? 'Close' : 'Fullscreen'}
+              </button>
+            </div>
+
+            {/* Right rail (hidden when fullscreen so the diagram has the
+                whole screen). */}
+            {!fullscreen && (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-5 text-white">
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-300">
+                  Part {index + 1}
+                </p>
+                <h3 className="mt-2 text-xl font-black">{video.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-200">{video.description}</p>
+                <div className="mt-5 space-y-2 text-xs font-bold text-slate-100">
+                  {getVisualPrompts(video.visual).map((prompt) => (
+                    <p key={prompt} className="rounded-xl bg-white/10 px-3 py-2">{prompt}</p>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </article>
+  );
+}
+
+function SubtopicVideoLessons({ videos }: { videos: SubtopicVideo[] }) {
+  return (
+    <section className="mb-8">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-emerald-600">Visual Explainer Lessons</p>
+          <h2 className="text-2xl font-black text-slate-950 sm:text-3xl">Learn each system with animated diagrams</h2>
+          <p className="mt-1 text-sm text-slate-600">Click any card to expand the animated explainer. Hit the fullscreen button for a board-ready view.</p>
+        </div>
+      </div>
+      <div className="space-y-3">
+        {videos.map((video, index) => (
+          <SubtopicCard key={video.title} video={video} index={index} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function getVisualPrompts(type: SubtopicVideo['visual']): string[] {
+  if (type === 'cell') {
+    return ['Trace the hierarchy from cell to organism.', 'Explain why damaged cells can weaken an organ.'];
+  }
+  if (type === 'digestive') {
+    return ['Follow the path from mouth to intestine.', 'Separate mechanical digestion from chemical digestion.'];
+  }
+  if (type === 'circulation') {
+    return ['Follow oxygen from lungs into blood.', 'Explain why heart rate rises during exercise.'];
+  }
+  return ['Identify the change: too hot or too cold.', 'Explain how negative feedback restores balance.'];
 }
 
 export function OverviewView({ unit, subject }: { unit: UnitId, subject?: SubjectId }) {
@@ -24,6 +172,28 @@ export function OverviewView({ unit, subject }: { unit: UnitId, subject?: Subjec
         case 'unit1': return {
           title: "Who are we?", concept: "Systems", related: "Function, Balance, Interaction", context: "Identities and Relationships",
           soi: "Human biological systems rely on interconnected structures and physiological balances to maintain life and interact with the environment.", color: "emerald", videoId: "gEUu-A2wfSE",
+          subtopicVideos: [
+            {
+              title: 'Cellular Organization',
+              description: 'Cells, tissues, organs, organ systems, organisms, with a cell-diagram visual.',
+              visual: 'cell' as const,
+            },
+            {
+              title: 'The Digestive System',
+              description: 'Mechanical digestion, chemical digestion, enzymes, nutrient absorption, and waste removal.',
+              visual: 'digestive' as const,
+            },
+            {
+              title: 'The Circulatory & Respiratory Systems',
+              description: 'Gas exchange in the lungs, blood transport, oxygen delivery, and carbon dioxide removal.',
+              visual: 'circulation' as const,
+            },
+            {
+              title: 'Homeostasis',
+              description: 'Stable internal conditions, temperature regulation, sweating, and negative feedback.',
+              visual: 'homeostasis' as const,
+            },
+          ],
           topics: [
             { name: "Cellular Organization", desc: "Understanding the hierarchy of life from cells to tissues, organs, organ systems, and organisms.", example: "E.g., Heart muscle cells form cardiac tissue, making up the heart (organ), part of the circulatory system." },
             { name: "The Digestive System", desc: "The mechanical and chemical breakdown of food into nutrients.", example: "E.g., Enzymes in saliva breaking down starch into simple sugars." },
@@ -99,7 +269,11 @@ export function OverviewView({ unit, subject }: { unit: UnitId, subject?: Subjec
             </p>
           </header>
 
-          {data.videoId && <VideoEmbed videoId={data.videoId} title={data.title} />}
+          {data.subtopicVideos ? (
+            <SubtopicVideoLessons videos={data.subtopicVideos} />
+          ) : (
+            data.videoId && <VideoEmbed videoId={data.videoId} title={data.title} />
+          )}
 
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
