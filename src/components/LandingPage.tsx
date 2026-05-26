@@ -53,7 +53,7 @@ const SUBJECTS: SubjectMeta[] = [
   {
     id: 'math',
     name: 'Mathematics',
-    tagline: 'Grade 8 MYP · Four reasoning strands',
+    tagline: 'Grade 8 MYP 2 · Four reasoning strands',
     units: '4 strands · 60+ worked examples',
     icon: Calculator,
     from: 'from-sky-400',
@@ -69,7 +69,7 @@ const SUBJECTS: SubjectMeta[] = [
   {
     id: 'science',
     name: 'Science',
-    tagline: 'Year 8 · Biology · Chemistry · Physics',
+    tagline: 'Grade 8 MYP 2 · Biology · Chemistry · Physics',
     units: '6 units · 13 labelled diagrams · 3D labs',
     icon: FlaskConical,
     from: 'from-emerald-400',
@@ -85,7 +85,7 @@ const SUBJECTS: SubjectMeta[] = [
   {
     id: 'english',
     name: 'English',
-    tagline: 'Year 8 · Language, literature & analysis',
+    tagline: 'Grade 8 MYP 2 · Language, literature & analysis',
     units: '5 units · Interactive ad-analysis lab',
     icon: BookOpen,
     from: 'from-fuchsia-400',
@@ -116,7 +116,7 @@ const FEATURES: Feature[] = [
   { title: 'Read-aloud narration', copy: 'Browser-native TTS with a hand-picked neural voice for every concept.', icon: Volume2, tone: 'from-fuchsia-400/40 to-purple-600/20' },
   { title: 'Teacher → student loop', copy: 'Post assignments, students submit, completion tracked in real time.', icon: GraduationCap, tone: 'from-amber-400/40 to-orange-600/20' },
   { title: 'Labelled SVG diagrams', copy: 'Every science subtopic ships with a clean labelled diagram authored in code.', icon: Layers3, tone: 'from-cyan-400/40 to-sky-600/20' },
-  { title: 'Built for Grade 8 IB MYP', copy: 'Aligned to the four assessment criteria from day one.', icon: Sparkles, tone: 'from-rose-400/40 to-fuchsia-600/20' },
+  { title: 'Built for Grade 8 MYP 2', copy: 'Aligned to the four assessment criteria from day one.', icon: Sparkles, tone: 'from-rose-400/40 to-fuchsia-600/20' },
 ];
 
 const CRITERIA = [
@@ -307,7 +307,7 @@ function StudioHub({ mouse }: { mouse: { x: number; y: number } }) {
             Learning Studio
           </p>
           <p className="mt-1 text-[8px] font-bold uppercase tracking-widest text-white/50 sm:text-[9px]">
-            Grade 8 · One Platform
+            Grade 8 MYP 2 · One Platform
           </p>
         </div>
       </div>
@@ -340,10 +340,12 @@ function SubjectCard({
   subject,
   mouse,
   index,
+  onEnter,
 }: {
   subject: SubjectMeta;
   mouse: { x: number; y: number };
   index: number;
+  onEnter: (subject: SubjectMeta) => void;
 }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
@@ -360,7 +362,17 @@ function SubjectCard({
       ref={cardRef}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative cursor-pointer"
+      onClick={() => onEnter(subject)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onEnter(subject);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${subject.name} studio`}
+      className="relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-3xl"
       style={{
         transform: `perspective(1400px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(${hovered ? -8 : 0}px)`,
         transition: 'transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1)',
@@ -558,6 +570,28 @@ export function LandingPage() {
     }
   }, []);
 
+  // Click handler for the three subject cards — drops the visitor
+  // straight into the matching studio tab. The teacher↔student split
+  // happens after entry; default new visitors to teacher unless a role
+  // is already pinned (e.g. they arrived via an invite link earlier).
+  const enterSubject = (subject: SubjectMeta) => {
+    try {
+      if (!window.localStorage.getItem('eis-role')) {
+        window.localStorage.setItem('eis-role', 'teacher');
+      }
+      const tab =
+        subject.id === 'math'
+          ? 'eis-maths'
+          : subject.id === 'english'
+            ? 'english-studio'
+            : 'science-studio';
+      window.localStorage.setItem('eis-initial-tab', tab);
+    } catch {
+      /* ignore */
+    }
+    setShowPlatform(true);
+  };
+
   if (showPlatform) {
     return <ClientPage />;
   }
@@ -619,7 +653,7 @@ export function LandingPage() {
       <section className="relative z-10 mx-auto max-w-5xl px-4 pt-4 text-center sm:px-8 sm:pt-12">
         <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.3em] text-white/70 backdrop-blur-xl sm:gap-2 sm:px-3 sm:text-[10px] sm:tracking-[0.4em]">
           <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-          Grade 8 · IB MYP
+          Grade 8 MYP 2
         </span>
         <h1 className="mt-4 text-[1.75rem] font-black leading-[1.1] tracking-tight text-white sm:mt-5 sm:text-5xl md:text-6xl">
           <span className="bg-gradient-to-r from-sky-300 via-fuchsia-200 to-amber-200 bg-clip-text text-transparent">
@@ -658,14 +692,14 @@ export function LandingPage() {
           {/* left subject card */}
           <div className="flex justify-center lg:col-start-1 lg:row-start-1">
             <div className="w-full max-w-sm">
-              <SubjectCard subject={SUBJECTS[0]} mouse={mouse} index={0} />
+              <SubjectCard subject={SUBJECTS[0]} mouse={mouse} index={0} onEnter={enterSubject} />
             </div>
           </div>
 
           {/* right subject card */}
           <div className="flex justify-center lg:col-start-3 lg:row-start-1">
             <div className="w-full max-w-sm">
-              <SubjectCard subject={SUBJECTS[2]} mouse={mouse} index={2} />
+              <SubjectCard subject={SUBJECTS[2]} mouse={mouse} index={2} onEnter={enterSubject} />
             </div>
           </div>
         </div>
@@ -673,7 +707,7 @@ export function LandingPage() {
         {/* science card centred below the hub on all viewports */}
         <div className="mt-6 flex justify-center sm:mt-8">
           <div className="w-full max-w-sm">
-            <SubjectCard subject={SUBJECTS[1]} mouse={mouse} index={1} />
+            <SubjectCard subject={SUBJECTS[1]} mouse={mouse} index={1} onEnter={enterSubject} />
           </div>
         </div>
       </section>

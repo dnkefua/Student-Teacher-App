@@ -28,6 +28,7 @@ const brandLogoSrc = '/eis-maths-studio-logo.png';
 
 export type TabType =
   | 'dashboard'
+  | 'student-profile'
   | 'lesson'
   | 'learning-hub'
   | 'eis-maths'
@@ -61,6 +62,7 @@ const navGroups = [
     label: 'Overview',
     items: [
       { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { id: 'student-profile', label: 'My Profile', icon: UserCircle },
       { id: 'learning-hub', label: 'Learning Hub', icon: Database },
     ],
   },
@@ -153,7 +155,7 @@ export function Sidebar({
                 <p className="truncate text-xs font-black uppercase tracking-wide text-white">
                   EIS Learning Studio
                 </p>
-                <p className="truncate text-[10px] font-semibold text-[#8ddfff]">Grade 8 · MYP</p>
+                <p className="truncate text-[10px] font-semibold text-[#8ddfff]">Grade 8 · MYP 2</p>
               </div>
             )}
           </div>

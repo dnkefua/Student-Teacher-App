@@ -46,7 +46,7 @@ const SUBJECT_META: Record<
 > = {
   math: {
     name: 'Mathematics',
-    tagline: 'Grade 8 MYP · Four reasoning strands',
+    tagline: 'Grade 8 MYP 2 · Four reasoning strands',
     icon: Calculator,
     from: 'from-sky-500',
     to: 'to-blue-700',

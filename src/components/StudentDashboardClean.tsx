@@ -54,7 +54,7 @@ const SUBJECT_META: Record<
 > = {
   math: {
     name: 'Maths',
-    tagline: 'Grade 8 MYP',
+    tagline: 'Grade 8 MYP 2',
     tab: 'eis-maths',
     icon: Calculator,
     from: 'from-sky-500',

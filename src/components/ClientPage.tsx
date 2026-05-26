@@ -70,6 +70,10 @@ const SubjectStudioShell = dynamic(
   () => import('@/components/SubjectStudioShell').then((m) => ({ default: m.SubjectStudioShell })),
   { loading: SkeletonLoading },
 );
+const StudentProfile = dynamic(
+  () => import('@/components/StudentProfile').then((m) => ({ default: m.StudentProfile })),
+  { loading: SkeletonLoading },
+);
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 // Learning Hub is teacher-only because it contains class analytics, external
@@ -159,7 +163,8 @@ function ClientPageInner() {
   const isMaths = effectiveActiveTab === 'eis-maths';
   const isCinematic = effectiveActiveTab === 'cinematic-studio';
   const isSubjectStudio = isMaths || isEnglish || isScience;
-  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isCinematic;
+  const isStudentProfile = effectiveActiveTab === 'student-profile';
+  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isCinematic || isStudentProfile;
 
   return (
     <div className={`flex h-dvh overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
@@ -197,6 +202,7 @@ function ClientPageInner() {
         <main className={`flex-1 overflow-y-auto p-4 md:p-8 ${useDarkSurface ? 'bg-[#050711]' : ''}`}>
           <div className={`${isSubjectStudio ? 'max-w-none' : 'max-w-6xl'} mx-auto h-full`}>
             {effectiveActiveTab === 'dashboard' && <DashboardHome mode={mode} setMode={setMode} setActiveTab={selectTab} />}
+            {effectiveActiveTab === 'student-profile' && <StudentProfile setActiveTab={selectTab} />}
             {effectiveActiveTab === 'lesson' && <InteractiveLessonRenderer mode={mode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'learning-hub' && mode === 'teacher' && <LearningDataHub mode={mode} setActiveTab={selectTab} />}
             {effectiveActiveTab === 'eis-maths' && (
