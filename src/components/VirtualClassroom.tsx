@@ -32,7 +32,8 @@ import {
 } from 'lucide-react';
 import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
-import { ActiveLessonPanel, type ShareableLesson } from './ActiveLessonPanel';
+import { type ShareableLesson } from './ActiveLessonPanel';
+import { LessonControlsButton } from './LessonControlsButton';
 import { TeacherVideoFloat } from './TeacherVideoFloat';
 import {
   listStudents,
@@ -818,15 +819,17 @@ export function VirtualClassroom({
             {/* Stage content */}
             <div className="relative flex-1 overflow-hidden bg-[#0a0d14]">
               {stageView === 'lesson' && (
-                <div className="absolute inset-0 overflow-y-auto p-5">
-                  <div className="mx-auto max-w-4xl">
-                    <ActiveLessonPanel
-                      onShareLesson={handleShareLesson}
-                      onShareAssignment={handleShareAssignment}
-                      onAskAi={handleAskAi}
-                      onOpenLessonPlayer={setActiveTab ? handleOpenLessonPlayer : undefined}
-                      isAskingAi={isAskingAi}
-                    />
+                <div className="absolute inset-0 grid place-items-center p-6 text-center">
+                  <div className="max-w-md space-y-3">
+                    <div className="grid h-14 w-14 place-items-center mx-auto rounded-2xl bg-gradient-to-br from-sky-500 to-fuchsia-500 shadow-lg">
+                      <Sparkles className="h-7 w-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-black text-white">No active lesson yet</h3>
+                    <p className="text-sm leading-6 text-slate-400">
+                      {isTeacher
+                        ? 'Hit Lesson controls (bottom-left) to pick a lesson, share your browser, or view a student\'s screen.'
+                        : 'Your teacher hasn\'t posted a lesson to the stage yet. Hang tight — it\'ll appear here when they do.'}
+                    </p>
                   </div>
                 </div>
               )}
@@ -936,6 +939,30 @@ export function VirtualClassroom({
                 mode={mode}
                 label="Teacher (You)"
               />
+
+              {/* Floating lesson-controls button — teacher only. Replaces
+                  the always-visible ActiveLessonPanel that used to clutter
+                  the lesson stage. */}
+              {isTeacher && (
+                <LessonControlsButton
+                  onShareLesson={handleShareLesson}
+                  onShareAssignment={handleShareAssignment}
+                  onAskAi={handleAskAi}
+                  onOpenLessonPlayer={setActiveTab ? handleOpenLessonPlayer : undefined}
+                  isAskingAi={isAskingAi}
+                  onStartScreenShare={() => {
+                    if (isScreenSharing) stopScreenShare();
+                    else startScreenShare();
+                  }}
+                  isScreenSharing={isScreenSharing}
+                  onRequestStudentScreen={() => {
+                    postSystemMessage(
+                      'Mr Smith (live)',
+                      '📺 Requesting one student to share their screen. Tap "Share screen" on your video bar to broadcast your screen to the class.',
+                    );
+                  }}
+                />
+              )}
             </div>
 
             {/* Filmstrip — teacher + students */}
@@ -1352,13 +1379,9 @@ export function VirtualClassroom({
         </button>
       </div>
 
-      <ActiveLessonPanel
-        onShareLesson={handleShareLesson}
-        onShareAssignment={handleShareAssignment}
-        onAskAi={handleAskAi}
-        onOpenLessonPlayer={setActiveTab ? handleOpenLessonPlayer : undefined}
-        isAskingAi={isAskingAi}
-      />
+      {/* Lobby no longer renders the ActiveLessonPanel — lesson controls
+          live behind the "Lesson controls" floating button INSIDE the
+          live class, so the lobby stays focused on starting the call. */}
 
       {cameraError && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{cameraError}</div>

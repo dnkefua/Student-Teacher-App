@@ -15,6 +15,7 @@ import { AssessmentView } from './components/assessment/AssessmentView';
 import { AssetsView } from './components/assets/AssetsView';
 import { GLExamView } from './components/exam/GLExamView';
 import { AssignmentManager } from './components/assignments/AssignmentManager';
+import { SubmissionsView } from './components/submissions/SubmissionsView';
 import { FloatingTools } from './components/FloatingTools';
 import { TabType, UnitId, SubjectId } from './types';
 import { Menu } from 'lucide-react';
@@ -73,6 +74,9 @@ export default function App({
           {currentTab === 'exam' && <GLExamView unit={currentUnit} subject={currentSubject} />}
           {currentTab === 'assignments' && (
             <AssignmentManager mode={mode} subject={currentSubject} studentId={studentId} />
+          )}
+          {currentTab === 'submissions' && (
+            <SubmissionsView mode={mode} subject={currentSubject} />
           )}
         </div>
       </main>

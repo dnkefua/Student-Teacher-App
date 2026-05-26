@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TabType, UnitId, SubjectId } from '../types';
-import { BookOpen, Target, PenTool, CheckSquare, GraduationCap, ChevronDown, Menu, BookText, Calculator, FlaskConical } from 'lucide-react';
+import { BookOpen, Target, PenTool, CheckSquare, GraduationCap, ChevronDown, Menu, BookText, Calculator, FlaskConical, Upload } from 'lucide-react';
 
 interface SidebarProps {
   currentSubject: SubjectId;
@@ -234,11 +234,13 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
     }
   };
 
-  // Always append the Assignments tab to whichever per-subject nav list
-  // was returned, so teachers and students can reach it from anywhere.
+  // Always append Assignments + Submissions to whichever per-subject
+  // nav list was returned, so teachers and students can reach them
+  // from anywhere.
   const navItems = [
     ...getNavItems(),
     { id: 'assignments' as TabType, label: 'Assignments', icon: <GraduationCap className="w-5 h-5" /> },
+    { id: 'submissions' as TabType, label: 'Submissions', icon: <Upload className="w-5 h-5" /> },
   ];
   
   const getThemeColor = () => {

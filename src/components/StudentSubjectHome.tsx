@@ -12,6 +12,7 @@ import {
   Layers3,
   Library,
   Sparkles,
+  Upload,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -106,6 +107,7 @@ export function StudentSubjectHome({
     { label: 'Lessons',  tab: 'lesson',   icon: BookOpen,      description: 'Walk through the worked examples for each unit.' },
     { label: 'Practice', tab: 'practice', icon: ClipboardList, description: 'Practice questions with hints and reveal answers.' },
     { label: 'Assets',   tab: 'assets',   icon: Library,       description: 'Reading material, videos and reference sheets.' },
+    { label: 'Submit work', tab: 'submissions', icon: Upload,  description: 'Upload pictures, docs, videos or audio of your work.' },
   ];
 
   if (subject === 'science' || subject === 'english') {
