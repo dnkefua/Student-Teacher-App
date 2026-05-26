@@ -2,6 +2,7 @@ import React from 'react';
 import Image from 'next/image';
 import {
   BookOpen,
+  CalendarDays,
   CheckSquare,
   ChevronLeft,
   ChevronRight,
@@ -38,6 +39,7 @@ export type TabType =
   | 'lesson-planner'
   | 'grader'
   | 'classroom'
+  | 'teacher-calendar'
   | 'email'
   | 'neuroquest';
 
@@ -85,6 +87,7 @@ const navGroups = [
     label: 'Live & Practice',
     items: [
       { id: 'classroom', label: 'Virtual Classroom', icon: MonitorPlay },
+      { id: 'teacher-calendar', label: 'Calendar', icon: CalendarDays },
       { id: 'lesson', label: 'Lesson Player', icon: GraduationCap },
       { id: 'neuroquest', label: 'NeuroQuest', icon: Gamepad2 },
     ],
@@ -99,6 +102,7 @@ const teacherOnlyTabs: TabType[] = [
   'lesson-planner',
   'grader',
   'email',
+  'teacher-calendar',
 ];
 
 export function Sidebar({

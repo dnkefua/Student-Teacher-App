@@ -26,6 +26,7 @@ import {
 import { TabType } from './Sidebar';
 import { StudentDashboardClean } from '@/components/StudentDashboardClean';
 import { ClassLinkSettings } from '@/components/ClassLinkSettings';
+import { LiveClassManager } from '@/components/LiveClassManager';
 import { InviteStudentsPanel } from '@/components/InviteStudentsPanel';
 import { ExplainerByType } from '@/components/Math3DExplainers';
 import { Math3DShowcase } from '@/components/Math3DShowcase';
@@ -440,9 +441,15 @@ function TeacherDashboard({
           </div>
         </section>
 
-        {/* Class-link settings — appears at the bottom of the teacher dashboard
-            so teachers can paste the live-class URL once without poking at
-            localStorage. Read by ClassLink on the student dashboard. */}
+        {/* Live-class session scheduler — replaces the old simple URL
+            input. Each session has its own token, attached students,
+            and shareable mailto link. Most-recent session URL is also
+            mirrored to eis-class-link so the legacy student-dashboard
+            "Join live class" pill keeps working. */}
+        <LiveClassManager onOpenClassroom={() => setActiveTab('classroom')} />
+
+        {/* Keep the legacy single-URL pasteboard for teachers who still
+            want a manual override (e.g. a long-running Meet room). */}
         <ClassLinkSettings />
 
         {/* My Students roster + invite-by-email flow. Generates a unique

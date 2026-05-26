@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { ClientPage } from '@/components/ClientPage';
 import { acceptInvite } from '@/lib/roster/rosterStore';
+import { getSession } from '@/lib/liveClass/liveClassStore';
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 
@@ -508,25 +509,49 @@ export function LandingPage() {
   const mouse = useMouseParallax();
   const compact = useIsCompactViewport();
 
-  // Invite-link handling: if the URL carries ?invite=<token>, lock the
-  // role to student, mark the invite consumed in the roster, and drop
-  // straight into the student platform (skipping the landing page).
+  // Deep-link handling: ?invite=<token> activates a student account,
+  // ?session=<token> opens a live-class session directly. Either drops
+  // the visitor straight into the platform (no landing screen).
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
-    const token = params.get('invite');
-    if (!token) return;
-    const student = acceptInvite(token);
-    if (student) {
-      try {
-        window.localStorage.setItem('eis-role', 'student');
-        window.localStorage.setItem('eis-student-id', student.id);
-        window.localStorage.setItem('eis-student-name', student.name);
-        window.localStorage.setItem('eis-student-email', student.email);
-      } catch {
-        /* ignore */
+
+    const inviteToken = params.get('invite');
+    if (inviteToken) {
+      const student = acceptInvite(inviteToken);
+      if (student) {
+        try {
+          window.localStorage.setItem('eis-role', 'student');
+          window.localStorage.setItem('eis-student-id', student.id);
+          window.localStorage.setItem('eis-student-name', student.name);
+          window.localStorage.setItem('eis-student-email', student.email);
+        } catch {
+          /* ignore */
+        }
       }
-      // Strip the invite param so refreshes don't re-trigger.
+    }
+
+    const sessionToken = params.get('session');
+    if (sessionToken) {
+      const session = getSession(sessionToken);
+      if (session) {
+        try {
+          // Default the joiner to student view; teachers can flip back
+          // from the sidebar.
+          if (!window.localStorage.getItem('eis-role')) {
+            window.localStorage.setItem('eis-role', 'student');
+          }
+          // Hint to ClientPage that the desired landing tab is the
+          // Virtual Classroom — the next mount picks it up.
+          window.localStorage.setItem('eis-initial-tab', 'classroom');
+          window.localStorage.setItem('eis-active-session', session.token);
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+
+    if (inviteToken || sessionToken) {
       const cleanUrl = `${window.location.origin}${window.location.pathname}`;
       window.history.replaceState({}, '', cleanUrl);
       setShowPlatform(true);

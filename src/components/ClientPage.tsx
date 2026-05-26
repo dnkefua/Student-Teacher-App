@@ -54,6 +54,10 @@ const Grader = dynamic(
   () => import('@/components/Grader').then((m) => ({ default: m.Grader })),
   { loading: SkeletonLoading },
 );
+const TeacherCalendar = dynamic(
+  () => import('@/components/TeacherCalendar').then((m) => ({ default: m.TeacherCalendar })),
+  { loading: SkeletonLoading },
+);
 const EmailAssistant = dynamic(
   () => import('@/components/EmailAssistant').then((m) => ({ default: m.EmailAssistant })),
   { loading: SkeletonLoading },
@@ -111,6 +115,13 @@ function ClientPageInner() {
       if (stored === 'student' || stored === 'teacher') {
         setRole(stored);
         setModeInternal(stored);
+      }
+      // Honour a one-shot landing-tab hint set by LandingPage when the
+      // user clicked a session link (?session=...). Consumed immediately.
+      const hint = window.localStorage.getItem('eis-initial-tab');
+      if (hint) {
+        window.localStorage.removeItem('eis-initial-tab');
+        setActiveTab(hint as TabType);
       }
     } catch {
       /* ignore */
@@ -203,6 +214,9 @@ function ClientPageInner() {
             {effectiveActiveTab === 'lesson-planner' && mode === 'teacher' && <LessonPlanner />}
             {effectiveActiveTab === 'grader' && mode === 'teacher' && <Grader />}
             {effectiveActiveTab === 'classroom' && <VirtualClassroom setActiveTab={selectTab} mode={mode} />}
+            {effectiveActiveTab === 'teacher-calendar' && mode === 'teacher' && (
+              <TeacherCalendar setActiveTab={selectTab} />
+            )}
             {effectiveActiveTab === 'email' && mode === 'teacher' && <EmailAssistant />}
             {effectiveActiveTab === 'neuroquest' && <NeuroQuestHub setActiveTab={selectTab} />}
           </div>
