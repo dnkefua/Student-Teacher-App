@@ -29,6 +29,7 @@ import {
   Maximize2,
   Image as ImageIcon,
   CircleDot,
+  Clock,
 } from 'lucide-react';
 import { Modality } from '@google/genai';
 import { NeuroQuestAssignment, getNeuroQuestGame, loadActiveAssignment } from '@/lib/neuroquest';
@@ -41,6 +42,13 @@ import {
   subscribe as subscribeRoster,
   type RosterStudent,
 } from '@/lib/roster/rosterStore';
+import {
+  type LiveClassSession,
+  isSessionJoinable,
+  isSessionLive,
+  listSessions,
+  subscribe as subscribeSessions,
+} from '@/lib/liveClass/liveClassStore';
 import type { DemoAssignment } from '@/lib/demoAssignments';
 import type { TabType } from './Sidebar';
 import { recordClassParticipationEvent } from '@/lib/learningHub/internalEvents';
@@ -1362,7 +1370,16 @@ export function VirtualClassroom({
     );
   }
 
-  // ── PRE-CLASS LOBBY ────────────────────────────────────────────────────
+  // ── STUDENT JOIN LOBBY ─────────────────────────────────────────────────
+  // Students must NEVER see the "Start class" controls. They can only
+  // join a session their teacher has already scheduled, and only when
+  // that session is live (or within 15 minutes of starting). This block
+  // renders for students instead of the teacher pre-class lobby below.
+  if (!isTeacher) {
+    return <StudentJoinLobby onJoin={() => startVideoCall()} />;
+  }
+
+  // ── TEACHER PRE-CLASS LOBBY ────────────────────────────────────────────
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -1536,6 +1553,197 @@ function FilmstripTile({
         <span className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-red-500">
           <MicOff className="h-3 w-3 text-white" />
         </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Student-only Virtual Classroom lobby. The student CANNOT start a
+ * class — they can only join one their teacher has already scheduled.
+ * Sessions are pulled from the live-class store and a join button
+ * unlocks 15 minutes before the start time.
+ */
+function StudentJoinLobby({ onJoin }: { onJoin: () => void }) {
+  const sessions = useSyncExternalStore(
+    subscribeSessions,
+    listSessions,
+    () => [] as LiveClassSession[],
+  );
+
+  // Re-render every 30s so the "live" / "joinable" pills update without
+  // requiring a page refresh as time crosses session boundaries.
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((t) => t + 1), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Student id resolved from the invite-accept flow. When known we
+  // surface only the sessions the teacher invited this student to. If
+  // we can't resolve an id (demo / fresh browser) we show every session
+  // so the page still has signal.
+  const [studentId, setStudentId] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      setStudentId(window.localStorage.getItem('eis-student-id'));
+    } catch {
+      setStudentId(null);
+    }
+  }, []);
+
+  const visible = useMemo(() => {
+    if (!studentId) return sessions;
+    return sessions.filter(
+      (s) => s.studentIds.length === 0 || s.studentIds.includes(studentId),
+    );
+  }, [sessions, studentId]);
+
+  const liveOrSoon = visible.filter((s) => isSessionJoinable(s));
+  const upcoming = visible.filter((s) => {
+    const start = new Date(s.startsAt).getTime();
+    return start > Date.now() && !isSessionJoinable(s);
+  });
+  const past = visible.filter((s) => {
+    const end = new Date(s.startsAt).getTime() + s.durationMin * 60_000;
+    return end < Date.now();
+  });
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-5">
+      <header>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+          Live classes
+        </p>
+        <h2 className="mt-1 text-2xl font-black text-white sm:text-3xl">
+          Your virtual classroom
+        </h2>
+        <p className="mt-1 text-sm text-slate-400">
+          You can join a class once your teacher starts it. You will see a green
+          <span className="mx-1 inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-black text-emerald-300">
+            <CircleDot className="h-2.5 w-2.5 animate-pulse fill-emerald-400 text-emerald-400" /> Live
+          </span>
+          tag next to the class when it&apos;s ready.
+        </p>
+      </header>
+
+      {/* JOINABLE — live or starting within 15 min */}
+      <section className="rounded-2xl border border-emerald-400/30 bg-emerald-500/5 p-4 backdrop-blur-xl">
+        <div className="mb-3 flex items-center gap-2">
+          <Video className="h-4 w-4 text-emerald-300" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200">
+            Ready to join
+          </p>
+        </div>
+        {liveOrSoon.length === 0 ? (
+          <p className="rounded-md border border-dashed border-white/10 px-3 py-6 text-center text-xs text-slate-500">
+            Nothing live right now. When your teacher starts a class the join
+            button will appear here.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {liveOrSoon.map((s) => {
+              const live = isSessionLive(s);
+              return (
+                <li
+                  key={s.id}
+                  className="flex flex-col gap-2 rounded-xl border border-white/10 bg-slate-950/50 p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-white">{s.title}</p>
+                    <p className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400" suppressHydrationWarning>
+                      <Clock className="h-3 w-3" />
+                      {new Date(s.startsAt).toLocaleString(undefined, {
+                        weekday: 'short',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                      <span>· {s.durationMin} min</span>
+                      {live ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-950">
+                          <CircleDot className="h-2.5 w-2.5 animate-pulse fill-emerald-900" /> Live
+                        </span>
+                      ) : (
+                        <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-amber-300">
+                          Starting soon
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={onJoin}
+                    className="inline-flex shrink-0 items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-xs font-black text-emerald-950 shadow-md transition hover:bg-emerald-400"
+                  >
+                    <Video className="h-3.5 w-3.5" />
+                    Join class
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* UPCOMING — scheduled, not yet joinable */}
+      <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl">
+        <div className="mb-3 flex items-center gap-2">
+          <Clock className="h-4 w-4 text-sky-300" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+            Coming up
+          </p>
+        </div>
+        {upcoming.length === 0 ? (
+          <p className="rounded-md border border-dashed border-white/10 px-3 py-4 text-center text-xs text-slate-500">
+            Nothing scheduled yet.
+          </p>
+        ) : (
+          <ul className="space-y-2">
+            {upcoming.map((s) => (
+              <li
+                key={s.id}
+                className="rounded-xl border border-white/10 bg-slate-950/40 p-3"
+              >
+                <p className="truncate text-sm font-bold text-white">{s.title}</p>
+                <p className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400" suppressHydrationWarning>
+                  <Clock className="h-3 w-3" />
+                  {new Date(s.startsAt).toLocaleString(undefined, {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                  <span>· {s.durationMin} min</span>
+                </p>
+                {s.notes && (
+                  <p className="mt-1.5 rounded-md bg-white/5 px-2 py-1 text-[11px] leading-5 text-slate-300">
+                    {s.notes}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {past.length > 0 && (
+        <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur-xl">
+          <p className="mb-2 text-[10px] font-black uppercase tracking-widest text-slate-500">
+            Past classes
+          </p>
+          <ul className="space-y-1.5">
+            {past.slice(0, 5).map((s) => (
+              <li key={s.id} className="flex items-center justify-between gap-2 rounded-md border border-white/5 bg-slate-950/40 px-2.5 py-1.5">
+                <p className="min-w-0 truncate text-[11px] text-slate-400">{s.title}</p>
+                <span suppressHydrationWarning className="shrink-0 text-[10px] text-slate-500">
+                  {new Date(s.startsAt).toLocaleDateString()}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

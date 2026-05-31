@@ -2,13 +2,14 @@
 
 import React, { useMemo, useState, useSyncExternalStore } from 'react';
 import {
-  Calendar,
   Check,
   Clock,
   Copy,
   Link2,
+  Mail,
+  MessageSquare,
   Plus,
-  Send,
+  Smartphone,
   Sparkles,
   Trash2,
   Users,
@@ -18,7 +19,10 @@ import {
 import {
   type LiveClassSession,
   buildSessionMailto,
+  buildSessionMessage,
+  buildSessionSmsUrl,
   buildSessionUrl,
+  buildSessionWhatsAppUrl,
   createSession,
   deleteSession,
   listSessions,
@@ -122,6 +126,7 @@ function SessionRow({
 }) {
   const [copied, setCopied] = useState(false);
   const [opened, setOpened] = useState(false);
+  const [messageCopied, setMessageCopied] = useState(false);
   const startMs = new Date(session.startsAt).getTime();
   const endMs = startMs + session.durationMin * 60_000;
   const now = Date.now();
@@ -204,18 +209,27 @@ function SessionRow({
           Open class
         </button>
         <button
-          onClick={sendMail}
-          className="inline-flex items-center gap-1.5 rounded-md bg-sky-500 px-2.5 py-1.5 text-[11px] font-black text-white shadow-md hover:bg-sky-400"
-        >
-          {opened ? <Check className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
-          {opened ? 'Opened' : 'Email students'}
-        </button>
-        <button
           onClick={copy}
           className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold text-slate-200 hover:bg-white/10"
         >
           {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? 'Copied' : 'Copy link'}
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(buildSessionMessage(session));
+              setMessageCopied(true);
+              setTimeout(() => setMessageCopied(false), 1500);
+            } catch {
+              /* ignore */
+            }
+          }}
+          className="inline-flex items-center gap-1.5 rounded-md border border-white/15 bg-white/5 px-2.5 py-1.5 text-[11px] font-bold text-slate-200 hover:bg-white/10"
+          title="Copy a ready-to-paste invite message"
+        >
+          {messageCopied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <MessageSquare className="h-3.5 w-3.5" />}
+          {messageCopied ? 'Copied' : 'Copy invite text'}
         </button>
         <button
           onClick={() => {
@@ -226,6 +240,37 @@ function SessionRow({
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
+      </div>
+
+      {/* Channel-by-channel share row — each opens the native share UI
+          for that medium. Email needs recipients (mailto:) so it's
+          disabled until students are attached. */}
+      <div className="mt-2 grid grid-cols-3 gap-1.5">
+        <button
+          onClick={sendMail}
+          disabled={recipients.length === 0}
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-sky-400/40 bg-sky-500/10 px-2 py-1.5 text-[11px] font-bold text-sky-200 hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-40"
+          title={recipients.length === 0 ? 'Attach students with emails to enable' : `Email ${recipients.length} student${recipients.length === 1 ? '' : 's'}`}
+        >
+          {opened ? <Check className="h-3.5 w-3.5" /> : <Mail className="h-3.5 w-3.5" />}
+          Email
+        </button>
+        <a
+          href={buildSessionWhatsAppUrl(session)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-emerald-400/40 bg-emerald-500/10 px-2 py-1.5 text-[11px] font-bold text-emerald-200 hover:bg-emerald-500/20"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          WhatsApp
+        </a>
+        <a
+          href={buildSessionSmsUrl(session)}
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border border-fuchsia-400/40 bg-fuchsia-500/10 px-2 py-1.5 text-[11px] font-bold text-fuchsia-200 hover:bg-fuchsia-500/20"
+        >
+          <Smartphone className="h-3.5 w-3.5" />
+          SMS
+        </a>
       </div>
     </li>
   );

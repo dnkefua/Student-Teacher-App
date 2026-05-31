@@ -9,6 +9,7 @@ import {
   Database,
   MonitorPlay,
   Mail,
+  Newspaper,
   Beaker,
   Clapperboard,
   Feather,
@@ -42,7 +43,8 @@ export type TabType =
   | 'classroom'
   | 'teacher-calendar'
   | 'email'
-  | 'neuroquest';
+  | 'neuroquest'
+  | 'news';
 
 interface SidebarProps {
   activeTab: TabType;
@@ -92,6 +94,12 @@ const navGroups = [
       { id: 'teacher-calendar', label: 'Calendar', icon: CalendarDays },
       { id: 'lesson', label: 'Lesson Player', icon: GraduationCap },
       { id: 'neuroquest', label: 'NeuroQuest', icon: Gamepad2 },
+    ],
+  },
+  {
+    label: 'Newsroom',
+    items: [
+      { id: 'news', label: 'African News', icon: Newspaper },
     ],
   },
 ] as const;
