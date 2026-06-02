@@ -3,9 +3,13 @@ import { practiceQuestions } from '../../data/curriculumData';
 import { unit2Practice } from '../../data/unit2Data';
 import { unit3Practice } from '../../data/unit3Data';
 import { unit4Practice } from '../../data/unit4Data';
-import { englishUnit1Practice, englishUnit2Practice, englishUnit3Practice, englishUnit4Practice, englishUnit5Practice } from '../../data/englishCurriculum';
+import {
+  englishUnit1Practice, englishUnit2Practice, englishUnit3Practice, englishUnit4Practice, englishUnit5Practice,
+  englishUnit1NGRTTests, englishUnit2NGRTTests, englishUnit3NGRTTests, englishUnit4NGRTTests, englishUnit5NGRTTests,
+  type NGRTTest,
+} from '../../data/englishCurriculum';
 import { scienceUnit1Practice, scienceUnit2Practice, scienceUnit3Practice, scienceUnit4Practice, scienceUnit5Practice, scienceUnit6Practice } from '../../data/scienceCurriculum';
-import { Brain, Eye, EyeOff, CheckCircle2, XCircle, PenTool } from 'lucide-react';
+import { Brain, Eye, EyeOff, CheckCircle2, XCircle, PenTool, BookOpenCheck } from 'lucide-react';
 import { UnitId, PracticeQuestion, SubjectId } from '../../types';
 import { QuickAssignButton } from '../QuickAssignButton';
 
@@ -90,8 +94,30 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
     }
   };
 
+  const getNGRTTests = (): NGRTTest[] => {
+    if (subject !== 'english') return [];
+    if (unit === 'unit1') return englishUnit1NGRTTests;
+    if (unit === 'unit2') return englishUnit2NGRTTests;
+    if (unit === 'unit3') return englishUnit3NGRTTests;
+    if (unit === 'unit4') return englishUnit4NGRTTests;
+    if (unit === 'unit5') return englishUnit5NGRTTests;
+    return [];
+  };
+
   const data = getData();
+  const ngrtTests = getNGRTTests();
   const theme = getColorTheme();
+
+  const [ngrtAnswers, setNgrtAnswers] = useState<Record<string, string>>({});
+  const [ngrtRevealed, setNgrtRevealed] = useState<Record<string, boolean>>({});
+
+  const handleNgrtAnswer = (testId: string, qId: number, opt: string, correct: string) => {
+    const key = `${testId}-${qId}`;
+    setNgrtAnswers(prev => ({ ...prev, [key]: opt }));
+    if (opt.trim().toLowerCase() === correct.trim().toLowerCase()) {
+      setNgrtRevealed(prev => ({ ...prev, [key]: true }));
+    }
+  };
 
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [completed, setCompleted] = useState<number>(0);
@@ -341,6 +367,107 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
           </div>
         ))}
       </div>
+      )}
+
+      {/* ── NGRT Tests (English only) ─────────────────────────────────────── */}
+      {ngrtTests.length > 0 && (
+        <div className="mt-14">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-xl bg-amber-100">
+              <BookOpenCheck className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-slate-900">End-of-Chapter NGRT Tests</h2>
+              <p className="text-sm text-slate-500">New Group Reading Test — 3 standardised reading comprehension tests. Assign directly to students.</p>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            {ngrtTests.map((test) => (
+              <div key={test.id} className="bg-white rounded-3xl border border-amber-200 shadow-sm overflow-hidden">
+                {/* Test header */}
+                <div className="flex items-center justify-between gap-3 px-6 py-4 bg-amber-50 border-b border-amber-200">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-amber-500 text-white text-xs font-black shrink-0">
+                      T{test.testNumber}
+                    </span>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-amber-600">NGRT · Test {test.testNumber}</p>
+                      <h3 className="font-bold text-slate-900 text-base">{test.title}</h3>
+                    </div>
+                  </div>
+                  {subject && (
+                    <QuickAssignButton
+                      refId={test.id}
+                      label={`NGRT Test ${test.testNumber}: ${test.title}`}
+                      subject={subject}
+                      unit={unit}
+                      kind="exercise"
+                      defaultTitle={`NGRT T${test.testNumber} – ${test.title}`}
+                    />
+                  )}
+                </div>
+
+                {/* Passage */}
+                <div className="px-6 pt-5 pb-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Reading Passage</p>
+                  <blockquote className="text-sm leading-relaxed text-slate-700 bg-slate-50 border-l-4 border-amber-400 rounded-r-xl px-5 py-4 italic">
+                    {test.passage}
+                  </blockquote>
+                </div>
+
+                {/* Questions */}
+                <div className="px-6 pb-6 space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Comprehension Questions</p>
+                  {test.questions.map((q) => {
+                    const key = `${test.id}-${q.id}`;
+                    const chosen = ngrtAnswers[key];
+                    const correct = ngrtRevealed[key];
+                    return (
+                      <div key={q.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                        <p className="font-semibold text-slate-800 text-sm mb-3">
+                          <span className="font-black text-amber-600 mr-1.5">{q.id}.</span>{q.question}
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {q.options.map((opt) => {
+                            const isChosen = chosen === opt;
+                            const isAnswer = opt.trim().toLowerCase() === q.answer.trim().toLowerCase();
+                            return (
+                              <button
+                                key={opt}
+                                disabled={correct}
+                                onClick={() => handleNgrtAnswer(test.id, q.id, opt, q.answer)}
+                                className={`text-left px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                                  correct && isAnswer
+                                    ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
+                                    : isChosen && !correct
+                                    ? 'bg-rose-50 border-rose-400 text-rose-900'
+                                    : 'bg-white border-slate-200 hover:border-amber-300 text-slate-700'
+                                }`}
+                              >
+                                {opt}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {correct && (
+                          <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-700">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Correct!
+                          </p>
+                        )}
+                        {chosen && !correct && (
+                          <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-rose-600">
+                            <XCircle className="w-3.5 h-3.5" /> Try again
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

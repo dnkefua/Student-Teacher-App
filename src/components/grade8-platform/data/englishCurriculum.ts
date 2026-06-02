@@ -613,6 +613,210 @@ export const englishUnit5Assets: Asset[] = [
   }
 ];
 
+// ── NGRT (New Group Reading Test) — 3 tests per unit ─────────────────────────
+// Each test contains a short reading passage and 4 standardised MCQ questions.
+// Thematically linked to the chapter so comprehension is contextually scaffolded.
+
+export interface NGRTQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  answer: string;
+}
+
+export interface NGRTTest {
+  id: string;
+  testNumber: 1 | 2 | 3;
+  title: string;
+  passage: string;
+  questions: NGRTQuestion[];
+}
+
+// ── Unit 1 — Advertising & Persuasion ────────────────────────────────────────
+export const englishUnit1NGRTTests: NGRTTest[] = [
+  {
+    id: 'ngrt-u1-1', testNumber: 1,
+    title: 'The Green Promise',
+    passage: `Every year, millions of tonnes of plastic waste end up in our oceans, silently strangling marine life and poisoning the food chain we all depend on. The Eco-Drive 500 is not merely a car — it is a declaration. By choosing to switch to our revolutionary hydrogen engine, you are not just saving on fuel costs (a staggering 62% reduction, verified by independent tests). You are joining a global community of forward-thinkers who refuse to sit idly by while the planet warms. The future does not wait. Neither should you.`,
+    questions: [
+      { id: 1, question: 'What percentage fuel cost reduction is claimed in the passage?', options: ['26%', '42%', '62%', '82%'], answer: '62%' },
+      { id: 2, question: 'Which AFOREST technique is used in the phrase "staggering 62% reduction, verified by independent tests"?', options: ['Alliteration', 'Rhetorical question', 'Statistics', 'Emotive language'], answer: 'Statistics' },
+      { id: 3, question: 'What does the phrase "sit idly by" imply about readers who do not buy the product?', options: ['They are lazy and passive', 'They are very busy', 'They already own a green car', 'They prefer public transport'], answer: 'They are lazy and passive' },
+      { id: 4, question: 'Which sentence best describes the purpose of the final two lines?', options: ['To provide a statistic', 'To create urgency and compel immediate action', 'To describe the car\'s features', 'To introduce the product price'], answer: 'To create urgency and compel immediate action' },
+    ],
+  },
+  {
+    id: 'ngrt-u1-2', testNumber: 2,
+    title: 'Charity Under the Spotlight',
+    passage: `The small child in the photograph stares directly into the camera. Her eyes, wide and dark, tell a story that no number of facts could adequately convey. "For just £2 a day," the caption reads, "you can change everything." The charity advertisement deploys every known persuasive tool: emotive imagery, personal address (the word "you" appears eleven times in a single paragraph), and a donation deadline printed in bold red. The colour red is no accident — designers know it signals urgency and danger, priming the reader to act before rational thought can intervene.`,
+    questions: [
+      { id: 1, question: 'How many times does the word "you" appear in the single paragraph mentioned?', options: ['Seven', 'Nine', 'Eleven', 'Fourteen'], answer: 'Eleven' },
+      { id: 2, question: 'Why is the colour red used for the donation deadline?', options: ['It is the charity\'s brand colour', 'It signals urgency and danger', 'It is easier to read', 'It matches the photograph'], answer: 'It signals urgency and danger' },
+      { id: 3, question: 'What does "personal address" mean in the context of this passage?', options: ['Giving out the charity\'s postal address', 'Directly speaking to the reader using "you"', 'Writing the donor\'s name on the form', 'Including a personal story from the director'], answer: 'Directly speaking to the reader using "you"' },
+      { id: 4, question: 'Which phrase from the passage best shows the technique of emotive language?', options: ['"For just £2 a day"', '"The colour red is no accident"', '"Her eyes, wide and dark, tell a story"', '"Printed in bold red"'], answer: '"Her eyes, wide and dark, tell a story"' },
+    ],
+  },
+  {
+    id: 'ngrt-u1-3', testNumber: 3,
+    title: 'The Power of the Slogan',
+    passage: `A good slogan must accomplish three things in under seven words: it must be memorable, it must encapsulate a brand's core identity, and it must create an emotional response. "Just Do It" achieves all three through the simple power of the imperative voice — a direct command that positions the customer not as a passive consumer but as an athlete, a conqueror of obstacles. The deliberate vagueness of the slogan is, paradoxically, its greatest strength. "It" can mean a morning run, a career change, or anything the reader desires. The brand becomes a mirror, reflecting the customer's own ambitions back at them.`,
+    questions: [
+      { id: 1, question: 'According to the passage, how many things must a good slogan accomplish?', options: ['Two', 'Three', 'Four', 'Five'], answer: 'Three' },
+      { id: 2, question: 'What grammatical term describes the technique used in "Just Do It"?', options: ['Rhetorical question', 'Metaphor', 'Imperative voice', 'Alliteration'], answer: 'Imperative voice' },
+      { id: 3, question: 'Why does the author describe the vagueness of "Just Do It" as a "strength"?', options: ['It saves time for the copywriter', 'Customers can project their own meaning onto it', 'Short slogans are cheaper to print', 'Vague words are easier to translate'], answer: 'Customers can project their own meaning onto it' },
+      { id: 4, question: 'What does the metaphor "The brand becomes a mirror" suggest?', options: ['The product is shiny and reflective', 'The brand shows customers their own ambitions', 'Mirrors are used in advertising shoots', 'The brand copies other companies'], answer: 'The brand shows customers their own ambitions' },
+    ],
+  },
+];
+
+// ── Unit 2 — The Novel: Character & Perspective ───────────────────────────────
+export const englishUnit2NGRTTests: NGRTTest[] = [
+  {
+    id: 'ngrt-u2-1', testNumber: 1,
+    title: 'The New Arrival',
+    passage: `The hall fell silent the moment Marcus stepped through the double doors. He was used to silences — the kind that stretched and hardened like cooling wax — but this one felt different. Two hundred pairs of eyes tracked him from his shoes (second-hand, one sole beginning to separate) to the bandage still wrapped around his left hand. He kept his chin level. His mother had drilled that into him since he could walk: chin level, shoulders back, let them stare. He found an empty seat near the window and settled into it with the deliberate slowness of someone who had learned, long ago, that running only made the pack give chase.`,
+    questions: [
+      { id: 1, question: 'What does the simile "hardened like cooling wax" tell us about the silence?', options: ['It was warm and comfortable', 'It was short and quickly forgotten', 'It was rigid and suffocating', 'It was pleasant and peaceful'], answer: 'It was rigid and suffocating' },
+      { id: 2, question: 'Why does Marcus sit down "with the deliberate slowness" of someone who knows running invites a chase?', options: ['He is physically tired from a long journey', 'He wants to show confidence and not appear afraid', 'He is unsure where to sit', 'He has a painful injury slowing him down'], answer: 'He wants to show confidence and not appear afraid' },
+      { id: 3, question: 'What does the detail about Marcus\'s shoes tell the reader?', options: ['He prefers second-hand fashion', 'He is wealthy but modest', 'His family does not have much money', 'He chose the wrong shoes for school'], answer: 'His family does not have much money' },
+      { id: 4, question: 'From whose perspective is this passage told?', options: ['An omniscient narrator', 'A third-person limited narrator focused on Marcus', 'A second-person narrator', 'A first-person narrator inside Marcus\'s head'], answer: 'A third-person limited narrator focused on Marcus' },
+    ],
+  },
+  {
+    id: 'ngrt-u2-2', testNumber: 2,
+    title: 'Turning Point',
+    passage: `Before that afternoon in the library, Priya had been a static character in her own story — reacting rather than acting, carried along by the current rather than choosing her direction. But when she found the notebook beneath the floorboard, something shifted. The handwriting was her grandmother's. The dates were from forty years before Priya was born. Page after page described a woman who had argued with teachers, who had walked out of her own arranged engagement, who had built a business from the proceeds of selling her gold bangles. Priya sat on the dusty floor for two hours, reading and re-reading. When she finally stood, she stood differently.`,
+    questions: [
+      { id: 1, question: 'What literary term best describes Priya before she finds the notebook?', options: ['Dynamic character', 'Round character', 'Static character', 'Protagonist'], answer: 'Static character' },
+      { id: 2, question: 'What does the phrase "carried along by the current" suggest about Priya?', options: ['She enjoys swimming', 'She is passive and lets life happen to her', 'She is adventurous and free-spirited', 'She follows the crowd intentionally'], answer: 'She is passive and lets life happen to her' },
+      { id: 3, question: 'Which detail best shows that Priya\'s grandmother was a dynamic, independent character?', options: ['She kept a notebook under the floorboard', 'She had beautiful handwriting', 'She sold her gold bangles to build a business', 'She lived forty years before Priya was born'], answer: 'She sold her gold bangles to build a business' },
+      { id: 4, question: 'What does "When she finally stood, she stood differently" imply?', options: ['Priya had hurt her leg sitting on the floor', 'Priya had grown taller while reading', 'Priya had been transformed internally by what she read', 'Priya was copying her grandmother\'s posture'], answer: 'Priya had been transformed internally by what she read' },
+    ],
+  },
+  {
+    id: 'ngrt-u2-3', testNumber: 3,
+    title: 'Unreliable Narrator',
+    passage: `I am going to tell you exactly what happened that night, and I want you to understand from the very beginning that I have no reason to lie. The window was already broken when I arrived. The dog — their dog, not mine — had knocked over the vase. I simply picked up the pieces. The fact that the letters were inside the vase, and the fact that I then read those letters, was a matter of entirely innocent curiosity. Anyone would have done the same. It is the letters that are the real crime here, not anything I may or may not have done with them afterwards.`,
+    questions: [
+      { id: 1, question: 'What technique does the narrator use at the start by saying "I have no reason to lie"?', options: ['Personification', 'Pre-emptive self-defence to make us trust them', 'A direct threat to the reader', 'A statement of confirmed fact'], answer: 'Pre-emptive self-defence to make us trust them' },
+      { id: 2, question: 'Why might a careful reader doubt this narrator?', options: ['The narrator admits to reading private letters', 'The narrator claims innocence too forcefully and deflects blame', 'The narrator describes a broken window clearly', 'The narrator is afraid of the dog'], answer: 'The narrator claims innocence too forcefully and deflects blame' },
+      { id: 3, question: 'What narrative device is being demonstrated by this passage?', options: ['Omniscient narration', 'Unreliable first-person narration', 'Third-person limited narration', 'Stream of consciousness'], answer: 'Unreliable first-person narration' },
+      { id: 4, question: 'The narrator says the letters are "the real crime." What effect does this have?', options: ['It proves the narrator is innocent', 'It redirects blame away from the narrator\'s own actions', 'It confirms the narrator found stolen property', 'It shows the narrator feels genuine guilt'], answer: 'It redirects blame away from the narrator\'s own actions' },
+    ],
+  },
+];
+
+// ── Unit 3 — Voices in Verse: Poetry & Form ───────────────────────────────────
+export const englishUnit3NGRTTests: NGRTTest[] = [
+  {
+    id: 'ngrt-u3-1', testNumber: 1,
+    title: 'The Language of Storm',
+    passage: `The storm does not ask permission. It arrives at the coast like an uninvited guest who has forgotten how to be quiet — shattering windows with its fist, scattering the fishing boats like seeds. The gulls, those ancient navigators, had read its handwriting in the clouds three days before and had flown inland. Only the lighthouse remained, standing in its patient, salt-bleached silence, blinking its amber eye into the dark. It had survived nineteen storms. It would survive this one.`,
+    questions: [
+      { id: 1, question: 'What literary device is used when the storm is described as "an uninvited guest"?', options: ['Simile', 'Personification', 'Onomatopoeia', 'Assonance'], answer: 'Personification' },
+      { id: 2, question: 'What does "scattering the fishing boats like seeds" tell us about the storm\'s power?', options: ['The storm is gentle and scatters things lightly', 'The storm is a farmer planting boats', 'The storm throws boats around with effortless force', 'The boats are very small and lightweight'], answer: 'The storm throws boats around with effortless force' },
+      { id: 3, question: 'What is the effect of ending the passage with two short, declarative sentences?', options: ['It shows the author ran out of ideas', 'It creates a sense of certainty and enduring strength', 'It speeds the narrative pace towards a climax', 'It rhymes with the rest of the passage'], answer: 'It creates a sense of certainty and enduring strength' },
+      { id: 4, question: 'What evidence in the passage shows that animals can sense extreme weather?', options: ['The lighthouse blinks its amber eye', 'The gulls read storm signals in the clouds three days early', 'The fishing boats are scattered', 'The windows shatter from the wind'], answer: 'The gulls read storm signals in the clouds three days early' },
+    ],
+  },
+  {
+    id: 'ngrt-u3-2', testNumber: 2,
+    title: 'Reading a Sonnet',
+    passage: `A sonnet is a fourteen-line argument. The first eight lines (the octave) establish a problem, a tension, or a contradiction. The final six lines (the sestet) then pivot — Shakespeare's sonnets use the word "but" or "yet" to signal this turn, which is called the volta — and offer a resolution, a counter-argument, or an unexpected revelation. When Shakespeare writes, "Shall I compare thee to a summer's day? / Thou art more lovely and more temperate," he opens a comparison only to immediately complicate it. Summer, he argues, is inconstant, too hot, too brief. His beloved, preserved in the poem itself, will last as long as the poem is read.`,
+    questions: [
+      { id: 1, question: 'What is the purpose of the octave in a sonnet?', options: ['To resolve a conflict', 'To establish a problem or tension', 'To rhyme perfectly with the sestet', 'To describe the poem\'s author'], answer: 'To establish a problem or tension' },
+      { id: 2, question: 'What is the "volta" in a sonnet?', options: ['The final couplet of the poem', 'The title of the poem', 'The pivoting turn in the argument, signalled by "but" or "yet"', 'The rhyme scheme of the octave'], answer: 'The pivoting turn in the argument, signalled by "but" or "yet"' },
+      { id: 3, question: 'What criticism does Shakespeare make of summer in the passage?', options: ['It is cold and grey', 'It is inconstant, too hot, and too brief', 'It is more beautiful than his beloved', 'It lasts longer than expected'], answer: 'It is inconstant, too hot, and too brief' },
+      { id: 4, question: 'According to Shakespeare\'s argument in the passage, what will preserve his beloved forever?', options: ['A painting or sculpture', 'The poem itself, as long as it is read', 'Her own natural beauty', 'A summer\'s day'], answer: 'The poem itself, as long as it is read' },
+    ],
+  },
+  {
+    id: 'ngrt-u3-3', testNumber: 3,
+    title: 'Sound and Sense',
+    passage: `Poets know that the sound of a word is as important as its meaning. The technique of sibilance — stringing together soft "s" and "sh" sounds — creates a hushing, whispering atmosphere, as if the poem itself is leaning in to confide a secret. By contrast, hard plosive consonants (b, p, d, t) create impact and aggression. Compare "the soft, silver stream slips silently south" with "the black rocks burst and battered the brutal beach." Both are descriptions of water, yet they inhabit entirely different emotional worlds because of the sounds the poet has chosen. Sound is not decoration. It is meaning.`,
+    questions: [
+      { id: 1, question: 'What is sibilance?', options: ['Repetition of hard plosive consonants', 'Repetition of soft "s" and "sh" sounds', 'A type of rhyme scheme', 'The rhythm of a line'], answer: 'Repetition of soft "s" and "sh" sounds' },
+      { id: 2, question: 'According to the passage, what effect do hard plosive consonants create?', options: ['Whispering and mystery', 'Sadness and longing', 'Impact and aggression', 'Softness and calm'], answer: 'Impact and aggression' },
+      { id: 3, question: 'Both example phrases in the passage describe what subject?', options: ['A forest', 'Fire', 'Water', 'The wind'], answer: 'Water' },
+      { id: 4, question: 'What is the author\'s argument in the final sentence, "Sound is not decoration. It is meaning."?', options: ['Poets should focus only on rhyme', 'Sound choices are purely aesthetic and optional', 'The sounds a poet chooses actively shape and create meaning', 'Decoration and meaning are the same thing in poetry'], answer: 'The sounds a poet chooses actively shape and create meaning' },
+    ],
+  },
+];
+
+// ── Unit 4 — Language & Film: Visual Literacy ─────────────────────────────────
+export const englishUnit4NGRTTests: NGRTTest[] = [
+  {
+    id: 'ngrt-u4-1', testNumber: 1,
+    title: 'The Grammar of the Camera',
+    passage: `Every choice a cinematographer makes is a grammatical decision. A low-angle shot — camera aimed upward at the subject — grants power and authority, elevating a character to something almost mythological. A high-angle shot reverses this entirely: the subject shrinks, becomes vulnerable, an object of pity or contempt. The close-up is the cinema's equivalent of italics, insisting that the audience pay intimate attention to a single detail — a trembling lip, a clenched fist, a tear that never falls. When these tools are combined, they create not just an image but an argument, a point of view pressed silently but insistently against the audience's understanding.`,
+    questions: [
+      { id: 1, question: 'What effect does a low-angle shot create?', options: ['The subject appears small and vulnerable', 'The subject appears powerful and authoritative', 'The subject is hidden from view', 'The subject appears to be running'], answer: 'The subject appears powerful and authoritative' },
+      { id: 2, question: 'What does the author compare a close-up to in written language?', options: ['Bold text', 'Italics', 'Capital letters', 'Quotation marks'], answer: 'Italics' },
+      { id: 3, question: 'What does the phrase "an argument pressed silently against the audience\'s understanding" suggest?', options: ['Audiences never understand films', 'Cinematography communicates ideas without needing words', 'Films use subtitles to make arguments', 'Silent films are more powerful than talking ones'], answer: 'Cinematography communicates ideas without needing words' },
+      { id: 4, question: 'A high-angle shot is said to make the subject become "an object of pity or contempt." What does this reveal about how camera position shapes audience emotion?', options: ['It confirms that angles are purely technical decisions', 'Camera angles actively manipulate how audiences feel about characters', 'Audiences always feel sympathy for characters shot from above', 'High-angle shots are only used in horror films'], answer: 'Camera angles actively manipulate how audiences feel about characters' },
+    ],
+  },
+  {
+    id: 'ngrt-u4-2', testNumber: 2,
+    title: 'The Sound Behind the Scene',
+    passage: `In the cinema, what you cannot see is often more powerful than what you can. Non-diegetic sound — music and narration added in post-production that exists outside the story world — reaches directly into the viewer's nervous system and tells it how to feel before rational analysis has a chance to catch up. Horror films exploit this ruthlessly. Research has shown that the deep, sub-bass frequencies used in horror soundtracks (sometimes below the threshold of normal hearing) trigger a physiological anxiety response in listeners. Remove the music from any famous horror scene, and the footage becomes almost comedic. The monster is never as terrifying as the note you did not know you were hearing.`,
+    questions: [
+      { id: 1, question: 'What is non-diegetic sound?', options: ['Sound that characters in the film can hear', 'Natural ambient sounds recorded on set', 'Music and narration added in post-production from outside the story world', 'Sound effects created by props'], answer: 'Music and narration added in post-production from outside the story world' },
+      { id: 2, question: 'What happens to horror scenes when the music is removed, according to the passage?', options: ['They become more frightening', 'They become almost comedic', 'They become confusing', 'They remain equally terrifying'], answer: 'They become almost comedic' },
+      { id: 3, question: 'What do deep sub-bass frequencies in horror soundtracks do to audiences?', options: ['They make audiences fall asleep', 'They trigger a physiological anxiety response', 'They cause hearing damage', 'They signal that the film is ending'], answer: 'They trigger a physiological anxiety response' },
+      { id: 4, question: 'What is the main argument of this passage?', options: ['Horror films rely entirely on monsters for their effect', 'Post-production is the most expensive part of filmmaking', 'Sound manipulates audience emotion more powerfully than visuals', 'Diegetic sound should be louder than non-diegetic sound'], answer: 'Sound manipulates audience emotion more powerfully than visuals' },
+    ],
+  },
+  {
+    id: 'ngrt-u4-3', testNumber: 3,
+    title: 'Colour as Language',
+    passage: `In film, colour is never innocent. Directors and production designers deploy colour palettes as deliberately as poets choose their words. Wes Anderson's films use symmetrical frames and pastel colour palettes to create a world of nostalgic, artificial perfection — a world the viewer knows is not real but longs for anyway. By contrast, the washed-out, de-saturated grey-green tones of a war film like *Saving Private Ryan* strip the world of beauty, insisting on the ugliness and moral compromise of combat. Even costume choices communicate: a character dressed in white within a world of grey and black becomes immediately symbolic — purity surrounded by corruption, or innocence about to be destroyed.`,
+    questions: [
+      { id: 1, question: 'What does the author mean when saying "colour is never innocent"?', options: ['Colours in films are always accidental', 'Every colour choice communicates meaning deliberately', 'Innocent characters always wear white', 'Film studios cannot afford to add colour'], answer: 'Every colour choice communicates meaning deliberately' },
+      { id: 2, question: 'What effect do pastel colour palettes create in Wes Anderson\'s films?', options: ['A sense of danger and war', 'A harsh, realistic portrayal of life', 'A nostalgic, artificial perfection the viewer longs for', 'A de-saturated, grey world'], answer: 'A nostalgic, artificial perfection the viewer longs for' },
+      { id: 3, question: 'What do "de-saturated grey-green tones" communicate in a war film?', options: ['Optimism and hope', 'The beauty of the natural landscape', 'Ugliness and the moral compromise of combat', 'A historical time period before colour film'], answer: 'Ugliness and the moral compromise of combat' },
+      { id: 4, question: 'A character dressed in white in a grey-and-black world represents what, according to the passage?', options: ['An unimportant background character', 'Purity surrounded by corruption, or innocence about to be destroyed', 'The villain of the story', 'A character who has wealth and status'], answer: 'Purity surrounded by corruption, or innocence about to be destroyed' },
+    ],
+  },
+];
+
+// ── Unit 5 — Shakespeare & Context ────────────────────────────────────────────
+export const englishUnit5NGRTTests: NGRTTest[] = [
+  {
+    id: 'ngrt-u5-1', testNumber: 1,
+    title: 'The Globe and Its World',
+    passage: `The Globe Theatre, opened in 1599 on the south bank of the Thames, was a radical democratic space in an era of rigid social hierarchy. Groundlings — the poorest members of the audience — paid a penny to stand in the open yard directly beneath the stage, packed together in sun or rain, eating nuts and heckling freely. The wealthy sat in covered galleries above. Yet every person in that crowd, from nobleman to illiterate apprentice, watched the same play. Shakespeare wrote for all of them simultaneously: crude slapstick and punning jokes for the groundlings, elaborate rhetoric and philosophical complexity for the educated elite. His genius was that both groups believed the play had been written exclusively for them.`,
+    questions: [
+      { id: 1, question: 'How much did groundlings pay to enter The Globe?', options: ['Tuppence', 'A shilling', 'A penny', 'Nothing — entry was free'], answer: 'A penny' },
+      { id: 2, question: 'Where did the wealthiest audience members sit?', options: ['In the open yard beneath the stage', 'On the stage itself', 'In covered galleries above', 'At the back of the theatre'], answer: 'In covered galleries above' },
+      { id: 3, question: 'What does the author mean by calling The Globe "a radical democratic space"?', options: ['The theatre was owned by the government', 'All social classes watched the same performance in the same place', 'Women were allowed to perform on the stage', 'The plays were about politics and elections'], answer: 'All social classes watched the same performance in the same place' },
+      { id: 4, question: 'What was Shakespeare\'s genius, according to the final sentence?', options: ['He wrote only for educated nobles', 'He made each group feel the play was written specifically for them', 'He charged different prices to different audiences', 'He only wrote comedies for groundlings'], answer: 'He made each group feel the play was written specifically for them' },
+    ],
+  },
+  {
+    id: 'ngrt-u5-2', testNumber: 2,
+    title: 'The Language of Power',
+    passage: `In Elizabethan England, mastery of language was mastery of power. Rhetoric — the formal art of persuasive speech — was a compulsory subject in grammar schools, and the most successful courtiers were those who could deploy its weapons with surgical precision: a well-timed allusion to a classical text, a metaphor that flattered without being obsequious, a pause of calculated length before a reply. Shakespeare's villains — Iago, Richard III — are invariably the cleverest speakers in the room. They understand that words are not just communication: they are architecture, building the reality in which others choose to live. The most dangerous weapon in Elizabethan society was not a sword. It was a perfectly constructed sentence.`,
+    questions: [
+      { id: 1, question: 'What was rhetoric in Elizabethan schools?', options: ['A type of musical performance', 'An optional art class for wealthy students', 'The formal art of persuasive speech, a compulsory subject', 'A form of swordsmanship'], answer: 'The formal art of persuasive speech, a compulsory subject' },
+      { id: 2, question: 'According to the passage, what characterizes Shakespeare\'s villains like Iago and Richard III?', options: ['They are the strongest fighters in the play', 'They are the cleverest speakers in the room', 'They are disliked for their poor vocabulary', 'They are cowardly and avoid conflict'], answer: 'They are the cleverest speakers in the room' },
+      { id: 3, question: 'What does the metaphor "words are not just communication: they are architecture" mean?', options: ['Shakespeare worked as an architect', 'Words are physically heavy and can break things', 'Language constructs and shapes the reality that people believe in', 'Elizabethan sentences were very long and complicated'], answer: 'Language constructs and shapes the reality that people believe in' },
+      { id: 4, question: 'What does the passage identify as "the most dangerous weapon in Elizabethan society"?', options: ['A sword or dagger', 'Rhetorical flattery in public', 'A perfectly constructed sentence', 'A letter sent to the Queen'], answer: 'A perfectly constructed sentence' },
+    ],
+  },
+  {
+    id: 'ngrt-u5-3', testNumber: 3,
+    title: 'Reading Katherina',
+    passage: `Modern audiences frequently misread Katherina in *The Taming of the Shrew*, judging her by twenty-first century standards of gender equality rather than the Elizabethan context in which she was written. In Elizabethan England, a woman who publicly refused to obey her father or husband risked social ruin — not merely disapproval, but the withdrawal of all financial support and legal protection. Katherina's famous final speech, in which she argues for a wife's obedience, has been read as Shakespeare's endorsement of patriarchy, as biting satire, or — most intriguingly — as the speech of a woman who has learned to perform compliance while retaining her inner defiance. The text supports all three readings simultaneously. That is its power.`,
+    questions: [
+      { id: 1, question: 'What mistake do modern audiences make when reading Katherina, according to the passage?', options: ['They do not read the play carefully', 'They judge her by modern values rather than Elizabethan context', 'They confuse her with characters in other Shakespeare plays', 'They misunderstand the plot entirely'], answer: 'They judge her by modern values rather than Elizabethan context' },
+      { id: 2, question: 'What risk did an Elizabethan woman face by publicly defying her father or husband?', options: ['Arrest and imprisonment', 'Social ruin and loss of financial and legal protection', 'Being exiled from England', 'Being fined by the local magistrate'], answer: 'Social ruin and loss of financial and legal protection' },
+      { id: 3, question: 'Which of the following is NOT listed as a possible interpretation of Katherina\'s final speech?', options: ['Endorsement of patriarchy', 'Biting satire', 'Performance of compliance hiding inner defiance', 'A genuine declaration of romantic love'], answer: 'A genuine declaration of romantic love' },
+      { id: 4, question: 'Why does the author say the play\'s ability to support multiple readings simultaneously is "its power"?', options: ['It means audiences never get bored re-reading it', 'It shows Shakespeare was confused about his own intentions', 'Texts that support multiple readings are richer, more complex, and more enduring', 'It proves that Shakespeare supported women\'s rights'], answer: 'Texts that support multiple readings are richer, more complex, and more enduring' },
+    ],
+  },
+];
+
 export const englishUnit1Assets: Asset[] = [
   {
     id: "asset_1a",

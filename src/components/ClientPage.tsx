@@ -74,10 +74,6 @@ const StudentProfile = dynamic(
   () => import('@/components/StudentProfile').then((m) => ({ default: m.StudentProfile })),
   { loading: SkeletonLoading },
 );
-const NewsHub = dynamic(
-  () => import('@/components/NewsHub').then((m) => ({ default: m.NewsHub })),
-  { loading: SkeletonLoading },
-);
 
 const brandLogoSrc = '/eis-maths-studio-logo.png';
 // Learning Hub is teacher-only because it contains class analytics, external
@@ -168,8 +164,7 @@ function ClientPageInner() {
   const isCinematic = effectiveActiveTab === 'cinematic-studio';
   const isSubjectStudio = isMaths || isEnglish || isScience;
   const isStudentProfile = effectiveActiveTab === 'student-profile';
-  const isNews = effectiveActiveTab === 'news';
-  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isCinematic || isStudentProfile || isNews;
+  const useDarkSurface = isDashboard || isLesson || isUpload || isLearningHub || isCinematic || isStudentProfile;
 
   return (
     <div className={`flex h-dvh overflow-hidden ${useDarkSurface ? 'bg-[#050711]' : 'bg-[#f6f8fc]'}`}>
@@ -230,7 +225,6 @@ function ClientPageInner() {
             )}
             {effectiveActiveTab === 'email' && mode === 'teacher' && <EmailAssistant />}
             {effectiveActiveTab === 'neuroquest' && <NeuroQuestHub setActiveTab={selectTab} />}
-            {effectiveActiveTab === 'news' && <NewsHub />}
           </div>
         </main>
       </div>

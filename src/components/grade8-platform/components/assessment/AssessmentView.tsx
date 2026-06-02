@@ -2,8 +2,9 @@ import React from 'react';
 import { ClipboardList, Award, Scale, HelpCircle, Lightbulb } from 'lucide-react';
 import { UnitId, SubjectId } from '../../types';
 import { assessmentsData } from '../../data/assessmentData';
+import { QuickAssignButton } from '../QuickAssignButton';
 
-export function AssessmentView({ unit, subject = 'math' }: { unit: UnitId, subject?: SubjectId }) {
+export function AssessmentView({ unit = 'unit1', subject = 'math' }: { unit?: UnitId, subject?: SubjectId }) {
   const subjectData = assessmentsData[subject];
 
   const getTheme = () => {
@@ -41,10 +42,13 @@ export function AssessmentView({ unit, subject = 'math' }: { unit: UnitId, subje
           <div className="space-y-6 text-slate-700 relative z-10">
             {subjectData.criteriaA.map((option: any, idx: number) => (
               <div key={idx} className={`p-5 rounded-2xl border ${bg}`}>
-                <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs ${theme.replace('text-', 'bg-')}`}>{idx + 1}</span>
-                  {option.optionTitle}
-                </h3>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="font-bold text-lg flex items-center gap-2">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs shrink-0 ${theme.replace('text-', 'bg-')}`}>{idx + 1}</span>
+                    {option.optionTitle}
+                  </h3>
+                  <QuickAssignButton refId={`assess-${subject}-${unit}-A-${idx}`} label={option.optionTitle} subject={subject} unit={unit} kind="exercise" defaultTitle={`Criterion A – ${option.optionTitle}`} />
+                </div>
                 {option.questions ? (
                    <ul className="space-y-2">
                      {option.questions.map((q: any) => (
@@ -73,10 +77,13 @@ export function AssessmentView({ unit, subject = 'math' }: { unit: UnitId, subje
           <div className="space-y-6 text-slate-700 relative z-10">
              {subjectData.criteriaB.map((option: any, idx: number) => (
               <div key={idx} className="p-5 rounded-2xl border bg-blue-50 border-blue-100">
-                 <h3 className="font-bold text-blue-900 text-lg mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs bg-blue-500">{idx + 1}</span>
-                  {option.optionTitle}
-                </h3>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="font-bold text-blue-900 text-lg flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs bg-blue-500 shrink-0">{idx + 1}</span>
+                    {option.optionTitle}
+                  </h3>
+                  <QuickAssignButton refId={`assess-${subject}-${unit}-B-${idx}`} label={option.optionTitle} subject={subject} unit={unit} kind="exercise" defaultTitle={`Criterion B – ${option.optionTitle}`} />
+                </div>
                 {option.description && <p className="mb-3 text-sm font-medium">{option.description}</p>}
                 {option.questions ? (
                   <ul className="list-decimal pl-5 space-y-1 text-sm bg-white p-4 rounded-xl border border-blue-100">
@@ -104,10 +111,13 @@ export function AssessmentView({ unit, subject = 'math' }: { unit: UnitId, subje
           <div className="space-y-6 text-slate-700 relative z-10">
              {subjectData.criteriaC.map((option: any, idx: number) => (
               <div key={idx} className="p-5 rounded-2xl border bg-purple-50 border-purple-100">
-                 <h3 className="font-bold text-purple-900 text-lg mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs bg-purple-500">{idx + 1}</span>
-                  {option.optionTitle}
-                </h3>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="font-bold text-purple-900 text-lg flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs bg-purple-500 shrink-0">{idx + 1}</span>
+                    {option.optionTitle}
+                  </h3>
+                  <QuickAssignButton refId={`assess-${subject}-${unit}-C-${idx}`} label={option.optionTitle} subject={subject} unit={unit} kind="exercise" defaultTitle={`Criterion C – ${option.optionTitle}`} />
+                </div>
                 <p className="text-sm bg-white p-4 rounded-xl border border-purple-100">{option.prompt}</p>
               </div>
             ))}
@@ -126,10 +136,13 @@ export function AssessmentView({ unit, subject = 'math' }: { unit: UnitId, subje
           <div className="space-y-6 text-slate-700 relative z-10">
              {subjectData.criteriaD.map((option: any, idx: number) => (
               <div key={idx} className="p-5 rounded-2xl border bg-fuchsia-50 border-fuchsia-100">
-                 <h3 className="font-bold text-fuchsia-900 text-lg mb-3 flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs bg-fuchsia-500">{idx + 1}</span>
-                  {option.optionTitle}
-                </h3>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <h3 className="font-bold text-fuchsia-900 text-lg flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs bg-fuchsia-500 shrink-0">{idx + 1}</span>
+                    {option.optionTitle}
+                  </h3>
+                  <QuickAssignButton refId={`assess-${subject}-${unit}-D-${idx}`} label={option.optionTitle} subject={subject} unit={unit} kind="exercise" defaultTitle={`Criterion D – ${option.optionTitle}`} />
+                </div>
                 {option.scenario && (
                   <div className="mb-3 text-sm bg-white p-4 rounded-xl border border-fuchsia-100">
                     <strong className="block mb-1 text-fuchsia-900">Scenario:</strong>
