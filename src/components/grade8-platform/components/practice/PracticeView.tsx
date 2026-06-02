@@ -408,12 +408,24 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
                   )}
                 </div>
 
-                {/* Passage */}
-                <div className="px-6 pt-5 pb-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Reading Passage</p>
-                  <blockquote className="text-sm leading-relaxed text-slate-700 bg-slate-50 border-l-4 border-amber-400 rounded-r-xl px-5 py-4 italic">
-                    {test.passage}
-                  </blockquote>
+                {/* Passages */}
+                <div className="px-6 pt-5 pb-4 space-y-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reading Passages</p>
+                  {(test as any).passages
+                    ? (test as any).passages.map((p: { label: string; text: string }) => (
+                        <div key={p.label}>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-1">{p.label}</p>
+                          <blockquote className="text-sm leading-relaxed text-slate-700 bg-slate-50 border-l-4 border-amber-400 rounded-r-xl px-5 py-4">
+                            {p.text}
+                          </blockquote>
+                        </div>
+                      ))
+                    : (
+                        <blockquote className="text-sm leading-relaxed text-slate-700 bg-slate-50 border-l-4 border-amber-400 rounded-r-xl px-5 py-4 italic">
+                          {(test as any).passage}
+                        </blockquote>
+                      )
+                  }
                 </div>
 
                 {/* Questions */}
