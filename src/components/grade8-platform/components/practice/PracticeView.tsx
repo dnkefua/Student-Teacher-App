@@ -113,6 +113,7 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
 
   const handleNgrtAnswer = (testId: string, qId: number, opt: string, correct: string) => {
     const key = `${testId}-${qId}`;
+    if (ngrtAnswers[key]) return;
     setNgrtAnswers(prev => ({ ...prev, [key]: opt }));
     if (opt.trim().toLowerCase() === correct.trim().toLowerCase()) {
       setNgrtRevealed(prev => ({ ...prev, [key]: true }));
@@ -435,6 +436,7 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
                     const key = `${test.id}-${q.id}`;
                     const chosen = ngrtAnswers[key];
                     const correct = ngrtRevealed[key];
+                    const answered = Boolean(chosen);
                     return (
                       <div key={q.id} className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
                         <p className="font-semibold text-slate-800 text-sm mb-3">
@@ -447,14 +449,14 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
                             return (
                               <button
                                 key={opt}
-                                disabled={correct}
+                                disabled={answered}
                                 onClick={() => handleNgrtAnswer(test.id, q.id, opt, q.answer)}
                                 className={`text-left px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
-                                  correct && isAnswer
+                                  answered && isAnswer
                                     ? 'bg-emerald-50 border-emerald-500 text-emerald-900'
-                                    : isChosen && !correct
+                                    : isChosen && !isAnswer
                                     ? 'bg-rose-50 border-rose-400 text-rose-900'
-                                    : 'bg-white border-slate-200 hover:border-amber-300 text-slate-700'
+                                    : 'bg-white border-slate-200 hover:border-amber-300 text-slate-700 disabled:hover:border-slate-200'
                                 }`}
                               >
                                 {opt}
@@ -469,7 +471,7 @@ export function PracticeView({ unit, subject }: { unit: UnitId, subject?: Subjec
                         )}
                         {chosen && !correct && (
                           <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-rose-600">
-                            <XCircle className="w-3.5 h-3.5" /> Try again
+                            <XCircle className="w-3.5 h-3.5" /> Answer locked. Correct answer revealed in green.
                           </p>
                         )}
                       </div>

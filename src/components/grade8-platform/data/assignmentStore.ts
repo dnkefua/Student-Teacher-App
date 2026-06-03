@@ -56,6 +56,11 @@ export type Submission = {
   submittedAt: string;
   answers: Record<string, string>;
   completionPercent: number;
+  score?: {
+    correct: number;
+    total: number;
+    percent: number;
+  };
 };
 
 type Store = {
