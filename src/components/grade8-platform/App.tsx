@@ -14,6 +14,7 @@ import { PracticeView } from './components/practice/PracticeView';
 import { AssessmentView } from './components/assessment/AssessmentView';
 import { AssetsView } from './components/assets/AssetsView';
 import { GLExamView } from './components/exam/GLExamView';
+import { NGRTFinalExam } from './components/exam/NGRTFinalExam';
 import { AssignmentManager } from './components/assignments/AssignmentManager';
 import { SubmissionsView } from './components/submissions/SubmissionsView';
 import { FloatingTools } from './components/FloatingTools';
@@ -71,7 +72,8 @@ export default function App({
           {currentTab === 'practice' && <PracticeView unit={currentUnit} subject={currentSubject} />}
           {currentTab === 'assessment' && <AssessmentView unit={currentUnit} subject={currentSubject} />}
           {currentTab === 'assets' && <AssetsView unit={currentUnit} subject={currentSubject} />}
-          {currentTab === 'exam' && <GLExamView unit={currentUnit} subject={currentSubject} />}
+          {currentTab === 'exam' && currentSubject === 'english' && <NGRTFinalExam />}
+          {currentTab === 'exam' && currentSubject !== 'english' && <GLExamView unit={currentUnit} subject={currentSubject} />}
           {currentTab === 'assignments' && (
             <AssignmentManager mode={mode} subject={currentSubject} studentId={studentId} />
           )}

@@ -165,7 +165,7 @@ export function Sidebar({ currentSubject, setSubject, currentUnit, setUnit, curr
         { id: 'lesson' as TabType, label: currentUnit === 'unit1' ? '1.2 Core Topics & Exercises' : currentUnit === 'unit2' ? '2.2 Core Topics & Exercises' : currentUnit === 'unit3' ? '3.2 Core Topics & Exercises' : currentUnit === 'unit4' ? '4.2 Core Topics & Exercises' : '5.2 Core Topics & Exercises', icon: <BookOpen className="w-5 h-5" /> },
         { id: 'practice' as TabType, label: 'Practice & NGRT Tests', icon: <PenTool className="w-5 h-5" /> },
         { id: 'assessment' as TabType, label: 'Assessment Framework', icon: <CheckSquare className="w-5 h-5" /> },
-        { id: 'exam' as TabType, label: 'GL Exams', icon: <GraduationCap className="w-5 h-5" /> },
+        { id: 'exam' as TabType, label: 'NGRT Final Exam', icon: <GraduationCap className="w-5 h-5" /> },
         { id: 'assets' as TabType, label: 'Learning Assets', icon: <BookText className="w-5 h-5" /> },
       ];
     }
