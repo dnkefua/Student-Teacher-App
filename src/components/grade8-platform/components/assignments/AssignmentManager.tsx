@@ -11,6 +11,7 @@ import {
   Clock,
   BookOpen,
   AlertCircle,
+  XCircle,
 } from 'lucide-react';
 import type { SubjectId, UnitId, Example } from '../../types';
 import {
@@ -36,6 +37,11 @@ import {
   englishUnit3Examples,
   englishUnit4Examples,
   englishUnit5Examples,
+  englishUnit1NGRTTests,
+  englishUnit2NGRTTests,
+  englishUnit3NGRTTests,
+  englishUnit4NGRTTests,
+  englishUnit5NGRTTests,
 } from '../../data/englishCurriculum';
 import {
   scienceUnit1Examples,
@@ -46,6 +52,7 @@ import {
   scienceUnit6Examples,
 } from '../../data/scienceCurriculum';
 import { glExams } from '../../data/glExams';
+import type { NGRTTest } from '../../data/englishNGRT';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -86,6 +93,42 @@ function poolFor(subject: SubjectId, unit: UnitId): Example[] {
     unit6: scienceUnit6Examples,
   };
   return byUnit[unit] || [];
+}
+
+const allNgrtTests: NGRTTest[] = [
+  ...englishUnit1NGRTTests,
+  ...englishUnit2NGRTTests,
+  ...englishUnit3NGRTTests,
+  ...englishUnit4NGRTTests,
+  ...englishUnit5NGRTTests,
+];
+
+function normaliseExamRef(refId: string): string {
+  return refId.startsWith('exam-') ? refId.slice(5) : refId;
+}
+
+function findAssignedGlExam(refId: string) {
+  const id = normaliseExamRef(refId);
+  return glExams.find((exam) => exam.id === id);
+}
+
+function findAssignedNgrt(refId: string) {
+  return allNgrtTests.find((test) => test.id === refId);
+}
+
+function gradeAnswers<T extends { id: number; answer: string }>(
+  questions: T[],
+  answers: Record<string, string>,
+  keyPrefix: string,
+) {
+  const correct = questions.reduce((sum, question) => {
+    return answers[`${keyPrefix}-${question.id}`] === question.answer ? sum + 1 : sum;
+  }, 0);
+  return {
+    correct,
+    total: questions.length,
+    percent: questions.length ? Math.round((correct / questions.length) * 100) : 0,
+  };
 }
 
 // Use the assignment store as an external store so any change in any panel
@@ -426,7 +469,7 @@ function StudentView({ studentId }: { studentId: string }) {
       {assignments.length > 0 && (
         <ul className="space-y-3">
           {assignments.map((a) => (
-            <StudentAssignmentRow
+            <EnhancedStudentAssignmentRow
               key={a.id}
               assignment={a}
               studentId={studentId}
@@ -436,6 +479,431 @@ function StudentView({ studentId }: { studentId: string }) {
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+function EnhancedStudentAssignmentRow({
+  assignment,
+  studentId,
+  expanded,
+  onToggle,
+}: {
+  assignment: Assignment;
+  studentId: string;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const existing = getSubmission(assignment.id, studentId);
+  const [answers, setAnswers] = useState<Record<string, string>>(existing?.answers ?? {});
+  const locked = Boolean(existing);
+  const hasAutoGradedItems = assignment.items.some((it) => findAssignedGlExam(it.refId) || findAssignedNgrt(it.refId));
+  const isOverdue = new Date(assignment.dueAt) < new Date() && !existing;
+
+  const completionPercent = useMemo(() => {
+    let filled = 0;
+    let total = 0;
+
+    assignment.items.forEach((it) => {
+      const exam = findAssignedGlExam(it.refId);
+      const ngrt = findAssignedNgrt(it.refId);
+
+      if (exam) {
+        total += exam.questions.length;
+        filled += (exam.questions as any[]).filter((q) => answers[`${it.refId}-${q.id}`]).length;
+      } else if (ngrt) {
+        total += ngrt.questions.length;
+        filled += ngrt.questions.filter((q) => answers[`${it.refId}-${q.id}`]).length;
+      } else {
+        total += 1;
+        if ((answers[it.refId] || '').trim().length > 0) filled += 1;
+      }
+    });
+
+    return Math.round((filled / Math.max(1, total)) * 100);
+  }, [answers, assignment.items]);
+
+  const score = useMemo(() => {
+    let correct = 0;
+    let total = 0;
+
+    assignment.items.forEach((it) => {
+      const exam = findAssignedGlExam(it.refId);
+      const ngrt = findAssignedNgrt(it.refId);
+
+      if (exam) {
+        const grade = gradeAnswers(exam.questions as any[], answers, it.refId);
+        correct += grade.correct;
+        total += grade.total;
+      } else if (ngrt) {
+        const grade = gradeAnswers(ngrt.questions, answers, it.refId);
+        correct += grade.correct;
+        total += grade.total;
+      }
+    });
+
+    return total > 0 ? { correct, total, percent: Math.round((correct / total) * 100) } : undefined;
+  }, [answers, assignment.items]);
+
+  const submit = () => {
+    if (locked) return;
+    submitAssignment({
+      assignmentId: assignment.id,
+      studentId,
+      submittedAt: new Date().toISOString(),
+      answers,
+      completionPercent,
+      score,
+    });
+    onToggle();
+  };
+
+  return (
+    <li className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between gap-3 p-4 text-left transition hover:bg-slate-50"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-base font-bold text-slate-900">{assignment.title}</p>
+            {existing ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                <CheckCircle2 className="h-3 w-3" /> Submitted{existing.score ? ` - ${existing.score.percent}%` : ''}
+              </span>
+            ) : isOverdue ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                <AlertCircle className="h-3 w-3" /> Overdue
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"
+                suppressHydrationWarning
+              >
+                <Clock className="h-3 w-3" /> Due {new Date(assignment.dueAt).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {assignment.subject} - {assignment.unit.replace('unit', 'Unit ')} - {assignment.kind} -{' '}
+            {assignment.items.length} item{assignment.items.length === 1 ? '' : 's'}
+          </p>
+        </div>
+      </button>
+
+      {expanded && (
+        <div className="space-y-3 border-t border-slate-100 bg-slate-50 p-4">
+          {assignment.notes && (
+            <p className="rounded-md border-l-4 border-blue-300 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+              {assignment.notes}
+            </p>
+          )}
+
+          {assignment.items.map((it, idx) => (
+            <AssignmentItemStudentTask
+              key={it.refId}
+              item={it}
+              index={idx}
+              answers={answers}
+              locked={locked}
+              onAnswer={(key, value) =>
+                setAnswers((prev) => (prev[key] ? prev : { ...prev, [key]: value }))
+              }
+              onTextAnswer={(key, value) =>
+                setAnswers((prev) => ({ ...prev, [key]: value }))
+              }
+            />
+          ))}
+
+          {score && completionPercent === 100 && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
+              Automatic score: {score.correct} / {score.total} ({score.percent}%)
+            </div>
+          )}
+
+          {hasAutoGradedItems && completionPercent < 100 && !locked && (
+            <p className="text-xs font-semibold text-slate-500">
+              Answer every test question to unlock submission and receive your automatic score.
+            </p>
+          )}
+
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                <div
+                  className="h-full bg-emerald-500 transition-all"
+                  style={{ width: `${completionPercent}%` }}
+                />
+              </div>
+              <p className="mt-1 text-xs text-slate-500">{completionPercent}% complete</p>
+            </div>
+            <button
+              onClick={submit}
+              disabled={locked || completionPercent === 0 || (hasAutoGradedItems && completionPercent < 100)}
+              className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+            >
+              <Send className="h-4 w-4" />
+              {existing ? 'Submitted' : 'Submit'}
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+}
+
+type AssignedGlExam = NonNullable<ReturnType<typeof findAssignedGlExam>>;
+type AssignedGlQuestion = AssignedGlExam['questions'][number];
+
+function AssignmentItemStudentTask({
+  item,
+  index,
+  answers,
+  locked,
+  onAnswer,
+  onTextAnswer,
+}: {
+  item: AssignmentItem;
+  index: number;
+  answers: Record<string, string>;
+  locked: boolean;
+  onAnswer: (key: string, value: string) => void;
+  onTextAnswer: (key: string, value: string) => void;
+}) {
+  const exam = findAssignedGlExam(item.refId);
+  const ngrt = findAssignedNgrt(item.refId);
+
+  if (ngrt) {
+    return (
+      <NgrtAssignmentTask
+        item={item}
+        test={ngrt}
+        answers={answers}
+        locked={locked}
+        onAnswer={onAnswer}
+      />
+    );
+  }
+
+  if (exam) {
+    return (
+      <GlAssignmentTask
+        item={item}
+        exam={exam}
+        answers={answers}
+        locked={locked}
+        onAnswer={onAnswer}
+      />
+    );
+  }
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-3">
+      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+        Question {index + 1}
+      </p>
+      <p className="mb-3 text-sm text-slate-800">{item.label}</p>
+      <textarea
+        value={answers[item.refId] ?? ''}
+        onChange={(e) => onTextAnswer(item.refId, e.target.value)}
+        rows={3}
+        disabled={locked}
+        placeholder="Write your answer here..."
+        className="w-full resize-none rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-500 disabled:bg-slate-100"
+      />
+    </div>
+  );
+}
+
+function MultipleChoiceQuestion({
+  questionKey,
+  questionNumber,
+  question,
+  options,
+  answer,
+  selected,
+  locked,
+  working,
+  onAnswer,
+}: {
+  questionKey: string;
+  questionNumber: number;
+  question: string;
+  options: string[];
+  answer: string;
+  selected?: string;
+  locked: boolean;
+  working?: string;
+  onAnswer: (key: string, value: string) => void;
+}) {
+  const hasAnswered = Boolean(selected);
+  const answeredCorrectly = selected === answer;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <p className="mb-3 text-sm font-semibold text-slate-800">
+        <span className="mr-1.5 font-black text-amber-600">{questionNumber}.</span>
+        {question}
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {options.map((option) => {
+          const isSelected = selected === option;
+          const isCorrect = option === answer;
+          const revealCorrect = hasAnswered && isCorrect;
+          const revealWrong = hasAnswered && isSelected && !isCorrect;
+
+          return (
+            <button
+              key={option}
+              type="button"
+              disabled={locked || hasAnswered}
+              onClick={() => onAnswer(questionKey, option)}
+              className={`rounded-xl border px-4 py-2.5 text-left text-sm font-semibold transition ${
+                revealCorrect
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-900'
+                  : revealWrong
+                    ? 'border-rose-400 bg-rose-50 text-rose-900'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-amber-300 disabled:hover:border-slate-200'
+              }`}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+      {hasAnswered && (
+        <div className="mt-3 space-y-2 text-xs font-bold">
+          {answeredCorrectly ? (
+            <p className="flex items-center gap-1.5 text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Correct.
+            </p>
+          ) : (
+            <p className="flex items-center gap-1.5 text-rose-700">
+              <XCircle className="h-3.5 w-3.5" /> Answer locked. Correct answer revealed in green.
+            </p>
+          )}
+          {working && (
+            <div className="rounded-lg border border-slate-200 bg-white p-3 font-normal leading-relaxed text-slate-700">
+              <span className="mb-1 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                Working
+              </span>
+              <p className="whitespace-pre-wrap">{working}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NgrtAssignmentTask({
+  item,
+  test,
+  answers,
+  locked,
+  onAnswer,
+}: {
+  item: AssignmentItem;
+  test: NGRTTest;
+  answers: Record<string, string>;
+  locked: boolean;
+  onAnswer: (key: string, value: string) => void;
+}) {
+  const answered = test.questions.filter((q) => answers[`${item.refId}-${q.id}`]).length;
+  const grade = gradeAnswers(test.questions, answers, item.refId);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-amber-200 bg-white">
+      <div className="border-b border-amber-100 bg-amber-50 px-4 py-3">
+        <p className="text-xs font-black uppercase tracking-widest text-amber-700">Assigned NGRT</p>
+        <h3 className="text-base font-bold text-slate-900">{test.title}</h3>
+        <p className="text-xs text-slate-600">
+          {answered} / {test.questions.length} answered
+          {answered === test.questions.length ? ` - score ${grade.correct}/${grade.total} (${grade.percent}%)` : ''}
+        </p>
+      </div>
+
+      <div className="space-y-4 px-4 py-4">
+        <details open className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <summary className="cursor-pointer text-xs font-black uppercase tracking-widest text-slate-500">
+            Reading passages
+          </summary>
+          <div className="mt-4 space-y-4">
+            {test.passages.map((passage) => (
+              <div key={passage.label}>
+                <p className="mb-1 text-[10px] font-black uppercase tracking-widest text-amber-600">
+                  {passage.label}
+                </p>
+                <blockquote className="rounded-r-xl border-l-4 border-amber-400 bg-white px-4 py-3 text-sm leading-relaxed text-slate-700">
+                  {passage.text}
+                </blockquote>
+              </div>
+            ))}
+          </div>
+        </details>
+
+        {test.questions.map((question) => (
+          <MultipleChoiceQuestion
+            key={question.id}
+            questionKey={`${item.refId}-${question.id}`}
+            questionNumber={question.id}
+            question={question.question}
+            options={(question as any).options ?? []}
+            answer={question.answer}
+            selected={answers[`${item.refId}-${question.id}`]}
+            locked={locked}
+            onAnswer={onAnswer}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GlAssignmentTask({
+  item,
+  exam,
+  answers,
+  locked,
+  onAnswer,
+}: {
+  item: AssignmentItem;
+  exam: AssignedGlExam;
+  answers: Record<string, string>;
+  locked: boolean;
+  onAnswer: (key: string, value: string) => void;
+}) {
+  const answered = (exam.questions as any[]).filter((q) => answers[`${item.refId}-${q.id}`]).length;
+  const grade = gradeAnswers(exam.questions as any[], answers, item.refId);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-indigo-200 bg-white">
+      <div className="border-b border-indigo-100 bg-indigo-50 px-4 py-3">
+        <p className="text-xs font-black uppercase tracking-widest text-indigo-700">Assigned GL exam</p>
+        <h3 className="text-base font-bold text-slate-900">{exam.title}</h3>
+        <p className="text-xs text-slate-600">
+          {answered} / {exam.questions.length} answered
+          {answered === exam.questions.length ? ` - score ${grade.correct}/${grade.total} (${grade.percent}%)` : ''}
+        </p>
+      </div>
+
+      <div className="space-y-4 px-4 py-4">
+        {exam.questions.map((question: AssignedGlQuestion) => (
+          <MultipleChoiceQuestion
+            key={question.id}
+            questionKey={`${item.refId}-${question.id}`}
+            questionNumber={question.id}
+            question={question.text}
+            options={(question as any).options ?? []}
+            answer={question.answer}
+            selected={answers[`${item.refId}-${question.id}`]}
+            locked={locked}
+            working={question.answerFullWorking}
+            onAnswer={onAnswer}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -453,11 +921,47 @@ function StudentAssignmentRow({
 }) {
   const existing = getSubmission(assignment.id, studentId);
   const [answers, setAnswers] = useState<Record<string, string>>(existing?.answers ?? {});
+  const isLockedSubmission = Boolean(existing);
+  const hasAutoGradedItems = assignment.items.some((it) => findAssignedGlExam(it.refId) || findAssignedNgrt(it.refId));
 
   const isOverdue = new Date(assignment.dueAt) < new Date() && !existing;
   const completionPercent = useMemo(() => {
-    const filled = assignment.items.filter((it) => (answers[it.refId] || '').trim().length > 0).length;
-    return Math.round((filled / Math.max(1, assignment.items.length)) * 100);
+    let filled = 0;
+    let total = 0;
+    assignment.items.forEach((it) => {
+      const exam = findAssignedGlExam(it.refId);
+      const ngrt = findAssignedNgrt(it.refId);
+      if (exam) {
+        total += exam.questions.length;
+        filled += (exam.questions as any[]).filter((q) => answers[`${it.refId}-${q.id}`]).length;
+      } else if (ngrt) {
+        total += ngrt.questions.length;
+        filled += ngrt.questions.filter((q) => answers[`${it.refId}-${q.id}`]).length;
+      } else {
+        total += 1;
+        if ((answers[it.refId] || '').trim().length > 0) filled += 1;
+      }
+    });
+    return Math.round((filled / Math.max(1, total)) * 100);
+  }, [answers, assignment.items]);
+
+  const score = useMemo(() => {
+    let correct = 0;
+    let total = 0;
+    assignment.items.forEach((it) => {
+      const exam = findAssignedGlExam(it.refId);
+      const ngrt = findAssignedNgrt(it.refId);
+      if (exam) {
+        const grade = gradeAnswers(exam.questions as any[], answers, it.refId);
+        correct += grade.correct;
+        total += grade.total;
+      } else if (ngrt) {
+        const grade = gradeAnswers(ngrt.questions, answers, it.refId);
+        correct += grade.correct;
+        total += grade.total;
+      }
+    });
+    return total > 0 ? { correct, total, percent: Math.round((correct / total) * 100) } : undefined;
   }, [answers, assignment.items]);
 
   const submit = () => {
@@ -467,6 +971,7 @@ function StudentAssignmentRow({
       submittedAt: new Date().toISOString(),
       answers,
       completionPercent,
+      score,
     });
     onToggle();
   };
@@ -483,7 +988,7 @@ function StudentAssignmentRow({
             <p className="truncate text-base font-bold text-slate-900">{assignment.title}</p>
             {existing ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                <CheckCircle2 className="h-3 w-3" /> Submitted
+                <CheckCircle2 className="h-3 w-3" /> Submitted{existing.score ? ` · ${existing.score.percent}%` : ''}
               </span>
             ) : isOverdue ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
